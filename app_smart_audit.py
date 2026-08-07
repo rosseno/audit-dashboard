@@ -11,7 +11,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom Styling UI (Membuat tombol kartu memanjang & rapat)
+# Custom Styling UI (Desain Kartu Elegan & Proporsional)
 st.markdown("""
 <style>
     .main { background-color: #0e1117; }
@@ -19,25 +19,23 @@ st.markdown("""
         background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
         padding: 20px;
         border-radius: 10px;
+        border-left: 5px solid #3b82f6;
         margin-bottom: 20px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
     }
-    /* Mengembalikan tampilan tombol ke mode standar yang lebih bersih */
-    div.stButton > button {
-        width: 100%;
-        height: 80px;
-        background-color: #1e293b !important;
-        color: #ffffff !important;
-        border: 1px solid #334155 !important;
-        border-radius: 8px !important;
-        font-weight: 600 !important;
-        font-size: 12px !important;
-    }
-    div.stButton > button:hover {
-        border-color: #3b82f6 !important;
-        background-color: #2d3a4f !important;
+    .header-title { color: #ffffff; font-size: 24px; font-weight: 700; margin-bottom: 3px; }
+    
+    /* Styling Kartu KPI yang Rapih dan Lebar */
+    .kpi-card {
+        background-color: #1e293b;
+        border-radius: 8px;
+        padding: 12px 15px;
+        border: 1px solid #334155;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
 </style>
 """, unsafe_allow_html=True)
+
 @st.cache_data
 def load_data():
     try:
@@ -64,9 +62,8 @@ df_filtered = df_filtered_periode[df_filtered_periode[col_bidang].astype(str) ==
 header_label = f"DEPARTEMEN {selected_bidang.upper()}" if selected_bidang != "Semua Bidang" else "SMART AUDIT MONITORING DASHBOARD - PT PELINDO SOLUSI MARITIM"
 st.markdown(f"""<div class="header-banner"><div class="header-title">📊 {header_label}</div></div>""", unsafe_allow_html=True)
 
-# KPI Interaktif
-st.markdown("### 📈 Ringkasan Eksekutif KPI (Klik Kartu untuk Filter)")
-if 'filter_status' not in st.session_state: st.session_state.filter_status = "Semua"
+# KPI Cards (Desain Lebar dan Proporsional)
+st.markdown("### 📈 Ringkasan Eksekutif KPI")
 
 col_status = "Status" if "Status" in df_filtered.columns else "Status_TL"
 total_temuan = len(df_filtered)
@@ -74,35 +71,64 @@ selesai = len(df_filtered[df_filtered[col_status].str.contains("Selesai|SLS", ca
 evaluasi = len(df_filtered[df_filtered[col_status].str.contains("Evaluasi|EVAL", case=False, na=False)])
 overdue = len(df_filtered[df_filtered[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)])
 
-c1, c2, c3, c4, c5 = st.columns(5)
-with c1:
-    if st.button(f"TOTAL TEMUAN\n\n{total_temuan}"): st.session_state.filter_status = "Semua"
-with c2:
-    st.button(f"POIN REKOMENDASI\n\n{total_temuan}")
-with c3:
-    if st.button(f"SELESAI (SLS)\n\n{selesai}"): st.session_state.filter_status = "Selesai"
-with c4:
-    if st.button(f"EVALUASI (EVAL)\n\n{evaluasi}"): st.session_state.filter_status = "Evaluasi"
-with c5:
-    if st.button(f"OVERDUE (BD)\n\n{overdue}"): st.session_state.filter_status = "Overdue"
+p_selesai = (selesai / total_temuan * 100) if total_temuan > 0 else 0
+p_evaluasi = (evaluasi / total_temuan * 100) if total_temuan > 0 else 0
+p_overdue = (overdue / total_temuan * 100) if total_temuan > 0 else 0
 
-if st.session_state.filter_status == "Selesai":
-    df_filtered = df_filtered[df_filtered[col_status].str.contains("Selesai|SLS", case=False, na=False)]
-elif st.session_state.filter_status == "Evaluasi":
-    df_filtered = df_filtered[df_filtered[col_status].str.contains("Evaluasi|EVAL", case=False, na=False)]
-elif st.session_state.filter_status == "Overdue":
-    df_filtered = df_filtered[df_filtered[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)]
+c1, c2, c3, c4, c5 = st.columns(5)
+
+with c1:
+    st.markdown(f"""
+    <div class="kpi-card" style="border-top: 3px solid #3b82f6;">
+        <span style="color: #94a3b8; font-size: 11px; font-weight: bold;">TOTAL TEMUAN</span>
+        <h3 style="color: #ffffff; margin: 2px 0 0 0; font-size: 22px;">{total_temuan}</h3>
+        <span style="color: #64748b; font-size: 10px;">Judul LHP Utama</span>
+    </div>""", unsafe_allow_html=True)
+
+with c2:
+    st.markdown(f"""
+    <div class="kpi-card" style="border-top: 3px solid #8b5cf6;">
+        <span style="color: #94a3b8; font-size: 11px; font-weight: bold;">POIN REKOMENDASI</span>
+        <h3 style="color: #ffffff; margin: 2px 0 0 0; font-size: 22px;">{total_temuan}</h3>
+        <span style="color: #64748b; font-size: 10px;">Butir Granular</span>
+    </div>""", unsafe_allow_html=True)
+
+with c3:
+    st.markdown(f"""
+    <div class="kpi-card" style="border-top: 3px solid #00CC96;">
+        <span style="color: #00CC96; font-size: 11px; font-weight: bold;">🟢 SELESAI (SLS)</span>
+        <h3 style="color: #ffffff; margin: 2px 0 0 0; font-size: 22px;">{selesai}</h3>
+        <span style="color: #00CC96; font-size: 10px;">{p_selesai:.1f}% dari Total</span>
+    </div>""", unsafe_allow_html=True)
+
+with c4:
+    st.markdown(f"""
+    <div class="kpi-card" style="border-top: 3px solid #FFA15A;">
+        <span style="color: #FFA15A; font-size: 11px; font-weight: bold;">🟡 EVALUASI (EVAL)</span>
+        <h3 style="color: #ffffff; margin: 2px 0 0 0; font-size: 22px;">{evaluasi}</h3>
+        <span style="color: #FFA15A; font-size: 10px;">{p_evaluasi:.1f}% Dalam Proses</span>
+    </div>""", unsafe_allow_html=True)
+
+with c5:
+    st.markdown(f"""
+    <div class="kpi-card" style="border-top: 3px solid #EF553B;">
+        <span style="color: #EF553B; font-size: 11px; font-weight: bold;">🔴 OVERDUE (BD)</span>
+        <h3 style="color: #ffffff; margin: 2px 0 0 0; font-size: 22px;">{overdue}</h3>
+        <span style="color: #EF553B; font-size: 10px;">{p_overdue:.1f}% Belum TL</span>
+    </div>""", unsafe_allow_html=True)
 
 st.markdown("---")
 
 # Chart & Data
 color_map = {'Selesai (SLS)': '#00CC96', 'Evaluasi (EVAL)': '#FFA15A', 'Overdue (BD)': '#EF553B', 'Belum TL': '#EF553B'}
 col_chart_bar, col_chart_pie = st.columns([3, 1.5])
+
 with col_chart_bar:
     df_chart = df_filtered.groupby([col_bidang, col_status]).size().reset_index(name='Jumlah')
     fig_bar = px.bar(df_chart, x='Jumlah', y=col_bidang, color=col_status, orientation='h', barmode='stack', title="Progres Status per Bidang", color_discrete_map=color_map, template='plotly_dark')
     fig_bar.update_layout(height=300, margin=dict(l=0, r=10, t=30, b=0))
     st.plotly_chart(fig_bar, use_container_width=True)
+
 with col_chart_pie:
     df_pie = df_filtered.groupby(col_status).size().reset_index(name='Total')
     fig_pie = px.pie(df_pie, values='Total', names=col_status, hole=0.6, title="Proporsi Status", color=col_status, color_discrete_map=color_map, template='plotly_dark')
