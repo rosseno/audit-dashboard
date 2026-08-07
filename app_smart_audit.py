@@ -4,7 +4,6 @@ import plotly.express as px
 import plotly.graph_objects as go
 import io
 
-# Config Halaman Dashboard
 st.set_page_config(
     page_title="Executive Audit Dashboard - PT Pelindo Solusi Maritim",
     page_icon="📊",
@@ -12,213 +11,195 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom Styling UI
 st.markdown("""
 <style>
     .main { background-color: #0e1117; }
-    
     .header-banner {
         background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-        padding: 22px 28px;
-        border-radius: 12px;
-        border-left: 6px solid #2563eb;
-        margin-bottom: 25px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        padding: 20px;
+        border-radius: 10px;
+        border-left: 5px solid #3b82f6;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
     }
-    .header-title { font-size: 24px; font-weight: 700; color: #f8fafc; margin-bottom: 4px; }
-    .header-subtitle { font-size: 13px; color: #94a3b8; }
-
-    .metric-card {
-        background: #1e293b; border-radius: 10px; padding: 16px 20px;
-        border: 1px solid #334155; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-    }
-    .metric-label { font-size: 12px; font-weight: 600; text-transform: uppercase; color: #94a3b8; }
-    .metric-value { font-size: 26px; font-weight: 800; margin-top: 4px; margin-bottom: 2px; }
-    .metric-sub { font-size: 12px; font-weight: 500; }
-
-    .stButton>button { width: 100%; border-radius: 8px; font-weight: 600; height: 42px; }
+    .header-title { color: #ffffff; font-size: 24px; font-weight: 700; margin-bottom: 3px; }
+    .header-subtitle { color: #94a3b8; font-size: 13px; }
 </style>
 """, unsafe_allow_html=True)
 
-file_path = "Master_Database_Temuan_Audit_2024_2025_PSM_Ringkas.xlsx"
-PIN_ADMIN = "1234"
-
-@st.cache_data(ttl=5)
+@st.cache_data
 def load_data():
     try:
-        df = pd.read_excel(file_path)
-        df.columns = df.columns.str.strip()
-        return df
-    except Exception as e:
-        st.error(f"Gagal membaca database Excel: {e}")
-        return pd.DataFrame()
+        df = pd.read_excel("Master_Database_Temuan_Audit_2024_2025_PSM_Ringkas.xlsx")
+    except:
+        df = pd.read_excel("Master_Database_Temuan_Audit_2024_2025_PSM_Ringkas.xlsx")
+    return df
 
-df_master = load_data()
+try:
+    df_master = load_data()
+except Exception as e:
+    st.error(f"Gagal memuat file Excel. Error: {e}")
+    st.stop()
 
-if not df_master.empty:
-    # BANNER DENGAN JUDUL YANG DIMINTA
-    st.markdown("""
-    <div class="header-banner">
-        <div class="header-title">📊 SMART AUDIT MONITORING DASHBOARD - PT PELINDO SOLUSI MARITIM</div>
-        <div class="header-subtitle">Sistem Pemantauan Granular Hasil Audit Kepatuhan & Performansi — Internal Audit Unit</div>
+PIN_ADMIN = "1234"
+
+st.sidebar.markdown("## 🎯 Filter Control Panel")
+st.sidebar.markdown("---")
+
+col_periode = "Tahun Audit" if "Tahun Audit" in df_master.columns else df_master.columns[3]
+periode_list = ["Semua Periode"] + sorted(list(df_master[col_periode].dropna().astype(str).unique()))
+selected_periode = st.sidebar.selectbox("📅 Periode Audit:", periode_list)
+
+if selected_periode != "Semua Periode":
+    df_filtered_periode = df_master[df_master[col_periode].astype(str) == str(selected_periode)]
+else:
+    df_filtered_periode = df_master.copy()
+
+col_bidang = "Bidang" if "Bidang" in df_master.columns else df_master.columns[5]
+bidang_list = ["Semua Bidang"] + sorted(list(df_filtered_periode[col_bidang].dropna().astype(str).unique()))
+selected_bidang = st.sidebar.selectbox("📂 Bidang Workgroup:", bidang_list)
+
+if selected_bidang != "Semua Bidang":
+    df_filtered = df_filtered_periode[df_filtered_periode[col_bidang].astype(str) == str(selected_bidang)]
+else:
+    df_filtered = df_filtered_periode.copy()
+
+st.sidebar.markdown("---")
+st.sidebar.markdown("### 🔐 Akses Admin (Editor)")
+input_pin = st.sidebar.text_input("Masukkan PIN Admin untuk Edit Data:", type="password")
+
+if input_pin == PIN_ADMIN:
+    st.sidebar.success("🔓 Akses Editor Aktif")
+    mode_edit = st.sidebar.checkbox("📝 Buka Mode Editor Status", value=True)
+elif input_pin != "":
+    st.sidebar.error("❌ PIN Salah")
+    mode_edit = False
+else:
+    st.sidebar.info("🔒 Mode Read-Only (Hanya Lihat)")
+    mode_edit = False
+
+header_label = f"DEPARTEMEN {selected_bidang.upper()}" if selected_bidang != "Semua Bidang" else "SMART AUDIT MONITORING DASHBOARD - PT PELINDO SOLUSI MARITIM"
+
+st.markdown(f"""
+<div class="header-banner">
+    <div class="header-title">📊 {header_label}</div>
+    <div class="header-subtitle">Sistem Pemantauan Granular Hasil Audit Kepatuhan & Performa — Internal Audit Unit</div>
+</div>
+""", unsafe_allow_html=True)
+
+st.markdown("### 📈 Ringkasan Eksekutif KPI")
+
+total_temuan = len(df_filtered)
+col_status = "Status" if "Status" in df_filtered.columns else "Status_TL"
+
+selesai = len(df_filtered[df_filtered[col_status].str.contains("Selesai|SLS", case=False, na=False)]) if col_status in df_filtered.columns else 0
+evaluasi = len(df_filtered[df_filtered[col_status].str.contains("Evaluasi|EVAL", case=False, na=False)]) if col_status in df_filtered.columns else 0
+overdue = len(df_filtered[df_filtered[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)]) if col_status in df_filtered.columns else 0
+persen_selesai = (selesai / total_temuan * 100) if total_temuan > 0 else 0
+persen_evaluasi = (evaluasi / total_temuan * 100) if total_temuan > 0 else 0
+persen_overdue = (overdue / total_temuan * 100) if total_temuan > 0 else 0
+
+col_kpi1, col_kpi2, col_kpi3, col_kpi4, col_kpi5 = st.columns(5)
+
+with col_kpi1:
+    st.markdown(f"""
+    <div style="background-color: #1e293b; border-radius: 8px; padding: 12px 15px; border-top: 3px solid #3b82f6; border: 1px solid #334155;">
+        <span style="color: #94a3b8; font-size: 11px; font-weight: bold;">TOTAL TEMUAN</span>
+        <h3 style="color: #ffffff; margin: 2px 0 0 0; font-size: 22px;">{total_temuan}</h3>
+        <span style="color: #64748b; font-size: 10px;">Judul LHP Utama</span>
     </div>
     """, unsafe_allow_html=True)
 
-    # Sidebar Filter Control
-    st.sidebar.markdown("## 🎯 Filter Control Panel")
-    st.sidebar.markdown("---")
+with col_kpi2:
+    st.markdown(f"""
+    <div style="background-color: #1e293b; border-radius: 8px; padding: 12px 15px; border-top: 3px solid #8b5cf6; border: 1px solid #334155;">
+        <span style="color: #94a3b8; font-size: 11px; font-weight: bold;">POIN REKOMENDASI</span>
+        <h3 style="color: #ffffff; margin: 2px 0 0 0; font-size: 22px;">{total_temuan}</h3>
+        <span style="color: #64748b; font-size: 10px;">Butir Granular</span>
+    </div>
+    """, unsafe_allow_html=True)
 
-    col_periode = "Tahun Audit" if "Tahun Audit" in df_master.columns else df_master.columns[3]
-    periode_list = ["Semua Periode"] + sorted(list(df_master[col_periode].dropna().astype(str).unique()))
-    selected_periode = st.sidebar.selectbox("📅 Periode Audit:", periode_list)
+with col_kpi3:
+    st.markdown(f"""
+    <div style="background-color: #1e293b; border-radius: 8px; padding: 12px 15px; border-top: 3px solid #00CC96; border: 1px solid #334155;">
+        <span style="color: #00CC96; font-size: 11px; font-weight: bold;">🟢 SELESAI (SLS)</span>
+        <h3 style="color: #ffffff; margin: 2px 0 0 0; font-size: 22px;">{selesai}</h3>
+        <span style="color: #00CC96; font-size: 10px;">{persen_selesai:.1f}% dari Total</span>
+    </div>
+    """, unsafe_allow_html=True)
 
-    col_bidang = "Bidang" if "Bidang" in df_master.columns else df_master.columns[5]
-    bidang_list = ["Semua Bidang"] + sorted(list(df_master[col_bidang].dropna().astype(str).unique()))
-    selected_bidang = st.sidebar.selectbox("🏢 Bidang Workgroup:", bidang_list)
+with col_kpi4:
+    st.markdown(f"""
+    <div style="background-color: #1e293b; border-radius: 8px; padding: 12px 15px; border-top: 3px solid #FFA15A; border: 1px solid #334155;">
+        <span style="color: #FFA15A; font-size: 11px; font-weight: bold;">🟡 EVALUASI (EVAL)</span>
+        <h3 style="color: #ffffff; margin: 2px 0 0 0; font-size: 22px;">{evaluasi}</h3>
+        <span style="color: #FFA15A; font-size: 10px;">{persen_evaluasi:.1f}% Dalam Proses</span>
+    </div>
+    """, unsafe_allow_html=True)
 
-    st.sidebar.markdown("---")
-    st.sidebar.markdown("### 🔐 Akses Admin (Editor)")
-    
-    input_pin = st.sidebar.text_input("Masukkan PIN Admin untuk Edit Data:", type="password")
-    
-    if input_pin == PIN_ADMIN:
-        st.sidebar.success("🔓 Akses Editor Aktif")
-        mode_edit = st.sidebar.checkbox("✏️ Buka Mode Editor Status", value=True)
-    elif input_pin != "":
-        st.sidebar.error("❌ PIN Salah")
-        mode_edit = False
-    else:
-        st.sidebar.info("🔒 Mode Read-Only (Hanya Lihat)")
-        mode_edit = False
+with col_kpi5:
+    st.markdown(f"""
+    <div style="background-color: #1e293b; border-radius: 8px; padding: 12px 15px; border-top: 3px solid #EF553B; border: 1px solid #334155;">
+        <span style="color: #EF553B; font-size: 11px; font-weight: bold;">🔴 OVERDUE (BD)</span>
+        <h3 style="color: #ffffff; margin: 2px 0 0 0; font-size: 22px;">{overdue}</h3>
+        <span style="color: #EF553B; font-size: 10px;">{persen_overdue:.1f}% Belum TL</span>
+    </div>
+    """, unsafe_allow_html=True)
 
-    # Filter Data
-    df_filtered = df_master.copy()
-    if selected_periode != "Semua Periode":
-        df_filtered = df_filtered[df_filtered[col_periode].astype(str) == str(selected_periode)]
-    if selected_bidang != "Semua Bidang":
-        df_filtered = df_filtered[df_filtered[col_bidang].astype(str) == str(selected_bidang)]
+st.markdown("---")
 
-    col_status = "Status" if "Status" in df_filtered.columns else "Status_TL"
-    col_id = "ID Temuan" if "ID Temuan" in df_filtered.columns else df_filtered.columns[1]
+color_map = {
+    'Selesai (SLS)': '#00CC96',
+    'Evaluasi (EVAL)': '#FFA15A',
+    'Overdue (BD)': '#EF553B',
+    'Belum TL': '#EF553B'
+}
 
-    status_series = df_filtered[col_status].astype(str).str.upper()
-    mask_sls = status_series.str.contains("SLS|SELESAI", na=False)
-    mask_eval = status_series.str.contains("EVAL|EVALUASI", na=False)
-    mask_bd = ~mask_sls & ~mask_eval
+st.markdown("### 📊 Visualisasi Distribusi & Progres Tindak Lanjut")
 
-    total_temuan = df_filtered[col_id].nunique()
-    total_rekomendasi = len(df_filtered)
-    total_sls = int(mask_sls.sum())
-    total_eval = int(mask_eval.sum())
-    total_bd = int(mask_bd.sum())
+if not df_filtered.empty and col_status in df_filtered.columns:
+    col_chart_bar, col_chart_pie = st.columns([3, 1.5])
 
-    pct_sls = (total_sls / total_rekomendasi * 100) if total_rekomendasi > 0 else 0
-    pct_eval = (total_eval / total_rekomendasi * 100) if total_rekomendasi > 0 else 0
-    pct_bd = (total_bd / total_rekomendasi * 100) if total_rekomendasi > 0 else 0
-
-    st.markdown("### 📈 Ringkasan Eksekutif KPI")
-    m1, m2, m3, m4, m5 = st.columns(5)
-
-    with m1:
-        st.markdown(f'<div class="metric-card" style="border-top: 4px solid #3b82f6;"><div class="metric-label">Total Temuan</div><div class="metric-value" style="color: #f8fafc;">{total_temuan}</div><div class="metric-sub" style="color: #94a3b8;">Judul LHP Utama</div></div>', unsafe_allow_html=True)
-    with m2:
-        st.markdown(f'<div class="metric-card" style="border-top: 4px solid #8b5cf6;"><div class="metric-label">Poin Rekomendasi</div><div class="metric-value" style="color: #f8fafc;">{total_rekomendasi}</div><div class="metric-sub" style="color: #94a3b8;">Butir Granular</div></div>', unsafe_allow_html=True)
-    with m3:
-        st.markdown(f'<div class="metric-card" style="border-top: 4px solid #10b981;"><div class="metric-label">🟢 Selesai (SLS)</div><div class="metric-value" style="color: #34d399;">{total_sls}</div><div class="metric-sub" style="color: #10b981;">{pct_sls:.1f}% dari Total</div></div>', unsafe_allow_html=True)
-    with m4:
-        st.markdown(f'<div class="metric-card" style="border-top: 4px solid #f59e0b;"><div class="metric-label">🟡 Evaluasi (EVAL)</div><div class="metric-value" style="color: #fbbf24;">{total_eval}</div><div class="metric-sub" style="color: #f59e0b;">{pct_eval:.1f}% Dalam Proses</div></div>', unsafe_allow_html=True)
-    with m5:
-        st.markdown(f'<div class="metric-card" style="border-top: 4px solid #ef4444;"><div class="metric-label">🔴 Overdue (BD)</div><div class="metric-value" style="color: #f87171;">{total_bd}</div><div class="metric-sub" style="color: #ef4444;">{pct_bd:.1f}% Belum TL</div></div>', unsafe_allow_html=True)
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    st.markdown("### 📊 Visualisasi Distribusi & Progres Tindak Lanjut")
-    chart_col1, chart_col2 = st.columns([1.8, 1])
-
-    summary_data = []
-    for b in df_filtered[col_bidang].unique():
-        sub = df_filtered[df_filtered[col_bidang] == b]
-        s_series = sub[col_status].astype(str).str.upper()
-        s_sls = s_series.str.contains("SLS|SELESAI", na=False).sum()
-        s_eval = s_series.str.contains("EVAL|EVALUASI", na=False).sum()
-        s_bd = len(sub) - s_sls - s_eval
-        summary_data.append({'Bidang': b, 'Selesai (SLS)': s_sls, 'Evaluasi (EVAL)': s_eval, 'Belum TL (BD)': s_bd})
-    df_chart = pd.DataFrame(summary_data)
-
-    with chart_col1:
-        fig_bar = go.Figure()
-        fig_bar.add_trace(go.Bar(y=df_chart['Bidang'], x=df_chart['Selesai (SLS)'], name='Selesai (SLS)', orientation='h', marker=dict(color='#10b981')))
-        fig_bar.add_trace(go.Bar(y=df_chart['Bidang'], x=df_chart['Evaluasi (EVAL)'], name='Evaluasi (EVAL)', orientation='h', marker=dict(color='#f59e0b')))
-        fig_bar.add_trace(go.Bar(y=df_chart['Bidang'], x=df_chart['Belum TL (BD)'], name='Belum TL (BD)', orientation='h', marker=dict(color='#ef4444')))
-        fig_bar.update_layout(barmode='stack', title=dict(text="Progres Status per Bidang Workgroup", font=dict(size=14, color="#f8fafc")), height=260, margin=dict(l=10, r=10, t=35, b=10), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font=dict(size=11, color="#94a3b8")), xaxis=dict(showgrid=True, gridcolor="#334155", tickfont=dict(color="#94a3b8")), yaxis=dict(autorange="reversed", tickfont=dict(color="#f8fafc", size=11)))
+    with col_chart_bar:
+        df_chart = df_filtered.groupby([col_bidang, col_status]).size().reset_index(name='Jumlah')
+        fig_bar = px.bar(
+            df_chart, x='Jumlah', y=col_bidang, color=col_status, 
+            orientation='h', barmode='stack', title="Progres Status per Bidang Workgroup",
+            color_discrete_map=color_map, template='plotly_dark'
+        )
+        fig_bar.update_layout(
+            height=320, plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
+            margin=dict(l=0, r=10, t=30, b=0),
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, title="")
+        )
+        fig_bar.update_xaxes(title="Jumlah Temuan")
+        fig_bar.update_yaxes(title="")
         st.plotly_chart(fig_bar, use_container_width=True)
 
-    with chart_col2:
-        donut_data = pd.DataFrame({'Status': ['Selesai (SLS)', 'Evaluasi (EVAL)', 'Belum TL (BD)'], 'Jumlah': [total_sls, total_eval, total_bd]})
-        fig_donut = px.pie(donut_data, values='Jumlah', names='Status', hole=0.6, color='Status', color_discrete_map={'Selesai (SLS)': '#10b981', 'Evaluasi (EVAL)': '#f59e0b', 'Belum TL (BD)': '#ef4444'})
-        fig_donut.update_layout(title=dict(text="Proporsi Status Total", font=dict(size=14, color="#f8fafc")), height=260, margin=dict(l=10, r=10, t=35, b=10), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', showlegend=False)
-        fig_donut.update_traces(textposition='inside', textinfo='percent+label')
-        st.plotly_chart(fig_donut, use_container_width=True)
-
-    st.write("---")
-
-    if mode_edit:
-        st.markdown("### ✏️ Interactive Editor Mode (Khusus Admin)")
-        st.info("💡 Anda dapat mengubah status poin rekomendasi pada kolom **Status** di bawah ini, lalu klik tombol simpan.")
-        edited_df = st.data_editor(
-            df_filtered,
-            column_config={"Status": st.column_config.SelectboxColumn("Status Tindak Lanjut", help="Pilih Status Rekomendasi", options=["SLS", "EVAL", "BD"], required=True)},
-            disabled=["No", "ID Temuan", "Poin", "Tahun Audit", "Nama Entitas", "Bidang", "Judul Temuan Audit"],
-            use_container_width=True, num_rows="fixed", height=400
+    with col_chart_pie:
+        df_pie = df_filtered.groupby(col_status).size().reset_index(name='Total')
+        fig_pie = px.pie(
+            df_pie, values='Total', names=col_status, hole=0.6,
+            title="Proporsi Status Total", color=col_status,
+            color_discrete_map=color_map, template='plotly_dark'
         )
-        if st.button("💾 SIMPAN PERUBAHAN STATUS KE EXCEL", type="primary"):
-            df_master.update(edited_df)
-            df_master.to_excel(file_path, sheet_name='Master Database Temuan', index=False)
-            st.success("✅ Perubahan status berhasil diperbarui di database Excel!")
-            st.rerun()
-    else:
-        st.markdown("### 🔍 Filter Detail Rincian Rekomendasi")
-        b1, b2, b3, b4 = st.columns(4)
-        show_sls = b1.button("🟢 REKOMENDASI SELESAI (SLS)")
-        show_eval = b2.button("🟡 DALAM EVALUASI (EVAL)")
-        show_bd = b3.button("🔴 OVERDUE / BELUM TL (BD)")
-        show_all = b4.button("📋 TAMPILKAN SEMUA DATA")
+        fig_pie.update_layout(
+            height=320, plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
+            margin=dict(l=10, r=10, t=30, b=10), showlegend=False
+        )
+        fig_pie.update_traces(textposition='inside', textinfo='percent+label')
+        st.plotly_chart(fig_pie, use_container_width=True)
+else:
+    st.info("Data grafik belum tersedia untuk filter yang dipilih.")
 
-        if show_sls:
-            st.subheader("🟢 Rincian Poin Rekomendasi Status Selesai (SLS)")
-            st.dataframe(df_filtered[mask_sls], use_container_width=True, height=400)
-            
-            output = io.BytesIO()
-            with pd.ExcelWriter(output, engine='openpyxl') as writer:
-                df_filtered[mask_sls].to_excel(writer, index=False, sheet_name='Data SLS')
-            st.download_button("📥 Download Excel Data SLS (.xlsx)", output.getvalue(), "data_audit_selesai.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+st.markdown("---")
+st.markdown("### 📋 Detail Data Temuan & Tindak Lanjut Audit")
 
-        elif show_eval:
-            st.subheader("🟡 Rincian Poin Rekomendasi Status Dalam Evaluasi (EVAL)")
-            st.dataframe(df_filtered[mask_eval], use_container_width=True, height=400)
-            
-            output = io.BytesIO()
-            with pd.ExcelWriter(output, engine='openpyxl') as writer:
-                df_filtered[mask_eval].to_excel(writer, index=False, sheet_name='Data Evaluasi')
-            st.download_button("📥 Download Excel Data Evaluasi (.xlsx)", output.getvalue(), "data_audit_evaluasi.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+if mode_edit and input_pin == PIN_ADMIN:
+    st.warning("⚠️ Anda berada dalam Mode Edit.")
+    edited_df = st.data_editor(df_filtered, num_rows="dynamic", use_container_width=True)
+else:
+    st.dataframe(df_filtered, use_container_width=True)
 
-        elif show_bd:
-            st.subheader("🔴 Rincian Poin Rekomendasi Status Overdue / Belum Ditindaklanjuti (BD)")
-            st.dataframe(df_filtered[mask_bd], use_container_width=True, height=400)
-            
-            output = io.BytesIO()
-            with pd.ExcelWriter(output, engine='openpyxl') as writer:
-                df_filtered[mask_bd].to_excel(writer, index=False, sheet_name='Data Overdue')
-            st.download_button("📥 Download Excel Data Overdue (.xlsx)", output.getvalue(), "data_audit_overdue.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-
-        else:
-            st.subheader("📋 Tabel Master Rekapitulasi Data Granular")
-            st.dataframe(df_filtered, use_container_width=True, height=400)
-            
-            output = io.BytesIO()
-            with pd.ExcelWriter(output, engine='openpyxl') as writer:
-                df_filtered.to_excel(writer, index=False, sheet_name='Master Data')
-            st.download_button("📥 Download Seluruh Master Data Excel (.xlsx)", output.getvalue(), "master_data_audit.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-
-st.write("---")
-st.caption("Internal Audit Unit (SPI) PT Pelindo Solusi Maritim © 2026")
+st.markdown("---")
+st.caption("Internal Audit Unit — PT Pelindo Solusi Maritim © 2026")
