@@ -55,15 +55,17 @@ def load_data():
 df_master = load_data()
 PIN_ADMIN = "1234"
 
-# --- SIDEBAR: PENGATURAN HAK AKSES (ADMIN VS AUDITEE) ---
+# --- SIDEBAR: PENGATURAN HAK AKSES FLEKSIBEL ---
 st.sidebar.markdown("## 🔐 Hak Akses Pengguna")
-access_mode = st.sidebar.radio("Pilih Mode Akses:", ["Auditee (Read-Only per Bidang)", "Admin SPI (Full Access)"])
+access_mode = st.sidebar.radio(
+    "Pilih Mode Akses:", 
+    ["Auditee (Per Bidang)", "Direksi / Manajemen (Semua Bidang)", "Admin SPI (Full Access)"]
+)
 
-# Inisialisasi session state untuk login admin
+# Inisialisasi session state login admin
 if 'admin_logged_in' not in st.session_state:
     st.session_state.admin_logged_in = False
 
-selected_bidang = "Semua Bidang"
 list_bidang_available = sorted(list(df_master["Bidang"].dropna().astype(str).unique())) if "Bidang" in df_master.columns else []
 
 if access_mode == "Admin SPI (Full Access)":
@@ -91,15 +93,26 @@ df_filtered_periode = df_master[df_master[col_periode].astype(str) == str(select
 
 col_bidang = "Bidang" if "Bidang" in df_master.columns else df_master.columns[5]
 
-# Logika Pembatasan Bidang Berdasarkan Mode Akses
-if access_mode == "Auditee (Read-Only per Bidang)":
-    st.sidebar.info("ℹ️ Mode Auditee: Silakan pilih bidang Anda di bawah ini.")
+# --- LOGIKA PEMBATASAN BERDASARKAN PILIHAN FLEKSIBEL ---
+if access_mode == "Auditee (Per Bidang)":
+    st.sidebar.info("ℹ️ Mode Auditee: Silakan pilih bidang unit kerja Anda.")
     selected_bidang = st.sidebar.selectbox("📂 Pilih Bidang Anda:", list_bidang_available)
     df_base = df_filtered_periode[df_filtered_periode[col_bidang].astype(str) == str(selected_bidang)]
-else:
-    # Mode Admin bisa melihat semua bidang atau memfilter spesifik
-    selected_bidang = st.sidebar.selectbox("📂 Bidang Workgroup:", ["Semua Bidang"] + list_bidang_available)
+
+elif access_mode == "Direksi / Manajemen (Semua Bidang)":
+    st.sidebar.info("ℹ️ Mode Direksi: Menampilkan ringkasan seluruh bidang.")
+    # Direksi bisa melihat "Semua Bidang" secara default atau memfilter bidang tertentu jika ingin
+    selected_bidang = st.sidebar.selectbox("📂 Pilih Bidang / Tinjau Semua:", ["Semua Bidang"] + list_bidang_available)
     df_base = df_filtered_periode[df_filtered_periode[col_bidang].astype(str) == str(selected_bidang)] if selected_bidang != "Semua Bidang" else df_filtered_periode.copy()
+
+else:  # Admin SPI
+    if st.session_state.admin_logged_in:
+        selected_bidang = st.sidebar.selectbox("📂 Bidang Workgroup:", ["Semua Bidang"] + list_bidang_available)
+        df_base = df_filtered_periode[df_filtered_periode[col_bidang].astype(str) == str(selected_bidang)] if selected_bidang != "Semua Bidang" else df_filtered_periode.copy()
+    else:
+        st.sidebar.warning("⚠️ Masukkan PIN Admin di atas untuk akses penuh.")
+        selected_bidang = list_bidang_available[0] if list_bidang_available else "Semua Bidang"
+        df_base = df_filtered_periode[df_filtered_periode[col_bidang].astype(str) == str(selected_bidang)]
 
 # Header
 header_label = f"DEPARTEMEN {selected_bidang.upper()}" if selected_bidang != "Semua Bidang" else "SMART AUDIT MONITORING DASHBOARD - PT PELINDO SOLUSI MARITIM"
