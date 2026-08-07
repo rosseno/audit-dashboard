@@ -55,17 +55,51 @@ def load_data():
 df_master = load_data()
 PIN_ADMIN = "1234"
 
-# Sidebar Filters (Periode & Bidang)
+# --- SIDEBAR: PENGATURAN HAK AKSES (ADMIN VS AUDITEE) ---
+st.sidebar.markdown("## 🔐 Hak Akses Pengguna")
+access_mode = st.sidebar.radio("Pilih Mode Akses:", ["Auditee (Read-Only per Bidang)", "Admin SPI (Full Access)"])
+
+# Inisialisasi session state untuk login admin
+if 'admin_logged_in' not in st.session_state:
+    st.session_state.admin_logged_in = False
+
+selected_bidang = "Semua Bidang"
+list_bidang_available = sorted(list(df_master["Bidang"].dropna().astype(str).unique())) if "Bidang" in df_master.columns else []
+
+if access_mode == "Admin SPI (Full Access)":
+    if not st.session_state.admin_logged_in:
+        entered_pin = st.sidebar.text_input("Masukkan PIN Admin:", type="password")
+        if entered_pin == PIN_ADMIN:
+            st.session_state.admin_logged_in = True
+            st.sidebar.success("Login Admin Berhasil!")
+            st.rerun()
+        elif entered_pin:
+            st.sidebar.error("PIN Salah!")
+    else:
+        st.sidebar.success("Status: Admin Aktif 🔓")
+        if st.sidebar.button("Logout Admin"):
+            st.session_state.admin_logged_in = False
+            st.rerun()
+
+st.sidebar.markdown("---")
 st.sidebar.markdown("## 🎯 Filter Control Panel")
+
 col_periode = "Tahun Audit" if "Tahun Audit" in df_master.columns else df_master.columns[3]
 selected_periode = st.sidebar.selectbox("📅 Periode Audit:", ["Semua Periode"] + sorted(list(df_master[col_periode].dropna().astype(str).unique())))
 
 df_filtered_periode = df_master[df_master[col_periode].astype(str) == str(selected_periode)] if selected_periode != "Semua Periode" else df_master.copy()
 
 col_bidang = "Bidang" if "Bidang" in df_master.columns else df_master.columns[5]
-selected_bidang = st.sidebar.selectbox("📂 Bidang Workgroup:", ["Semua Bidang"] + sorted(list(df_filtered_periode[col_bidang].dropna().astype(str).unique())))
 
-df_base = df_filtered_periode[df_filtered_periode[col_bidang].astype(str) == str(selected_bidang)] if selected_bidang != "Semua Bidang" else df_filtered_periode.copy()
+# Logika Pembatasan Bidang Berdasarkan Mode Akses
+if access_mode == "Auditee (Read-Only per Bidang)":
+    st.sidebar.info("ℹ️ Mode Auditee: Silakan pilih bidang Anda di bawah ini.")
+    selected_bidang = st.sidebar.selectbox("📂 Pilih Bidang Anda:", list_bidang_available)
+    df_base = df_filtered_periode[df_filtered_periode[col_bidang].astype(str) == str(selected_bidang)]
+else:
+    # Mode Admin bisa melihat semua bidang atau memfilter spesifik
+    selected_bidang = st.sidebar.selectbox("📂 Bidang Workgroup:", ["Semua Bidang"] + list_bidang_available)
+    df_base = df_filtered_periode[df_filtered_periode[col_bidang].astype(str) == str(selected_bidang)] if selected_bidang != "Semua Bidang" else df_filtered_periode.copy()
 
 # Header
 header_label = f"DEPARTEMEN {selected_bidang.upper()}" if selected_bidang != "Semua Bidang" else "SMART AUDIT MONITORING DASHBOARD - PT PELINDO SOLUSI MARITIM"
@@ -100,7 +134,7 @@ with c5:
     if st.button(f"OVERDUE (BD)\n\n{overdue} Belum TL", key="b_bd"):
         st.session_state.filter_status = "Overdue"
 
-# TERAPKAN FILTER STATUS KE DATA UTAMA (Agar grafik dan tabel ikut bereaksi)
+# TERAPKAN FILTER STATUS KE DATA UTAMA
 df_filtered = df_base.copy()
 if st.session_state.filter_status == "Selesai":
     df_filtered = df_base[df_base[col_status].str.contains("Selesai|SLS", case=False, na=False)]
@@ -114,19 +148,19 @@ st.markdown("---")
 
 # Konsistensi Warna Baku untuk Setiap Status
 color_map = {
-    'Selesai (SLS)': '#00BCD4',   # Biru Muda
+    'Selesai (SLS)': '#00BCD4',   
     'Selesai': '#00BCD4',
     'SLS': '#00BCD4',
-    'Evaluasi (EVAL)': '#FFCA28', # Kuning / Amber
+    'Evaluasi (EVAL)': '#FFCA28', 
     'Evaluasi': '#FFCA28',
     'EVAL': '#FFCA28',
-    'Overdue (BD)': '#FF7043',    # Oranye / Merah
+    'Overdue (BD)': '#FF7043',    
     'Overdue': '#FF7043',
     'BD': '#FF7043',
     'Belum TL': '#FF7043'
 }
 
-# Chart & Data (Menggunakan df_filtered agar ikut tersaring saat kartu diklik)
+# Chart & Data
 col_chart_bar, col_chart_pie = st.columns([3, 1.5])
 
 with col_chart_bar:
