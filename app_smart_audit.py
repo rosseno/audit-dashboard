@@ -25,16 +25,22 @@ st.markdown("""
     }
     .header-title { color: #ffffff; font-size: 24px; font-weight: 700; margin-bottom: 3px; }
     
-    /* Mengatur agar tombol KPI memanjang memenuhi kolom dan proporsional */
+    /* Memaksa elemen kolom tombol agar memenuhi lebar penuh */
+    .stColumn {
+        width: 100% !important;
+        flex: 1 !important;
+    }
+    /* Memperpanjang ukuran tombol kartu KPI */
     div.stButton > button {
         width: 100% !important;
-        height: 85px !important;
+        min-width: 100% !important;
+        height: 80px !important;
         background-color: #1e293b !important;
         color: white !important;
         border: 1px solid #334155 !important;
         border-radius: 8px !important;
         font-weight: bold !important;
-        padding: 10px !important;
+        font-size: 13px !important;
     }
     div.stButton > button:hover {
         border-color: #3b82f6 !important;
@@ -42,7 +48,6 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
-
 @st.cache_data
 def load_data():
     try:
