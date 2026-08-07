@@ -19,28 +19,18 @@ st.markdown("""
         background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
         padding: 20px;
         border-radius: 10px;
-        border-left: 5px solid #3b82f6;
         margin-bottom: 20px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
     }
-    .header-title { color: #ffffff; font-size: 24px; font-weight: 700; margin-bottom: 3px; }
-    
-    /* Memaksa elemen kolom tombol agar memenuhi lebar penuh */
-    .stColumn {
-        width: 100% !important;
-        flex: 1 !important;
-    }
-    /* Memperpanjang ukuran tombol kartu KPI */
+    /* Mengembalikan tampilan tombol ke mode standar yang lebih bersih */
     div.stButton > button {
-        width: 100% !important;
-        min-width: 100% !important;
-        height: 80px !important;
+        width: 100%;
+        height: 80px;
         background-color: #1e293b !important;
-        color: white !important;
+        color: #ffffff !important;
         border: 1px solid #334155 !important;
         border-radius: 8px !important;
-        font-weight: bold !important;
-        font-size: 13px !important;
+        font-weight: 600 !important;
+        font-size: 12px !important;
     }
     div.stButton > button:hover {
         border-color: #3b82f6 !important;
