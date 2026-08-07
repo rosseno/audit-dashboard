@@ -11,7 +11,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS agar tombol interaktif berubah wujud menjadi Kartu KPI yang lebar & rapi
+# Custom CSS untuk Kartu KPI Interaktif
 st.markdown("""
 <style>
     .main { background-color: #0e1117; }
@@ -25,7 +25,6 @@ st.markdown("""
     }
     .header-title { color: #ffffff; font-size: 24px; font-weight: 700; margin-bottom: 3px; }
     
-    /* Memaksa tombol Streamlit menjadi bentuk kartu interaktif yang lebar dan responsif */
     div.stButton > button {
         width: 100% !important;
         height: 85px !important;
@@ -72,7 +71,7 @@ df_filtered = df_filtered_periode[df_filtered_periode[col_bidang].astype(str) ==
 header_label = f"DEPARTEMEN {selected_bidang.upper()}" if selected_bidang != "Semua Bidang" else "SMART AUDIT MONITORING DASHBOARD - PT PELINDO SOLUSI MARITIM"
 st.markdown(f"""<div class="header-banner"><div class="header-title">📊 {header_label}</div></div>""", unsafe_allow_html=True)
 
-# KPI Interaktif (Bisa Diklik dan Tetap Rapi)
+# KPI Interaktif
 st.markdown("### 📈 Ringkasan Eksekutif KPI (Klik Kartu untuk Filter Status)")
 if 'filter_status' not in st.session_state: 
     st.session_state.filter_status = "Semua"
@@ -101,7 +100,10 @@ with c5:
     if st.button(f"OVERDUE (BD)\n\n{overdue} Belum TL", key="b_bd"):
         st.session_state.filter_status = "Overdue"
 
-# Logika Filter Berdasarkan Kartu yang Diklik
+# Salinan data untuk grafik sebelum difilter status (agar warna kategori master tetap terkunci)
+df_for_charts = df_filtered.copy()
+
+# Terapkan filter status untuk tabel detail data di bawah
 if st.session_state.filter_status == "Selesai":
     df_filtered = df_filtered[df_filtered[col_status].str.contains("Selesai|SLS", case=False, na=False)]
 elif st.session_state.filter_status == "Evaluasi":
@@ -112,19 +114,38 @@ elif st.session_state.filter_status == "Overdue":
 st.markdown(f"<p style='color: #3b82f6; font-size: 12px; margin-top: -10px;'>Status Filter Aktif: <b>{st.session_state.filter_status}</b></p>", unsafe_allow_html=True)
 st.markdown("---")
 
-# Chart & Data
-color_map = {'Selesai (SLS)': '#00CC96', 'Evaluasi (EVAL)': '#FFA15A', 'Overdue (BD)': '#EF553B', 'Belum TL': '#EF553B'}
+# Konsistensi Warna Baku untuk Setiap Status
+color_map = {
+    'Selesai (SLS)': '#00BCD4',   # Biru Muda
+    'Selesai': '#00BCD4',
+    'SLS': '#00BCD4',
+    'Evaluasi (EVAL)': '#FFCA28', # Kuning / Amber
+    'Evaluasi': '#FFCA28',
+    'EVAL': '#FFCA28',
+    'Overdue (BD)': '#FF7043',    # Oranye / Merah
+    'Overdue': '#FF7043',
+    'BD': '#FF7043',
+    'Belum TL': '#FF7043'
+}
+
+# Chart & Data (Menggunakan df_for_charts agar warna konsisten di pie/bar chart)
 col_chart_bar, col_chart_pie = st.columns([3, 1.5])
 
 with col_chart_bar:
-    df_chart = df_filtered.groupby([col_bidang, col_status]).size().reset_index(name='Jumlah')
-    fig_bar = px.bar(df_chart, x='Jumlah', y=col_bidang, color=col_status, orientation='h', barmode='stack', title="Progres Status per Bidang", color_discrete_map=color_map, template='plotly_dark')
+    df_chart = df_for_charts.groupby([col_bidang, col_status]).size().reset_index(name='Jumlah')
+    fig_bar = px.bar(
+        df_chart, x='Jumlah', y=col_bidang, color=col_status, orientation='h', barmode='stack', 
+        title="Progres Status per Bidang", color_discrete_map=color_map, template='plotly_dark'
+    )
     fig_bar.update_layout(height=300, margin=dict(l=0, r=10, t=30, b=0))
     st.plotly_chart(fig_bar, use_container_width=True)
 
 with col_chart_pie:
-    df_pie = df_filtered.groupby(col_status).size().reset_index(name='Total')
-    fig_pie = px.pie(df_pie, values='Total', names=col_status, hole=0.6, title="Proporsi Status", color=col_status, color_discrete_map=color_map, template='plotly_dark')
+    df_pie = df_for_charts.groupby(col_status).size().reset_index(name='Total')
+    fig_pie = px.pie(
+        df_pie, values='Total', names=col_status, hole=0.6, 
+        title="Proporsi Status", color=col_status, color_discrete_map=color_map, template='plotly_dark'
+    )
     fig_pie.update_layout(height=300, margin=dict(l=10, r=10, t=30, b=10), showlegend=False)
     st.plotly_chart(fig_pie, use_container_width=True)
 
