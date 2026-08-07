@@ -11,7 +11,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom Styling UI
+# Custom Styling UI (Membuat tombol kartu memanjang & rapat)
 st.markdown("""
 <style>
     .main { background-color: #0e1117; }
@@ -24,22 +24,21 @@ st.markdown("""
         box-shadow: 0 4px 6px rgba(0,0,0,0.3);
     }
     .header-title { color: #ffffff; font-size: 24px; font-weight: 700; margin-bottom: 3px; }
-    .header-subtitle { color: #94a3b8; font-size: 13px; }
     
-    /* Styling tombol agar mirip kartu dan responsif */
+    /* Mengatur agar tombol KPI memanjang memenuhi kolom dan proporsional */
     div.stButton > button {
-        width: 100%;
-        height: 100px;
-        background-color: #1e293b;
-        color: white;
-        border: 1px solid #334155;
-        border-radius: 8px;
-        font-weight: bold;
-        transition: 0.3s;
+        width: 100% !important;
+        height: 85px !important;
+        background-color: #1e293b !important;
+        color: white !important;
+        border: 1px solid #334155 !important;
+        border-radius: 8px !important;
+        font-weight: bold !important;
+        padding: 10px !important;
     }
     div.stButton > button:hover {
-        border-color: #3b82f6;
-        background-color: #2d3a4f;
+        border-color: #3b82f6 !important;
+        background-color: #2d3a4f !important;
     }
 </style>
 """, unsafe_allow_html=True)
