@@ -11,7 +11,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom Styling UI (Desain Kartu Elegan & Proporsional)
+# Custom CSS agar tombol interaktif berubah wujud menjadi Kartu KPI yang lebar & rapi
 st.markdown("""
 <style>
     .main { background-color: #0e1117; }
@@ -25,13 +25,23 @@ st.markdown("""
     }
     .header-title { color: #ffffff; font-size: 24px; font-weight: 700; margin-bottom: 3px; }
     
-    /* Styling Kartu KPI yang Rapih dan Lebar */
-    .kpi-card {
-        background-color: #1e293b;
-        border-radius: 8px;
-        padding: 12px 15px;
-        border: 1px solid #334155;
+    /* Memaksa tombol Streamlit menjadi bentuk kartu interaktif yang lebar dan responsif */
+    div.stButton > button {
+        width: 100% !important;
+        height: 85px !important;
+        background-color: #1e293b !important;
+        color: #ffffff !important;
+        border: 1px solid #334155 !important;
+        border-radius: 8px !important;
+        font-weight: bold !important;
+        padding: 8px !important;
+        text-align: left !important;
         box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        transition: 0.2s ease-in-out;
+    }
+    div.stButton > button:hover {
+        border-color: #3b82f6 !important;
+        background-color: #253348 !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -62,8 +72,10 @@ df_filtered = df_filtered_periode[df_filtered_periode[col_bidang].astype(str) ==
 header_label = f"DEPARTEMEN {selected_bidang.upper()}" if selected_bidang != "Semua Bidang" else "SMART AUDIT MONITORING DASHBOARD - PT PELINDO SOLUSI MARITIM"
 st.markdown(f"""<div class="header-banner"><div class="header-title">📊 {header_label}</div></div>""", unsafe_allow_html=True)
 
-# KPI Cards (Desain Lebar dan Proporsional)
-st.markdown("### 📈 Ringkasan Eksekutif KPI")
+# KPI Interaktif (Bisa Diklik dan Tetap Rapi)
+st.markdown("### 📈 Ringkasan Eksekutif KPI (Klik Kartu untuk Filter Status)")
+if 'filter_status' not in st.session_state: 
+    st.session_state.filter_status = "Semua"
 
 col_status = "Status" if "Status" in df_filtered.columns else "Status_TL"
 total_temuan = len(df_filtered)
@@ -71,52 +83,33 @@ selesai = len(df_filtered[df_filtered[col_status].str.contains("Selesai|SLS", ca
 evaluasi = len(df_filtered[df_filtered[col_status].str.contains("Evaluasi|EVAL", case=False, na=False)])
 overdue = len(df_filtered[df_filtered[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)])
 
-p_selesai = (selesai / total_temuan * 100) if total_temuan > 0 else 0
-p_evaluasi = (evaluasi / total_temuan * 100) if total_temuan > 0 else 0
-p_overdue = (overdue / total_temuan * 100) if total_temuan > 0 else 0
-
 c1, c2, c3, c4, c5 = st.columns(5)
 
 with c1:
-    st.markdown(f"""
-    <div class="kpi-card" style="border-top: 3px solid #3b82f6;">
-        <span style="color: #94a3b8; font-size: 11px; font-weight: bold;">TOTAL TEMUAN</span>
-        <h3 style="color: #ffffff; margin: 2px 0 0 0; font-size: 22px;">{total_temuan}</h3>
-        <span style="color: #64748b; font-size: 10px;">Judul LHP Utama</span>
-    </div>""", unsafe_allow_html=True)
-
+    if st.button(f"TOTAL TEMUAN\n\n{total_temuan} (Semua)", key="b_all"):
+        st.session_state.filter_status = "Semua"
 with c2:
-    st.markdown(f"""
-    <div class="kpi-card" style="border-top: 3px solid #8b5cf6;">
-        <span style="color: #94a3b8; font-size: 11px; font-weight: bold;">POIN REKOMENDASI</span>
-        <h3 style="color: #ffffff; margin: 2px 0 0 0; font-size: 22px;">{total_temuan}</h3>
-        <span style="color: #64748b; font-size: 10px;">Butir Granular</span>
-    </div>""", unsafe_allow_html=True)
-
+    if st.button(f"POIN REKOMENDASI\n\n{total_temuan} (Total)", key="b_rec"):
+        st.session_state.filter_status = "Semua"
 with c3:
-    st.markdown(f"""
-    <div class="kpi-card" style="border-top: 3px solid #00CC96;">
-        <span style="color: #00CC96; font-size: 11px; font-weight: bold;">🟢 SELESAI (SLS)</span>
-        <h3 style="color: #ffffff; margin: 2px 0 0 0; font-size: 22px;">{selesai}</h3>
-        <span style="color: #00CC96; font-size: 10px;">{p_selesai:.1f}% dari Total</span>
-    </div>""", unsafe_allow_html=True)
-
+    if st.button(f"SELESAI (SLS)\n\n{selesai} Selesai", key="b_sls"):
+        st.session_state.filter_status = "Selesai"
 with c4:
-    st.markdown(f"""
-    <div class="kpi-card" style="border-top: 3px solid #FFA15A;">
-        <span style="color: #FFA15A; font-size: 11px; font-weight: bold;">🟡 EVALUASI (EVAL)</span>
-        <h3 style="color: #ffffff; margin: 2px 0 0 0; font-size: 22px;">{evaluasi}</h3>
-        <span style="color: #FFA15A; font-size: 10px;">{p_evaluasi:.1f}% Dalam Proses</span>
-    </div>""", unsafe_allow_html=True)
-
+    if st.button(f"EVALUASI (EVAL)\n\n{evaluasi} Proses", key="b_eval"):
+        st.session_state.filter_status = "Evaluasi"
 with c5:
-    st.markdown(f"""
-    <div class="kpi-card" style="border-top: 3px solid #EF553B;">
-        <span style="color: #EF553B; font-size: 11px; font-weight: bold;">🔴 OVERDUE (BD)</span>
-        <h3 style="color: #ffffff; margin: 2px 0 0 0; font-size: 22px;">{overdue}</h3>
-        <span style="color: #EF553B; font-size: 10px;">{p_overdue:.1f}% Belum TL</span>
-    </div>""", unsafe_allow_html=True)
+    if st.button(f"OVERDUE (BD)\n\n{overdue} Belum TL", key="b_bd"):
+        st.session_state.filter_status = "Overdue"
 
+# Logika Filter Berdasarkan Kartu yang Diklik
+if st.session_state.filter_status == "Selesai":
+    df_filtered = df_filtered[df_filtered[col_status].str.contains("Selesai|SLS", case=False, na=False)]
+elif st.session_state.filter_status == "Evaluasi":
+    df_filtered = df_filtered[df_filtered[col_status].str.contains("Evaluasi|EVAL", case=False, na=False)]
+elif st.session_state.filter_status == "Overdue":
+    df_filtered = df_filtered[df_filtered[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)]
+
+st.markdown(f"<p style='color: #3b82f6; font-size: 12px; margin-top: -10px;'>Status Filter Aktif: <b>{st.session_state.filter_status}</b></p>", unsafe_allow_html=True)
 st.markdown("---")
 
 # Chart & Data
