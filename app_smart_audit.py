@@ -55,7 +55,7 @@ def load_data():
 df_master = load_data()
 PIN_ADMIN = "1234"
 
-# Sidebar Filters
+# Sidebar Filters (Periode & Bidang)
 st.sidebar.markdown("## 🎯 Filter Control Panel")
 col_periode = "Tahun Audit" if "Tahun Audit" in df_master.columns else df_master.columns[3]
 selected_periode = st.sidebar.selectbox("📅 Periode Audit:", ["Semua Periode"] + sorted(list(df_master[col_periode].dropna().astype(str).unique())))
@@ -65,22 +65,22 @@ df_filtered_periode = df_master[df_master[col_periode].astype(str) == str(select
 col_bidang = "Bidang" if "Bidang" in df_master.columns else df_master.columns[5]
 selected_bidang = st.sidebar.selectbox("📂 Bidang Workgroup:", ["Semua Bidang"] + sorted(list(df_filtered_periode[col_bidang].dropna().astype(str).unique())))
 
-df_filtered = df_filtered_periode[df_filtered_periode[col_bidang].astype(str) == str(selected_bidang)] if selected_bidang != "Semua Bidang" else df_filtered_periode.copy()
+df_base = df_filtered_periode[df_filtered_periode[col_bidang].astype(str) == str(selected_bidang)] if selected_bidang != "Semua Bidang" else df_filtered_periode.copy()
 
 # Header
 header_label = f"DEPARTEMEN {selected_bidang.upper()}" if selected_bidang != "Semua Bidang" else "SMART AUDIT MONITORING DASHBOARD - PT PELINDO SOLUSI MARITIM"
 st.markdown(f"""<div class="header-banner"><div class="header-title">📊 {header_label}</div></div>""", unsafe_allow_html=True)
 
-# KPI Interaktif
+# KPI Interaktif (Tombol Kartu)
 st.markdown("### 📈 Ringkasan Eksekutif KPI (Klik Kartu untuk Filter Status)")
 if 'filter_status' not in st.session_state: 
     st.session_state.filter_status = "Semua"
 
-col_status = "Status" if "Status" in df_filtered.columns else "Status_TL"
-total_temuan = len(df_filtered)
-selesai = len(df_filtered[df_filtered[col_status].str.contains("Selesai|SLS", case=False, na=False)])
-evaluasi = len(df_filtered[df_filtered[col_status].str.contains("Evaluasi|EVAL", case=False, na=False)])
-overdue = len(df_filtered[df_filtered[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)])
+col_status = "Status" if "Status" in df_base.columns else "Status_TL"
+total_temuan = len(df_base)
+selesai = len(df_base[df_base[col_status].str.contains("Selesai|SLS", case=False, na=False)])
+evaluasi = len(df_base[df_base[col_status].str.contains("Evaluasi|EVAL", case=False, na=False)])
+overdue = len(df_base[df_base[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)])
 
 c1, c2, c3, c4, c5 = st.columns(5)
 
@@ -100,16 +100,14 @@ with c5:
     if st.button(f"OVERDUE (BD)\n\n{overdue} Belum TL", key="b_bd"):
         st.session_state.filter_status = "Overdue"
 
-# Salinan data untuk grafik sebelum difilter status (agar warna kategori master tetap terkunci)
-df_for_charts = df_filtered.copy()
-
-# Terapkan filter status untuk tabel detail data di bawah
+# TERAPKAN FILTER STATUS KE DATA UTAMA (Agar grafik dan tabel ikut bereaksi)
+df_filtered = df_base.copy()
 if st.session_state.filter_status == "Selesai":
-    df_filtered = df_filtered[df_filtered[col_status].str.contains("Selesai|SLS", case=False, na=False)]
+    df_filtered = df_base[df_base[col_status].str.contains("Selesai|SLS", case=False, na=False)]
 elif st.session_state.filter_status == "Evaluasi":
-    df_filtered = df_filtered[df_filtered[col_status].str.contains("Evaluasi|EVAL", case=False, na=False)]
+    df_filtered = df_base[df_base[col_status].str.contains("Evaluasi|EVAL", case=False, na=False)]
 elif st.session_state.filter_status == "Overdue":
-    df_filtered = df_filtered[df_filtered[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)]
+    df_filtered = df_base[df_base[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)]
 
 st.markdown(f"<p style='color: #3b82f6; font-size: 12px; margin-top: -10px;'>Status Filter Aktif: <b>{st.session_state.filter_status}</b></p>", unsafe_allow_html=True)
 st.markdown("---")
@@ -128,11 +126,11 @@ color_map = {
     'Belum TL': '#FF7043'
 }
 
-# Chart & Data (Menggunakan df_for_charts agar warna konsisten di pie/bar chart)
+# Chart & Data (Menggunakan df_filtered agar ikut tersaring saat kartu diklik)
 col_chart_bar, col_chart_pie = st.columns([3, 1.5])
 
 with col_chart_bar:
-    df_chart = df_for_charts.groupby([col_bidang, col_status]).size().reset_index(name='Jumlah')
+    df_chart = df_filtered.groupby([col_bidang, col_status]).size().reset_index(name='Jumlah')
     fig_bar = px.bar(
         df_chart, x='Jumlah', y=col_bidang, color=col_status, orientation='h', barmode='stack', 
         title="Progres Status per Bidang", color_discrete_map=color_map, template='plotly_dark'
@@ -141,7 +139,7 @@ with col_chart_bar:
     st.plotly_chart(fig_bar, use_container_width=True)
 
 with col_chart_pie:
-    df_pie = df_for_charts.groupby(col_status).size().reset_index(name='Total')
+    df_pie = df_filtered.groupby(col_status).size().reset_index(name='Total')
     fig_pie = px.pie(
         df_pie, values='Total', names=col_status, hole=0.6, 
         title="Proporsi Status", color=col_status, color_discrete_map=color_map, template='plotly_dark'
