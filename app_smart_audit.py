@@ -236,12 +236,86 @@ st.markdown("---")
 
 color_map = {'Selesai': '#00BCD4', 'SLS': '#00BCD4', 'Evaluasi': '#FFCA28', 'EVAL': '#FFCA28', 'Overdue': '#FF7043', 'BD': '#FF7043', 'Belum TL': '#FF7043'}
 
-# --- TAB VISUALISASI & TABEL REKAPITULASI MATRIKS ---
-tab_grafik1, tab_tabel_rekap, tab_grafik2 = st.tabs([
-    "📊 Progres Status & Sebaran", 
-    "📑 Tabel Rekapitulasi Matriks Audit", 
-    "📉 Grafik Tren Perbandingan Antar Tahun"
-])
+# --- TABEL REKAPITULASI MATRIKS AUDIT (DITAMPILKAN LANGSUNG DI ATAS GRAFIK) ---
+st.markdown("### 📑 Rekapitulasi Matriks Tindak Lanjut Hasil Audit")
+if not df_base.empty:
+    summary_rows = []
+    unique_bidang = sorted(df_base[col_bidang].dropna().astype(str).unique())
+    
+    tot_t = 0
+    tot_r = 0
+    tot_sls = 0
+    tot_eval = 0
+    tot_bd = 0
+    
+    for idx, b in enumerate(unique_bidang):
+        df_b = df_base[df_base[col_bidang].astype(str) == b]
+        j_t = len(df_b)
+        j_r = j_t 
+        j_sls = len(df_b[df_b[col_status].str.contains("Selesai|SLS", case=False, na=False)])
+        j_eval = len(df_b[df_b[col_status].str.contains("Evaluasi|EVAL", case=False, na=False)])
+        j_bd = len(df_b[df_b[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)])
+        
+        tot_t += j_t
+        tot_r += j_r
+        tot_sls += j_sls
+        tot_eval += j_eval
+        tot_bd += j_bd
+        
+        summary_rows.append({
+            "Objek Audit": f"{chr(65+idx)}. Bidang {b}",
+            "Jumlah Temuan": j_t,
+            "Jumlah Rekomendasi": j_r,
+            "Selesai (SLS)": j_sls,
+            "Belum Sesuai (BS)": j_eval,
+            "Belum Ditindaklanjuti (BD)": j_bd,
+            "TPTD": 0
+        })
+        
+    df_summary = pd.DataFrame(summary_rows)
+    
+    row_jumlah = {
+        "Objek Audit": "JUMLAH",
+        "Jumlah Temuan": tot_t,
+        "Jumlah Rekomendasi": tot_r,
+        "Selesai (SLS)": tot_sls,
+        "Belum Sesuai (BS)": tot_eval,
+        "Belum Ditindaklanjuti (BD)": tot_bd,
+        "TPTD": 0
+    }
+    
+    p_sls = f"{(tot_sls/tot_r)*100:.2f}" if tot_r > 0 else "0.00"
+    p_eval = f"{(tot_eval/tot_r)*100:.2f}" if tot_r > 0 else "0.00"
+    p_bd = f"{(tot_bd/tot_r)*100:.2f}" if tot_r > 0 else "0.00"
+    
+    row_progres = {
+        "Objek Audit": "PROGRES (%)",
+        "Jumlah Temuan": "",
+        "Jumlah Rekomendasi": "",
+        "Selesai (SLS)": p_sls,
+        "Belum Sesuai (BS)": p_eval,
+        "Belum Ditindaklanjuti (BD)": p_bd,
+        "TPTD": "0"
+    }
+    
+    df_summary = pd.concat([df_summary, pd.DataFrame([row_jumlah, row_progres])], ignore_index=True)
+
+    def style_summary_rows(row):
+        if row["Objek Audit"] == "JUMLAH":
+            return ['background-color: #1e3a8a; color: white; font-weight: bold; text-align: left' if idx == 0 else 'background-color: #1e3a8a; color: white; font-weight: bold; text-align: center' for idx in range(len(row))]
+        elif row["Objek Audit"] == "PROGRES (%)":
+            return ['background-color: #0f766e; color: white; font-weight: bold; text-align: left' if idx == 0 else 'background-color: #0f766e; color: white; font-weight: bold; text-align: center' for idx in range(len(row))]
+        return ['text-align: left' if idx == 0 else 'text-align: center' for idx in range(len(row))]
+
+    styled_summary = df_summary.style.apply(style_summary_rows, axis=1)
+    st.dataframe(styled_summary, use_container_width=True, hide_index=True)
+else:
+    st.info("Tidak ada data untuk ditampilkan dalam matriks rekapitulasi.")
+
+st.markdown("---")
+
+# --- VISUALISASI GRAFIK (DI BAWAH TABEL REKAPITULASI) ---
+tab_grafik1, tab_grafik2 = st.tabs(["📊 Visualisasi Grafik Progres & Sebaran", "📉 Grafik Tren Perbandingan Antar Tahun"])
 
 with tab_grafik1:
     col_chart_bar, col_chart_pie = st.columns([3, 1.5])
@@ -257,90 +331,6 @@ with tab_grafik1:
             fig_pie = px.pie(df_pie, values='Total', names=col_status, hole=0.6, title="Proporsi Status", color=col_status, color_discrete_map=color_map, template='plotly_dark')
             fig_pie.update_layout(height=300, margin=dict(l=10, r=10, t=30, b=10), showlegend=False)
             st.plotly_chart(fig_pie, use_container_width=True)
-
-with tab_tabel_rekap:
-    st.markdown("#### 📑 Rekapitulasi Matriks Tindak Lanjut Hasil Audit")
-    if not df_base.empty:
-        summary_rows = []
-        unique_bidang = sorted(df_base[col_bidang].dropna().astype(str).unique())
-        
-        tot_t = 0
-        tot_r = 0
-        tot_sls = 0
-        tot_eval = 0
-        tot_bd = 0
-        
-        for idx, b in enumerate(unique_bidang):
-            df_b = df_base[df_base[col_bidang].astype(str) == b]
-            j_t = len(df_b)
-            j_r = j_t 
-            j_sls = len(df_b[df_b[col_status].str.contains("Selesai|SLS", case=False, na=False)])
-            j_eval = len(df_b[df_b[col_status].str.contains("Evaluasi|EVAL", case=False, na=False)])
-            j_bd = len(df_b[df_b[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)])
-            
-            tot_t += j_t
-            tot_r += j_r
-            tot_sls += j_sls
-            tot_eval += j_eval
-            tot_bd += j_bd
-            
-            summary_rows.append({
-                "Objek Audit": f"{chr(65+idx)}. Bidang {b}",
-                "Jumlah Temuan": j_t,
-                "Jumlah Rekomendasi": j_r,
-                "Selesai (SLS)": j_sls,
-                "Belum Sesuai (BS)": j_eval,
-                "Belum Ditindaklanjuti (BD)": j_bd,
-                "TPTD": 0
-            })
-            
-        df_summary = pd.DataFrame(summary_rows)
-        
-        row_jumlah = {
-            "Objek Audit": "JUMLAH",
-            "Jumlah Temuan": tot_t,
-            "Jumlah Rekomendasi": tot_r,
-            "Selesai (SLS)": tot_sls,
-            "Belum Sesuai (BS)": tot_eval,
-            "Belum Ditindaklanjuti (BD)": tot_bd,
-            "TPTD": 0
-        }
-        
-        p_sls = f"{(tot_sls/tot_r)*100:.2f}" if tot_r > 0 else "0.00"
-        p_eval = f"{(tot_eval/tot_r)*100:.2f}" if tot_r > 0 else "0.00"
-        p_bd = f"{(tot_bd/tot_r)*100:.2f}" if tot_r > 0 else "0.00"
-        
-        row_progres = {
-            "Objek Audit": "PROGRES (%)",
-            "Jumlah Temuan": "",
-            "Jumlah Rekomendasi": "",
-            "Selesai (SLS)": p_sls,
-            "Belum Sesuai (BS)": p_eval,
-            "Belum Ditindaklanjuti (BD)": p_bd,
-            "TPTD": "0"
-        }
-        
-        df_summary = pd.concat([df_summary, pd.DataFrame([row_jumlah, row_progres])], ignore_index=True)
-        
-        # Konfigurasi alignment styling pandas agar seluruh kolom angka berada persis di tengah
-        def style_center_alignment(df):
-            return pd.DataFrame(
-                [['text-align: left' if i == 0 else 'text-align: center' for i in range(len(df.columns))] for _ in range(len(df))],
-                index=df.index,
-                columns=df.columns
-            )
-
-        def style_summary_rows(row):
-            if row["Objek Audit"] == "JUMLAH":
-                return ['background-color: #1e3a8a; color: white; font-weight: bold; text-align: left' if idx == 0 else 'background-color: #1e3a8a; color: white; font-weight: bold; text-align: center' for idx in range(len(row))]
-            elif row["Objek Audit"] == "PROGRES (%)":
-                return ['background-color: #0f766e; color: white; font-weight: bold; text-align: left' if idx == 0 else 'background-color: #0f766e; color: white; font-weight: bold; text-align: center' for idx in range(len(row))]
-            return ['text-align: left' if idx == 0 else 'text-align: center' for idx in range(len(row))]
-
-        styled_summary = df_summary.style.apply(style_summary_rows, axis=1)
-        st.dataframe(styled_summary, use_container_width=True, hide_index=True)
-    else:
-        st.info("Tidak ada data untuk ditampilkan dalam matriks rekapitulasi.")
 
 with tab_grafik2:
     st.markdown("#### Analisis Komparasi Temuan & Penyelesaian Antar Tahun")
