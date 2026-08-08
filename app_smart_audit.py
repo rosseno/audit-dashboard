@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-import os
 import io
 
 st.set_page_config(
@@ -12,7 +11,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS untuk Kartu KPI Interaktif
+# Custom CSS untuk Kartu KPI Interaktif & Tombol Tautan
 st.markdown("""
 <style>
     .main { background-color: #0e1117; }
@@ -81,10 +80,6 @@ access_role = st.sidebar.selectbox(
 
 if 'admin_logged_in' not in st.session_state:
     st.session_state.admin_logged_in = False
-
-# Simpan riwayat upload bukti dukung sementara dalam session state
-if 'uploaded_evidences' not in st.session_state:
-    st.session_state.uploaded_evidences = []
 
 role_title = "SMART AUDIT MONITORING DASHBOARD - PT PELINDO SOLUSI MARITIM"
 
@@ -228,37 +223,21 @@ with col_chart_pie:
 st.markdown("### 📋 Detail Data Temuan")
 st.dataframe(df_filtered, use_container_width=True)
 
-# --- FITUR TAMBAHAN: FORM UPLOAD BUKTI DUKUNG (KHUSUS AUDITEE & ADMIN) ---
-if access_role in ["Auditee", "Admin SPI"] and not df_base.empty:
+# --- INTEGRASI GOOGLE FORM / GOOGLE DRIVE (KHUSUS AUDITEE & ADMIN) ---
+if access_role in ["Auditee", "Admin SPI"]:
     st.markdown("---")
-    st.markdown("### 📤 Form Upload Bukti Dukung Tindak Lanjut (Evidence)")
-    st.info("💡 Gunakan form ini untuk mengunggah dokumen pendukung / bukti penyelesaian (format PDF / Foto) untuk dikirimkan kepada tim SPI.")
-
-    col_id_temuan = "ID Temuan" if "ID Temuan" in df_base.columns else df_base.columns[1]
-    list_temuan_ids = df_base[col_id_temuan].dropna().astype(str).tolist()
-
-    with st.form("form_upload_evidence"):
-        selected_temuan_upload = st.selectbox("Pilih ID Temuan Terkait:", list_temuan_ids)
-        keterangan_tindakan = st.text_area("Keterangan Tindak Lanjut / Catatan Penyelesaian:")
-        uploaded_file = st.file_uploader("Unggah Dokumen Evidence (Format: PDF / Foto JPG/PNG):", type=["pdf", "png", "jpg", "jpeg"])
-        
-        submit_upload = st.form_submit_button("Kirim Bukti Dukung ke SPI")
-
-        if submit_upload:
-            if uploaded_file is not None:
-                # Simpan data sementara ke session state riwayat upload
-                st.session_state.uploaded_evidences.append({
-                    "Bidang": selected_bidang if 'selected_bidang' in locals() else access_role,
-                    "ID Temuan": selected_temuan_upload,
-                    "Keterangan": keterangan_tindakan,
-                    "Nama File": uploaded_file.name
-                })
-                st.success(f"Berhasil! Dokumen '{uploaded_file.name}' untuk temuan {selected_temuan_upload} telah dikirim ke SPI.")
-            else:
-                st.warning("Mohon lampirkan file bukti dukung terlebih dahulu sebelum menekan tombol kirim.")
-
-    # Tampilkan daftar riwayat file yang sudah diunggah pada sesi ini
-    if st.session_state.uploaded_evidences:
-        st.markdown("#### 📁 Riwayat Dokumen yang Telah Diunggah:")
-        df_ev = pd.DataFrame(st.session_state.uploaded_evidences)
-        st.dataframe(df_ev, use_container_width=True)
+    st.markdown("### 📤 Pengunggahan Bukti Dukung (Evidence) Tindak Lanjut")
+    st.info("💡 Klik tautan di bawah ini untuk mengunggah dokumen bukti penyelesaian temuan audit. File akan langsung tersimpan secara aman ke Google Drive SPI.")
+    
+    # Tombol Tautan Langsung ke Google Form
+    google_form_url = "https://docs.google.com/forms/d/e/1FAIpQLSczUxjVMZqcduSy704OVRGvIRga1LhQDAkJKoUkDUn6Aez82A/viewform"
+    st.markdown(
+        f"""
+        <a href="{google_form_url}" target="_blank">
+            <div style="display: inline-block; background-color: #3b82f6; color: white; padding: 12px 24px; border-radius: 8px; font-weight: bold; text-decoration: none; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
+                🚀 Buka Formulir Upload Bukti Dukung (Google Drive)
+            </div>
+        </a>
+        """,
+        unsafe_allow_html=True
+    )
