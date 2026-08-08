@@ -204,9 +204,13 @@ with col_chart_pie:
         fig_pie.update_layout(height=300, margin=dict(l=10, r=10, t=30, b=10), showlegend=False)
         st.plotly_chart(fig_pie, use_container_width=True)
 
-# Tampilan Tabel Temuan dilengkapi Kolom Verifikasi & Catatan Auditor agar Auditee bisa langsung melihat
+# --- RINGKAS KOLOM TABEL UTAMA ---
+# Kolom yang ingin disembunyikan agar tabel lebih ringkas
+columns_to_drop = ["Tahun Audit", "Nama Entitas", "Tingkat Risiko", "Prioritas", "Tag Kata Kunci (#Preventif)"]
+df_table_display = df_filtered.drop(columns=[col for col in columns_to_drop if col in df_filtered.columns])
+
 st.markdown("### 📋 Detail Data Temuan & Respon Auditor")
-st.dataframe(df_filtered, use_container_width=True)
+st.dataframe(df_table_display, use_container_width=True)
 
 # --- PANEL KHUSUS ADMIN SPI UNTUK INPUT VERIFIKASI ---
 if access_role == "Admin SPI" and st.session_state.admin_logged_in:
