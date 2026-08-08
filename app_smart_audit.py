@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS untuk card rapat dengan garis aksen warna di atas
+# Custom CSS untuk card KPI modern dengan border warna di atas
 st.markdown("""
 <style>
     .main { background-color: #0e1117; }
@@ -27,7 +27,7 @@ st.markdown("""
     .header-title { color: #ffffff; font-size: 22px; font-weight: 700; }
     .header-subtitle { color: #94a3b8; font-size: 13px; margin-top: 5px; }
 
-    /* Styling Card KPI yang rapat dan elegan */
+    /* Styling Card KPI dengan Border Aksen di Atas */
     div.stButton > button {
         width: 100% !important;
         height: 105px !important;
@@ -37,7 +37,7 @@ st.markdown("""
         border-radius: 8px !important;
         font-weight: bold !important;
         text-align: left !important;
-        padding: 14px 16px !important;
+        padding: 12px 14px !important;
         box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         transition: 0.2s ease-in-out;
     }
@@ -46,6 +46,13 @@ st.markdown("""
         background-color: #1f242c !important;
         transform: translateY(-2px);
     }
+    
+    /* Warna Aksen Garis Atas Khusus Tiap Card */
+    div[data-testid="column"]:nth-of-type(1) div.stButton > button { border-top: 3px solid #3b82f6 !important; }
+    div[data-testid="column"]:nth-of-type(2) div.stButton > button { border-top: 3px solid #8b5cf6 !important; }
+    div[data-testid="column"]:nth-of-type(3) div.stButton > button { border-top: 3px solid #10b981 !important; }
+    div[data-testid="column"]:nth-of-type(4) div.stButton > button { border-top: 3px solid #f59e0b !important; }
+    div[data-testid="column"]:nth-of-type(5) div.stButton > button { border-top: 3px solid #ef4444 !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -146,7 +153,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# KPI Interaktif ala Card Modern yang Rapat
+# KPI Interaktif ala Card Modern
 st.markdown("### 📈 Ringkasan Eksekutif KPI")
 if 'filter_status' not in st.session_state: 
     st.session_state.filter_status = "Semua"
@@ -160,21 +167,20 @@ pct_selesai = f"{(selesai/total_temuan)*100:.1f}% dari Total" if total_temuan > 
 pct_eval = f"{(evaluasi/total_temuan)*100:.1f}% Dalam Proses" if total_temuan > 0 else "0%"
 pct_overdue = f"{(overdue/total_temuan)*100:.1f}% Belum TL" if total_temuan > 0 else "0%"
 
-# Menggunakan pembagian kolom rapat dengan HTML border atas berwarna
-c1, c2, c3, c4, c5 = st.columns(5)
-with c1:
+cols = st.columns(5)
+with cols[0]:
     if st.button(f"TOTAL TEMUAN\n\n  {total_temuan}\nJudul LHP Utama", key="b_all"):
         st.session_state.filter_status = "Semua"
-with c2:
+with cols[1]:
     if st.button(f"POIN REKOMENDASI\n\n  {total_temuan}\nButir Granular", key="b_rec"):
         st.session_state.filter_status = "Semua"
-with c3:
+with cols[2]:
     if st.button(f"🟢 SELESAI (SLS)\n\n  {selesai}\n{pct_selesai}", key="b_sls"):
         st.session_state.filter_status = "Selesai"
-with c4:
+with cols[3]:
     if st.button(f"🟡 EVALUASI (EVAL)\n\n  {evaluasi}\n{pct_eval}", key="b_eval"):
         st.session_state.filter_status = "Evaluasi"
-with c5:
+with cols[4]:
     if st.button(f"🔴 OVERDUE (BD)\n\n  {overdue}\n{pct_overdue}", key="b_bd"):
         st.session_state.filter_status = "Overdue"
 
