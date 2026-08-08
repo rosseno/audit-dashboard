@@ -204,13 +204,25 @@ with col_chart_pie:
         fig_pie.update_layout(height=300, margin=dict(l=10, r=10, t=30, b=10), showlegend=False)
         st.plotly_chart(fig_pie, use_container_width=True)
 
-# --- RINGKAS KOLOM TABEL UTAMA ---
-# Kolom yang ingin disembunyikan agar tabel lebih ringkas
-columns_to_drop = ["Tahun Audit", "Nama Entitas", "Tingkat Risiko", "Prioritas", "Tag Kata Kunci (#Preventif)"]
-df_table_display = df_filtered.drop(columns=[col for col in columns_to_drop if col in df_filtered.columns])
+# --- PROSES GABUNG / RINGKAS BERDASARKAN JUDUL TEMUAN ---
+col_judul = "Judul Temuan Audit" if "Judul Temuan Audit" in df_filtered.columns else df_filtered.columns[6]
+col_rekomendasi = "Rekomendasi Utama / Tindak Lanjut" if "Rekomendasi Utama / Tindak Lanjut" in df_filtered.columns else df_filtered.columns[8]
 
-st.markdown("### 📋 Detail Data Temuan & Respon Auditor")
-st.dataframe(df_table_display, use_container_width=True)
+if not df_filtered.empty and col_judul in df_filtered.columns and col_rekomendasi in df_filtered.columns:
+    # Menggabungkan rekomendasi berdasarkan Judul Temuan yang sama menggunakan bullet points
+    df_grouped = df_filtered.groupby([col_bidang, col_judul]).agg({
+        "ID Temuan": lambda x: ", ".join(x.dropna().astype(str).unique()),
+        col_rekomendasi: lambda x: "<br>• " + "<br>• ".join(x.dropna().astype(str)),
+        col_status: lambda x: x.iloc[0],
+        "Verifikasi_Auditor": lambda x: x.iloc[0],
+        "Catatan_Auditor": lambda x: x.iloc[0]
+    }).reset_index()
+else:
+    df_grouped = df_filtered.copy()
+
+st.markdown("### 📋 Detail Ringkasan Temuan & Rekomendasi Tergabung")
+st.markdown("💡 *Catatan: Rekomendasi ganda pada judul temuan yang sama kini digabungkan secara otomatis dalam satu baris.*")
+st.dataframe(df_grouped, use_container_width=True, unsafe_allow_html=True)
 
 # --- PANEL KHUSUS ADMIN SPI UNTUK INPUT VERIFIKASI ---
 if access_role == "Admin SPI" and st.session_state.admin_logged_in:
