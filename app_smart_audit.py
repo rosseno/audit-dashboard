@@ -63,7 +63,6 @@ col_bidang = "Bidang" if "Bidang" in df_master.columns else df_master.columns[5]
 col_periode = "Tahun Audit" if "Tahun Audit" in df_master.columns else df_master.columns[3]
 col_status = "Status" if "Status" in df_master.columns else "Status_TL"
 
-# Pastikan kolom catatan auditor ada di dataframe
 if "Catatan_Auditor" not in df_master.columns:
     df_master["Catatan_Auditor"] = "-"
 
@@ -188,21 +187,35 @@ st.markdown("---")
 
 color_map = {'Selesai': '#00BCD4', 'SLS': '#00BCD4', 'Evaluasi': '#FFCA28', 'EVAL': '#FFCA28', 'Overdue': '#FF7043', 'BD': '#FF7043', 'Belum TL': '#FF7043'}
 
-col_chart_bar, col_chart_pie = st.columns([3, 1.5])
-with col_chart_bar:
-    if not df_filtered.empty:
-        df_chart = df_filtered.groupby([col_bidang, col_status]).size().reset_index(name='Jumlah')
-        fig_bar = px.bar(df_chart, x='Jumlah', y=col_bidang, color=col_status, orientation='h', barmode='stack', title="Progres Status per Bidang", color_discrete_map=color_map, template='plotly_dark')
-        fig_bar.update_layout(height=300, margin=dict(l=0, r=10, t=30, b=0))
-        st.plotly_chart(fig_bar, use_container_width=True)
-with col_chart_pie:
-    if not df_filtered.empty:
-        df_pie = df_filtered.groupby(col_status).size().reset_index(name='Total')
-        fig_pie = px.pie(df_pie, values='Total', names=col_status, hole=0.6, title="Proporsi Status", color=col_status, color_discrete_map=color_map, template='plotly_dark')
-        fig_pie.update_layout(height=300, margin=dict(l=10, r=10, t=30, b=10), showlegend=False)
-        st.plotly_chart(fig_pie, use_container_width=True)
+# --- GRAFIK UTAMA & GRAFIK TREN PERBANDINGAN TAHUNAN ---
+tab_grafik1, tab_grafik2 = st.tabs(["📊 Progres Status & Sebaran", "📉 Grafik Tren Perbandingan Antar Tahun"])
 
-# --- PENGATURAN KOLOM TABEL (HAPUS VERIFIKASI AUDITOR) ---
+with tab_grafik1:
+    col_chart_bar, col_chart_pie = st.columns([3, 1.5])
+    with col_chart_bar:
+        if not df_filtered.empty:
+            df_chart = df_filtered.groupby([col_bidang, col_status]).size().reset_index(name='Jumlah')
+            fig_bar = px.bar(df_chart, x='Jumlah', y=col_bidang, color=col_status, orientation='h', barmode='stack', title="Progres Status per Bidang", color_discrete_map=color_map, template='plotly_dark')
+            fig_bar.update_layout(height=300, margin=dict(l=0, r=10, t=30, b=0))
+            st.plotly_chart(fig_bar, use_container_width=True)
+    with col_chart_pie:
+        if not df_filtered.empty:
+            df_pie = df_filtered.groupby(col_status).size().reset_index(name='Total')
+            fig_pie = px.pie(df_pie, values='Total', names=col_status, hole=0.6, title="Proporsi Status", color=col_status, color_discrete_map=color_map, template='plotly_dark')
+            fig_pie.update_layout(height=300, margin=dict(l=10, r=10, t=30, b=10), showlegend=False)
+            st.plotly_chart(fig_pie, use_container_width=True)
+
+with tab_grafik2:
+    st.markdown("#### Analisis Komparasi Temuan & Penyelesaian Antar Tahun")
+    if col_periode in df_master.columns:
+        df_trend = df_master.groupby([col_periode, col_status]).size().reset_index(name='Jumlah')
+        fig_trend = px.bar(df_trend, x=col_periode, y='Jumlah', color=col_status, barmode='group', title="Tren Perbandingan Temuan Audit Berdasarkan Tahun", color_discrete_map=color_map, template='plotly_dark')
+        fig_trend.update_layout(height=350)
+        st.plotly_chart(fig_trend, use_container_width=True)
+    else:
+        st.info("Kolom periode tahun tidak ditemukan dalam dataset.")
+
+# --- PENGATURAN KOLOM TABEL UTAMA ---
 columns_to_drop = [
     "No", "Poin", "Tahun Audit", "Nama Entitas", "Tingkat Risiko", 
     "Prioritas", "Tag Kata Kunci (#Preventif)", 
@@ -214,6 +227,41 @@ df_table_display.insert(0, "No", range(1, len(df_table_display) + 1))
 
 st.markdown("### 📋 Detail Data Temuan & Rekomendasi")
 st.dataframe(df_table_display, use_container_width=True, hide_index=True)
+
+# --- FITUR EKSPOR LAPORAN KUSTOM (PDF / EXCEL) ---
+st.markdown("---")
+st.markdown("### 📥 Ekspor Laporan Ringkas (Untuk Rapat Direksi / Komite Audit)")
+col_exp1, col_exp2 = st.columns(2)
+
+with col_exp1:
+    # Tombol Ekspor Excel / CSV
+    csv_data = df_table_display.to_csv(index=False).encode('utf-8')
+    st.download_button(
+        label="📥 Download Rekapan Laporan (Format Excel/CSV)",
+        data=csv_data,
+        file_name=f"Laporan_Audit_{selected_periode}_{datetime.now().strftime('%Y%m%d')}.csv",
+        mime="text/csv",
+    )
+
+with col_exp2:
+    # Simulasi Ekspor Laporan Ringkas PDF Profesional untuk Komite Audit
+    def generate_summary_text_report():
+        report = f"=== LAPORAN EKSEKUTIF PENGAWASAN SPI ===\n"
+        report += f"Periode: {selected_periode}\n"
+        report += f"Tanggal Cetak: {datetime.now().strftime('%d-%m-%Y')}\n"
+        report += f"Total Temuan: {total_temuan}\n"
+        report += f"Selesai (SLS): {selesai}\n"
+        report += f"Dalam Evaluasi (EVAL): {evaluasi}\n"
+        report += f"Overdue (BD): {overdue}\n"
+        report += f"===========================================\n"
+        return report.encode('utf-8')
+
+    st.download_button(
+        label="📄 Download Laporan Ringkas (Format Siap Cetak PDF/TXT)",
+        data=generate_summary_text_report(),
+        file_name=f"Ringkasan_Eksekutif_Audit_{selected_periode}.txt",
+        mime="text/plain",
+    )
 
 # --- PANEL KHUSUS ADMIN SPI UNTUK INPUT VERIFIKASI ---
 if access_role == "Admin SPI" and st.session_state.admin_logged_in:
