@@ -209,10 +209,9 @@ col_judul = "Judul Temuan Audit" if "Judul Temuan Audit" in df_filtered.columns 
 col_rekomendasi = "Rekomendasi Utama / Tindak Lanjut" if "Rekomendasi Utama / Tindak Lanjut" in df_filtered.columns else df_filtered.columns[8]
 
 if not df_filtered.empty and col_judul in df_filtered.columns and col_rekomendasi in df_filtered.columns:
-    # Menggabungkan rekomendasi berdasarkan Judul Temuan yang sama menggunakan bullet points
     df_grouped = df_filtered.groupby([col_bidang, col_judul]).agg({
         "ID Temuan": lambda x: ", ".join(x.dropna().astype(str).unique()),
-        col_rekomendasi: lambda x: "<br>• " + "<br>• ".join(x.dropna().astype(str)),
+        col_rekomendasi: lambda x: " • " + "\n • ".join(x.dropna().astype(str)),
         col_status: lambda x: x.iloc[0],
         "Verifikasi_Auditor": lambda x: x.iloc[0],
         "Catatan_Auditor": lambda x: x.iloc[0]
@@ -222,7 +221,9 @@ else:
 
 st.markdown("### 📋 Detail Ringkasan Temuan & Rekomendasi Tergabung")
 st.markdown("💡 *Catatan: Rekomendasi ganda pada judul temuan yang sama kini digabungkan secara otomatis dalam satu baris.*")
-st.dataframe(df_grouped, use_container_width=True, unsafe_allow_html=True)
+
+# PERBAIKAN: Menghapus unsafe_allow_html=True agar tidak terjadi error
+st.dataframe(df_grouped, use_container_width=True)
 
 # --- PANEL KHUSUS ADMIN SPI UNTUK INPUT VERIFIKASI ---
 if access_role == "Admin SPI" and st.session_state.admin_logged_in:
