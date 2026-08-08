@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS untuk styling card KPI yang keren dan modern
+# Custom CSS untuk card rapat dengan garis aksen warna di atas
 st.markdown("""
 <style>
     .main { background-color: #0e1117; }
@@ -25,24 +25,25 @@ st.markdown("""
         box-shadow: 0 4px 6px rgba(0,0,0,0.3);
     }
     .header-title { color: #ffffff; font-size: 22px; font-weight: 700; }
-    
-    /* Styling Tombol agar menyerupai card modern */
+    .header-subtitle { color: #94a3b8; font-size: 13px; margin-top: 5px; }
+
+    /* Styling Card KPI yang rapat dan elegan */
     div.stButton > button {
         width: 100% !important;
-        height: 95px !important;
-        background-color: #1e293b !important;
+        height: 105px !important;
+        background-color: #161b22 !important;
         color: #ffffff !important;
-        border: 1px solid #334155 !important;
-        border-radius: 10px !important;
+        border: 1px solid #30363d !important;
+        border-radius: 8px !important;
         font-weight: bold !important;
         text-align: left !important;
-        padding: 12px 15px !important;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        padding: 14px 16px !important;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         transition: 0.2s ease-in-out;
     }
     div.stButton > button:hover {
-        border-color: #3b82f6 !important;
-        background-color: #253348 !important;
+        border-color: #58a6ff !important;
+        background-color: #1f242c !important;
         transform: translateY(-2px);
     }
 </style>
@@ -141,11 +142,12 @@ else:  # Admin SPI
 st.markdown("""
 <div class="header-banner">
     <div class="header-title">📊 SMART AUDIT MONITORING DASHBOARD - PT PELINDO SOLUSI MARITIM</div>
+    <div class="header-subtitle">Sistem Pemantauan Granular Hasil Audit Kepatuhan & Performansi — Internal Audit Unit</div>
 </div>
 """, unsafe_allow_html=True)
 
-# KPI Interaktif ala Card Modern
-st.markdown("### 📈 Ringkasan Eksekutif KPI (Klik Kartu untuk Filter Status)")
+# KPI Interaktif ala Card Modern yang Rapat
+st.markdown("### 📈 Ringkasan Eksekutif KPI")
 if 'filter_status' not in st.session_state: 
     st.session_state.filter_status = "Semua"
 
@@ -154,25 +156,25 @@ selesai = len(df_base[df_base[col_status].str.contains("Selesai|SLS", case=False
 evaluasi = len(df_base[df_base[col_status].str.contains("Evaluasi|EVAL", case=False, na=False)])
 overdue = len(df_base[df_base[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)])
 
-# Hitung persentase untuk sub-teks card
 pct_selesai = f"{(selesai/total_temuan)*100:.1f}% dari Total" if total_temuan > 0 else "0%"
 pct_eval = f"{(evaluasi/total_temuan)*100:.1f}% Dalam Proses" if total_temuan > 0 else "0%"
 pct_overdue = f"{(overdue/total_temuan)*100:.1f}% Belum TL" if total_temuan > 0 else "0%"
 
-cols = st.columns(5)
-with cols[0]:
+# Menggunakan pembagian kolom rapat dengan HTML border atas berwarna
+c1, c2, c3, c4, c5 = st.columns(5)
+with c1:
     if st.button(f"TOTAL TEMUAN\n\n  {total_temuan}\nJudul LHP Utama", key="b_all"):
         st.session_state.filter_status = "Semua"
-with cols[1]:
+with c2:
     if st.button(f"POIN REKOMENDASI\n\n  {total_temuan}\nButir Granular", key="b_rec"):
         st.session_state.filter_status = "Semua"
-with cols[2]:
+with c3:
     if st.button(f"🟢 SELESAI (SLS)\n\n  {selesai}\n{pct_selesai}", key="b_sls"):
         st.session_state.filter_status = "Selesai"
-with cols[3]:
+with c4:
     if st.button(f"🟡 EVALUASI (EVAL)\n\n  {evaluasi}\n{pct_eval}", key="b_eval"):
         st.session_state.filter_status = "Evaluasi"
-with cols[4]:
+with c5:
     if st.button(f"🔴 OVERDUE (BD)\n\n  {overdue}\n{pct_overdue}", key="b_bd"):
         st.session_state.filter_status = "Overdue"
 
@@ -184,7 +186,7 @@ elif st.session_state.filter_status == "Evaluasi":
 elif st.session_state.filter_status == "Overdue":
     df_filtered = df_base[df_base[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)]
 
-st.markdown(f"<p style='color: #3b82f6; font-size: 12px; margin-top: -5px;'>Status Filter Aktif: <b>{st.session_state.filter_status}</b></p>", unsafe_allow_html=True)
+st.markdown(f"<p style='color: #3b82f6; font-size: 12px; margin-top: 5px;'>Status Filter Aktif: <b>{st.session_state.filter_status}</b></p>", unsafe_allow_html=True)
 st.markdown("---")
 
 color_map = {'Selesai': '#00BCD4', 'SLS': '#00BCD4', 'Evaluasi': '#FFCA28', 'EVAL': '#FFCA28', 'Overdue': '#FF7043', 'BD': '#FF7043', 'Belum TL': '#FF7043'}
