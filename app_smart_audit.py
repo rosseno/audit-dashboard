@@ -62,10 +62,10 @@ col_periode = "Tahun Audit" if "Tahun Audit" in df_master.columns else df_master
 st.sidebar.markdown("## 🎯 Filter Control Panel")
 selected_periode = st.sidebar.selectbox("📅 Periode Audit:", ["Semua Periode"] + sorted(list(df_master[col_periode].dropna().astype(str).unique())))
 
-# Filter data berdasarkan periode terlebih dahulu, agar daftar bidang di bawahnya dinamis sesuai tahun
+# Filter data berdasarkan periode terlebih dahulu
 df_filtered_periode = df_master[df_master[col_periode].astype(str) == str(selected_periode)] if selected_periode != "Semua Periode" else df_master.copy()
 
-# Daftar bidang sekarang murni mengikuti data yang ada pada periode terpilih saja
+# Daftar bidang dinamis sesuai periode terpilih
 current_available_bidang = sorted(list(df_filtered_periode[col_bidang].dropna().astype(str).unique()))
 
 st.sidebar.markdown("---")
@@ -76,7 +76,7 @@ access_role = st.sidebar.selectbox(
         "Direktur Utama",
         "Direktur Operasi & Komersial",
         "Direktur Keuangan, SDM, HSSE, IT, PAP, Umum & RT",
-        "Auditee (Perorangan / Unit Lain)",
+        "Auditee",
         "Admin SPI (Full Access)"
     ]
 )
@@ -125,9 +125,8 @@ elif access_role == "Direktur Keuangan, SDM, HSSE, IT, PAP, Umum & RT":
     df_base = df_filtered_periode[df_filtered_periode[col_bidang].str.contains('|'.join(fin_choices), case=False, na=False)]
     role_title = f"DIREKTORAT KEUANGAN, SDM, HSSE, IT, PAP, UMUM & RT ({selected_periode})"
 
-elif access_role == "Auditee (Perorangan / Unit Lain)":
+elif access_role == "Auditee":
     st.sidebar.info("ℹ️ Pilih unit kerja Anda di periode ini:")
-    # Hanya menampilkan bidang yang aktif di tahun tersebut
     chosen_unit = st.sidebar.selectbox("Pilih Bidang:", current_available_bidang if current_available_bidang else ["Tidak ada data"])
     df_base = df_filtered_periode[df_filtered_periode[col_bidang].astype(str) == str(chosen_unit)]
     role_title = f"DEPARTEMEN {chosen_unit.upper()} ({selected_periode})"
