@@ -3,6 +3,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import io
+from datetime import datetime
 
 st.set_page_config(
     page_title="Executive Audit Dashboard - PT Pelindo Solusi Maritim",
@@ -11,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS untuk Kartu KPI Interaktif & Tombol Tautan
+# Custom CSS
 st.markdown("""
 <style>
     .main { background-color: #0e1117; }
@@ -52,11 +53,21 @@ def load_data():
     except:
         return pd.read_excel("Master_Database_Temuan_Audit_2024_2025_PSM_Ringkas.xlsx")
 
-df_master = load_data()
-PIN_ADMIN = "1234"  # <-- Ubah PIN Admin SPI di sini jika diperlukan
+if 'df_master' not in st.session_state:
+    st.session_state.df_master = load_data()
+
+df_master = st.session_state.df_master
+PIN_ADMIN = "1234"  # <-- PIN Admin SPI
 
 col_bidang = "Bidang" if "Bidang" in df_master.columns else df_master.columns[5]
 col_periode = "Tahun Audit" if "Tahun Audit" in df_master.columns else df_master.columns[3]
+col_status = "Status" if "Status" in df_master.columns else "Status_TL"
+
+# Pastikan kolom verifikasi auditor ada di dataframe
+if "Verifikasi_Auditor" not in df_master.columns:
+    df_master["Verifikasi_Auditor"] = "Belum Diverifikasi"
+if "Catatan_Auditor" not in df_master.columns:
+    df_master["Catatan_Auditor"] = "-"
 
 # --- SIDEBAR: PENGATURAN HAK AKSES & PERIODE ---
 st.sidebar.markdown("## 🎯 Filter Control Panel")
@@ -101,7 +112,6 @@ if access_role == "Admin SPI":
 
 # --- PEMETAAN DATA BERDASARKAN PERAN ---
 if access_role == "Direktur Utama":
-    st.sidebar.info("ℹ️ Mode Dirut: Meninjau seluruh bidang.")
     sub_choice = st.sidebar.selectbox("Tinjau Cakupan:", ["Semua Bidang (Keseluruhan)", "SPI", "Hukum", "Sekper", "Pengadaan"])
     if sub_choice == "Semua Bidang (Keseluruhan)":
         df_base = df_filtered_periode.copy()
@@ -111,19 +121,16 @@ if access_role == "Direktur Utama":
         role_title = f"DIREKTORAT UTAMA - {sub_choice.upper()} ({selected_periode})"
 
 elif access_role == "Direktur Operasi & Komersial":
-    st.sidebar.info("ℹ️ Portofolio: Operasi, Teknik, & Pemasaran.")
     ops_choices = ["Operasi", "Teknik", "Pemasaran"]
     df_base = df_filtered_periode[df_filtered_periode[col_bidang].str.contains('|'.join(ops_choices), case=False, na=False)]
     role_title = f"DIREKTORAT OPERASI & KOMERSIAL ({selected_periode})"
 
 elif access_role == "Direktur Keuangan, SDM, HSSE, IT, PAP, Umum & RT":
-    st.sidebar.info("ℹ️ Portofolio: Keuangan, SDM, HSSE, IT, PAP, Umum, dll.")
     fin_choices = ["Keuangan", "SDM", "HSSE", "IT", "PAP", "Umum", "Rumah Tangga"]
     df_base = df_filtered_periode[df_filtered_periode[col_bidang].str.contains('|'.join(fin_choices), case=False, na=False)]
     role_title = f"DIREKTORAT KEUANGAN, SDM, HSSE, IT, PAP, UMUM & RT ({selected_periode})"
 
 elif access_role == "Auditee":
-    st.sidebar.info("ℹ️ Pilih unit kerja Anda di periode ini:")
     chosen_unit = st.sidebar.selectbox("Pilih Bidang:", current_available_bidang if current_available_bidang else ["Tidak ada data"])
     df_base = df_filtered_periode[df_filtered_periode[col_bidang].astype(str) == str(chosen_unit)]
     role_title = f"DEPARTEMEN {chosen_unit.upper()} ({selected_periode})"
@@ -143,19 +150,17 @@ else:  # Admin SPI
 # Header Banner
 st.markdown(f"""<div class="header-banner"><div class="header-title">📊 {role_title}</div></div>""", unsafe_allow_html=True)
 
-# KPI Interaktif (Tombol Kartu)
+# KPI Interaktif
 st.markdown("### 📈 Ringkasan Eksekutif KPI (Klik Kartu untuk Filter Status)")
 if 'filter_status' not in st.session_state: 
     st.session_state.filter_status = "Semua"
 
-col_status = "Status" if "Status" in df_base.columns else "Status_TL"
 total_temuan = len(df_base)
 selesai = len(df_base[df_base[col_status].str.contains("Selesai|SLS", case=False, na=False)])
 evaluasi = len(df_base[df_base[col_status].str.contains("Evaluasi|EVAL", case=False, na=False)])
 overdue = len(df_base[df_base[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)])
 
 c1, c2, c3, c4, c5 = st.columns(5)
-
 with c1:
     if st.button(f"TOTAL TEMUAN\n\n{total_temuan} (Semua)", key="b_all"):
         st.session_state.filter_status = "Semua"
@@ -183,53 +188,72 @@ elif st.session_state.filter_status == "Overdue":
 st.markdown(f"<p style='color: #3b82f6; font-size: 12px; margin-top: -10px;'>Status Filter Aktif: <b>{st.session_state.filter_status}</b></p>", unsafe_allow_html=True)
 st.markdown("---")
 
-color_map = {
-    'Selesai (SLS)': '#00BCD4',   
-    'Selesai': '#00BCD4',
-    'SLS': '#00BCD4',
-    'Evaluasi (EVAL)': '#FFCA28', 
-    'Evaluasi': '#FFCA28',
-    'EVAL': '#FFCA28',
-    'Overdue (BD)': '#FF7043',    
-    'Overdue': '#FF7043',
-    'BD': '#FF7043',
-    'Belum TL': '#FF7043'
-}
+color_map = {'Selesai': '#00BCD4', 'SLS': '#00BCD4', 'Evaluasi': '#FFCA28', 'EVAL': '#FFCA28', 'Overdue': '#FF7043', 'BD': '#FF7043', 'Belum TL': '#FF7043'}
 
 col_chart_bar, col_chart_pie = st.columns([3, 1.5])
-
 with col_chart_bar:
     if not df_filtered.empty:
         df_chart = df_filtered.groupby([col_bidang, col_status]).size().reset_index(name='Jumlah')
-        fig_bar = px.bar(
-            df_chart, x='Jumlah', y=col_bidang, color=col_status, orientation='h', barmode='stack', 
-            title="Progres Status per Bidang", color_discrete_map=color_map, template='plotly_dark'
-        )
+        fig_bar = px.bar(df_chart, x='Jumlah', y=col_bidang, color=col_status, orientation='h', barmode='stack', title="Progres Status per Bidang", color_discrete_map=color_map, template='plotly_dark')
         fig_bar.update_layout(height=300, margin=dict(l=0, r=10, t=30, b=0))
         st.plotly_chart(fig_bar, use_container_width=True)
-    else:
-        st.info("Tidak ada data untuk filter portofolio atau periode ini.")
-
 with col_chart_pie:
     if not df_filtered.empty:
         df_pie = df_filtered.groupby(col_status).size().reset_index(name='Total')
-        fig_pie = px.pie(
-            df_pie, values='Total', names=col_status, hole=0.6, 
-            title="Proporsi Status", color=col_status, color_discrete_map=color_map, template='plotly_dark'
-        )
+        fig_pie = px.pie(df_pie, values='Total', names=col_status, hole=0.6, title="Proporsi Status", color=col_status, color_discrete_map=color_map, template='plotly_dark')
         fig_pie.update_layout(height=300, margin=dict(l=10, r=10, t=30, b=10), showlegend=False)
         st.plotly_chart(fig_pie, use_container_width=True)
 
 st.markdown("### 📋 Detail Data Temuan")
 st.dataframe(df_filtered, use_container_width=True)
 
+# --- PANEL VERIFIKASI AUDITOR (KHUSUS ADMIN SPI YANG SUDAH LOGIN) ---
+if access_role == "Admin SPI" and st.session_state.admin_logged_in:
+    st.markdown("---")
+    st.markdown("### ✍️ Panel Catatan Verifikasi Auditor (Approve / Reject Evidence)")
+    st.info("💡 Pilih ID Temuan di bawah ini untuk memverifikasi bukti dukung dari auditee. Status temuan akan otomatis berubah sesuai hasil verifikasi Anda.")
+    
+    id_list = df_base["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_base.columns else []
+    if id_list:
+        selected_id = st.selectbox("Pilih ID Temuan untuk Diverifikasi:", id_list)
+        
+        # Ambil baris data terkait
+        row_idx = df_master[df_master["ID Temuan"].astype(str) == str(selected_id)].index
+        if len(row_idx) > 0:
+            current_verif = df_master.loc[row_idx[0], "Verifikasi_Auditor"]
+            current_note = df_master.loc[row_idx[0], "Catatan_Auditor"]
+            
+            with st.form(key="form_verifikasi"):
+                col_v1, col_v2 = st.columns(2)
+                with col_v1:
+                    verdict = st.selectbox("Keputusan Verifikasi Auditor:", ["Belum Diverifikasi", "✅ Disetujui (Approve - Ubah Status jadi Selesai)", "❌ Ditolak (Reject - Ubah Status jadi Overdue / Evaluasi)"], index=0 if current_verif=="Belum Diverifikasi" else (1 if "Disetujui" in current_verif else 2))
+                with col_v2:
+                    auditor_note = st.text_area("Catatan / Alasan Auditor:", value=str(current_note))
+                
+                submit_verif = st.form_submit_button("💾 Simpan & Perbarui Status Temuan Otomatis")
+                
+                if submit_verif:
+                    df_master.loc[row_idx, "Catatan_Auditor"] = auditor_note
+                    if "Disetujui" in verdict:
+                        df_master.loc[row_idx, "Verifikasi_Auditor"] = "Disetujui"
+                        df_master.loc[row_idx, col_status] = "Selesai (SLS)"
+                        st.success(f"Temuan {selected_id} berhasil DISETUJUI. Status otomatis menjadi SELESAI.")
+                    elif "Ditolak" in verdict:
+                        df_master.loc[row_idx, "Verifikasi_Auditor"] = "Ditolak"
+                        df_master.loc[row_idx, col_status] = "Overdue (BD)"
+                        st.warning(f"Temuan {selected_id} DITOLAK. Status otomatis menjadi OVERDUE.")
+                    else:
+                        df_master.loc[row_idx, "Verifikasi_Auditor"] = "Belum Diverifikasi"
+                    
+                    st.session_state.df_master = df_master
+                    st.rerun()
+
 # --- INTEGRASI GOOGLE FORM / GOOGLE DRIVE (KHUSUS AUDITEE & ADMIN) ---
 if access_role in ["Auditee", "Admin SPI"]:
     st.markdown("---")
     st.markdown("### 📤 Pengunggahan Bukti Dukung (Evidence) Tindak Lanjut")
-    st.info("💡 Klik tautan di bawah ini untuk mengunggah dokumen bukti penyelesaian temuan audit. File akan langsung tersimpan secara aman ke Google Drive SPI.")
+    st.info("💡 Klik tautan di bawah ini untuk mengunggah dokumen bukti penyelesaian temuan audit ke Google Drive SPI.")
     
-    # Tombol Tautan Langsung ke Google Form
     google_form_url = "https://docs.google.com/forms/d/e/1FAIpQLSczUxjVMZqcduSy704OVRGvIRga1LhQDAkJKoUkDUn6Aez82A/viewform"
     st.markdown(
         f"""
