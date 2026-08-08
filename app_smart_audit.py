@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS
+# Custom CSS untuk merapikan ukuran dan jarak tombol KPI
 st.markdown("""
 <style>
     .main { background-color: #0e1117; }
@@ -26,15 +26,17 @@ st.markdown("""
     }
     .header-title { color: #ffffff; font-size: 22px; font-weight: 700; }
     
+    /* Mengatur ukuran dan kerapatan tombol KPI */
     div.stButton > button {
         width: 100% !important;
-        height: 85px !important;
+        height: 75px !important;
         background-color: #1e293b !important;
         color: #ffffff !important;
         border: 1px solid #334155 !important;
         border-radius: 8px !important;
         font-weight: bold !important;
-        padding: 8px !important;
+        font-size: 13px !important;
+        padding: 5px !important;
         text-align: left !important;
         box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         transition: 0.2s ease-in-out;
@@ -135,14 +137,14 @@ else:  # Admin SPI
     else:
         df_base = df_filtered_periode.head(0)
 
-# Header Banner (Hanya menampilkan nama utama aplikasi)
+# Header Banner
 st.markdown("""
 <div class="header-banner">
     <div class="header-title">📊 SMART AUDIT MONITORING DASHBOARD - PT PELINDO SOLUSI MARITIM</div>
 </div>
 """, unsafe_allow_html=True)
 
-# KPI Interaktif
+# KPI Interaktif (Menggunakan kolom tambahan agar tersusun rapat dan proporsional)
 st.markdown("### 📈 Ringkasan Eksekutif KPI (Klik Kartu untuk Filter Status)")
 if 'filter_status' not in st.session_state: 
     st.session_state.filter_status = "Semua"
@@ -152,21 +154,22 @@ selesai = len(df_base[df_base[col_status].str.contains("Selesai|SLS", case=False
 evaluasi = len(df_base[df_base[col_status].str.contains("Evaluasi|EVAL", case=False, na=False)])
 overdue = len(df_base[df_base[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)])
 
-c1, c2, c3, c4, c5 = st.columns(5)
-with c1:
-    if st.button(f"TOTAL TEMUAN\n\n{total_temuan} (Semua)", key="b_all"):
+# Menggunakan 5 kolom utama + 1 kolom kosong kecil di ujung atau pembagian proporsional yang rapat
+cols = st.columns(5)
+with cols[0]:
+    if st.button(f"TOTAL TEMUAN\n{total_temuan} (Semua)", key="b_all"):
         st.session_state.filter_status = "Semua"
-with c2:
-    if st.button(f"POIN REKOMENDASI\n\n{total_temuan} (Total)", key="b_rec"):
+with cols[1]:
+    if st.button(f"POIN REKOMENDASI\n{total_temuan} (Total)", key="b_rec"):
         st.session_state.filter_status = "Semua"
-with c3:
-    if st.button(f"SELESAI (SLS)\n\n{selesai} Selesai", key="b_sls"):
+with cols[2]:
+    if st.button(f"SELESAI (SLS)\n{selesai} Selesai", key="b_sls"):
         st.session_state.filter_status = "Selesai"
-with c4:
-    if st.button(f"EVALUASI (EVAL)\n\n{evaluasi} Proses", key="b_eval"):
+with cols[3]:
+    if st.button(f"EVALUASI (EVAL)\n{evaluasi} Proses", key="b_eval"):
         st.session_state.filter_status = "Evaluasi"
-with c5:
-    if st.button(f"OVERDUE (BD)\n\n{overdue} Belum TL", key="b_bd"):
+with cols[4]:
+    if st.button(f"OVERDUE (BD)\n{overdue} Belum TL", key="b_bd"):
         st.session_state.filter_status = "Overdue"
 
 df_filtered = df_base.copy()
