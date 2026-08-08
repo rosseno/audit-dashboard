@@ -53,7 +53,7 @@ def load_data():
         return pd.read_excel("Master_Database_Temuan_Audit_2024_2025_PSM_Ringkas.xlsx")
 
 df_master = load_data()
-PIN_ADMIN = "020813"
+PIN_ADMIN = "1234"  # <-- Ubah angka ini jika ingin mengganti PIN Admin SPI
 
 col_bidang = "Bidang" if "Bidang" in df_master.columns else df_master.columns[5]
 col_periode = "Tahun Audit" if "Tahun Audit" in df_master.columns else df_master.columns[3]
@@ -87,9 +87,10 @@ if 'admin_logged_in' not in st.session_state:
 
 role_title = "SMART AUDIT MONITORING DASHBOARD - PT PELINDO SOLUSI MARITIM"
 
-if access_role == "Admin SPI (Full Access)":
+# --- LOGIKA INPUT PIN YANG DIPERBAIKI ---
+if access_role == "Admin SPI":
     if not st.session_state.admin_logged_in:
-        entered_pin = st.sidebar.text_input("Masukkan PIN Admin:", type="password")
+        entered_pin = st.sidebar.text_input("🔑 Masukkan PIN Admin:", type="password")
         if entered_pin == PIN_ADMIN:
             st.session_state.admin_logged_in = True
             st.sidebar.success("Login Admin Berhasil!")
@@ -140,7 +141,6 @@ else:  # Admin SPI
             df_base = df_filtered_periode[df_filtered_periode[col_bidang].astype(str) == str(chosen_admin_filter)]
         role_title = f"ADMIN SPI - FULL ACCESS ({selected_periode})"
     else:
-        st.sidebar.warning("⚠️ Masukkan PIN Admin di atas.")
         df_base = df_filtered_periode.head(0)
         role_title = "SILAKAN LOGIN ADMIN"
 
@@ -185,7 +185,7 @@ elif st.session_state.filter_status == "Evaluasi":
 elif st.session_state.filter_status == "Overdue":
     df_filtered = df_base[df_base[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)]
 
-st.markdown(f"<p style='color: #3b82f6; font-size: 12px; margin-top: -10px;'>Status Filter Aktif: <b>{st.session_state.filter_status}</b></p>", unsafe_allow_html=True)
+st.markdown(f"<p style='color: #3b82f6; font-size: 12px; margin-top: -10px;'>Status Filter Aktif: <b>{st.session_state.filter_status}</b></p>", unsafe_allow_html.True)
 st.markdown("---")
 
 # Konsistensi Warna Baku untuk Setiap Status
