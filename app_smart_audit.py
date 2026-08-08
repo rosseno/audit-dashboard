@@ -87,7 +87,7 @@ if 'admin_logged_in' not in st.session_state:
 
 role_title = "SMART AUDIT MONITORING DASHBOARD - PT PELINDO SOLUSI MARITIM"
 
-# --- LOGIKA INPUT PIN YANG DIPERBAIKI ---
+# --- LOGIKA INPUT PIN ---
 if access_role == "Admin SPI":
     if not st.session_state.admin_logged_in:
         entered_pin = st.sidebar.text_input("🔑 Masukkan PIN Admin:", type="password")
@@ -185,7 +185,7 @@ elif st.session_state.filter_status == "Evaluasi":
 elif st.session_state.filter_status == "Overdue":
     df_filtered = df_base[df_base[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)]
 
-st.markdown(f"<p style='color: #3b82f6; font-size: 12px; margin-top: -10px;'>Status Filter Aktif: <b>{st.session_state.filter_status}</b></p>", unsafe_allow_html.True)
+st.markdown(f"<p style='color: #3b82f6; font-size: 12px; margin-top: -10px;'>Status Filter Aktif: <b>{st.session_state.filter_status}</b></p>", unsafe_allow_html=True)
 st.markdown("---")
 
 # Konsistensi Warna Baku untuk Setiap Status
