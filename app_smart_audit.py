@@ -24,8 +24,7 @@ st.markdown("""
         margin-bottom: 20px;
         box-shadow: 0 4px 6px rgba(0,0,0,0.3);
     }
-    .header-title { color: #ffffff; font-size: 20px; font-weight: 700; margin-bottom: 3px; }
-    .header-subtitle { color: #94a3b8; font-size: 14px; font-weight: 500; }
+    .header-title { color: #ffffff; font-size: 22px; font-weight: 700; }
     
     div.stButton > button {
         width: 100% !important;
@@ -90,8 +89,6 @@ access_role = st.sidebar.selectbox(
 if 'admin_logged_in' not in st.session_state:
     st.session_state.admin_logged_in = False
 
-role_subtitle = "SMART AUDIT MONITORING DASHBOARD - PT PELINDO SOLUSI MARITIM"
-
 # --- LOGIKA INPUT PIN ADMIN ---
 if access_role == "Admin SPI":
     if not st.session_state.admin_logged_in:
@@ -113,25 +110,20 @@ if access_role == "Direktur Utama":
     sub_choice = st.sidebar.selectbox("Tinjau Cakupan:", ["Semua Bidang (Keseluruhan)", "SPI", "Hukum", "Sekper", "Pengadaan"])
     if sub_choice == "Semua Bidang (Keseluruhan)":
         df_base = df_filtered_periode.copy()
-        role_title = f"DIREKTORAT UTAMA - PERIODE {selected_periode}"
     else:
         df_base = df_filtered_periode[df_filtered_periode[col_bidang].str.contains(sub_choice, case=False, na=False)]
-        role_title = f"DIREKTORAT UTAMA - {sub_choice.upper()} ({selected_periode})"
 
 elif access_role == "Direktur Operasi & Komersial":
     ops_choices = ["Operasi", "Teknik", "Pemasaran"]
     df_base = df_filtered_periode[df_filtered_periode[col_bidang].str.contains('|'.join(ops_choices), case=False, na=False)]
-    role_title = f"DIREKTORAT OPERASI & KOMERSIAL ({selected_periode})"
 
 elif access_role == "Direktur Keuangan, SDM, HSSE, IT, PAP, Umum & RT":
     fin_choices = ["Keuangan", "SDM", "HSSE", "IT", "PAP", "Umum", "Rumah Tangga"]
     df_base = df_filtered_periode[df_filtered_periode[col_bidang].str.contains('|'.join(fin_choices), case=False, na=False)]
-    role_title = f"DIREKTORAT KEUANGAN, SDM, HSSE, IT, PAP, UMUM & RT ({selected_periode})"
 
 elif access_role == "Auditee":
     chosen_unit = st.sidebar.selectbox("Pilih Bidang:", current_available_bidang if current_available_bidang else ["Tidak ada data"])
     df_base = df_filtered_periode[df_filtered_periode[col_bidang].astype(str) == str(chosen_unit)]
-    role_title = f"DEPARTEMEN {chosen_unit.upper()} ({selected_periode})"
 
 else:  # Admin SPI
     if st.session_state.admin_logged_in:
@@ -140,16 +132,13 @@ else:  # Admin SPI
             df_base = df_filtered_periode.copy()
         else:
             df_base = df_filtered_periode[df_filtered_periode[col_bidang].astype(str) == str(chosen_admin_filter)]
-        role_title = f"ADMIN SPI - FULL ACCESS ({selected_periode})"
     else:
         df_base = df_filtered_periode.head(0)
-        role_title = "SILAKAN LOGIN ADMIN"
 
-# Header Banner dengan nama aplikasi yang jelas di atas
-st.markdown(f"""
+# Header Banner (Hanya menampilkan nama utama aplikasi)
+st.markdown("""
 <div class="header-banner">
     <div class="header-title">📊 SMART AUDIT MONITORING DASHBOARD - PT PELINDO SOLUSI MARITIM</div>
-    <div class="header-subtitle">📌 {role_title}</div>
 </div>
 """, unsafe_allow_html=True)
 
