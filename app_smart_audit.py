@@ -204,12 +204,15 @@ with col_chart_pie:
         fig_pie.update_layout(height=300, margin=dict(l=10, r=10, t=30, b=10), showlegend=False)
         st.plotly_chart(fig_pie, use_container_width=True)
 
-# --- RINGKAS KOLOM TABEL (TETAP MENAMPILKAN MASING-MASING REKOMENDASI TERPISAH) ---
-columns_to_drop = ["Tahun Audit", "Nama Entitas", "Tingkat Risiko", "Prioritas", "Tag Kata Kunci (#Preventif)"]
+# --- PENGATURAN KOLOM TABEL (HAPUS POIN, RESET NOMOR URUT PER 1) ---
+columns_to_drop = ["No", "Poin", "Tahun Audit", "Nama Entitas", "Tingkat Risiko", "Prioritas", "Tag Kata Kunci (#Preventif)"]
 df_table_display = df_filtered.drop(columns=[col for col in columns_to_drop if col in df_filtered.columns])
 
+# Membuat penomoran urut baru dimulai dari angka 1 berdasarkan filter aktif
+df_table_display.insert(0, "No", range(1, len(df_table_display) + 1))
+
 st.markdown("### 📋 Detail Data Temuan & Rekomendasi Terpisah")
-st.dataframe(df_table_display, use_container_width=True)
+st.dataframe(df_table_display, use_container_width=True, hide_index=True)
 
 # --- PANEL KHUSUS ADMIN SPI UNTUK INPUT VERIFIKASI ---
 if access_role == "Admin SPI" and st.session_state.admin_logged_in:
