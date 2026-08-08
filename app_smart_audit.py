@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS Styling Ultimate untuk Card 3D Hidup, Rapat, & Neon Glow
+# Custom CSS Ultimate untuk Card 3D Hidup, Berpendar Neon, & Proporsi Font Sempurna
 st.markdown("""
 <style>
     .main { background-color: #0e1117; }
@@ -27,54 +27,54 @@ st.markdown("""
     .header-title { color: #ffffff; font-size: 22px; font-weight: 700; }
     .header-subtitle { color: #94a3b8; font-size: 13px; margin-top: 5px; }
 
-    /* Container Flexbox agar card benar-benar rapat berdampingan */
-    .metric-container {
+    /* Container untuk membuat card rapat berjejer ke samping */
+    .kpi-row {
         display: flex;
         gap: 12px;
         width: 100%;
-        margin-top: 10px;
-        margin-bottom: 5px;
+        margin-bottom: 15px;
     }
 
-    /* Desain Card 3D Hidup dengan Efek Cahaya Neon di Pinggir */
-    .metric-card {
+    /* Desain Card 3D Hidup dengan Efek Cahaya Neon & Kedalaman */
+    .kpi-card {
         flex: 1;
         background: linear-gradient(145deg, #161b22 0%, #0d1117 100%);
         border-radius: 12px;
-        padding: 16px;
-        position: relative;
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+        padding: 16px 18px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7), inset 0 1px 1px rgba(255, 255, 255, 0.15);
         transition: transform 0.2s ease, box-shadow 0.2s ease;
+        cursor: pointer;
     }
     
-    .metric-card:hover {
+    .kpi-card:hover {
         transform: translateY(-4px);
     }
 
-    /* Siluet Garis Warna Neon Spesifik per Card */
-    .card-blue { border: 2px solid #3b82f6; box-shadow: 0 0 15px rgba(59, 130, 246, 0.3), inset 0 1px 1px rgba(255,255,255,0.1); }
-    .card-purple { border: 2px solid #8b5cf6; box-shadow: 0 0 15px rgba(139, 92, 246, 0.3), inset 0 1px 1px rgba(255,255,255,0.1); }
-    .card-green { border: 2px solid #10b981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.3), inset 0 1px 1px rgba(255,255,255,0.1); }
-    .card-yellow { border: 2px solid #f59e0b; box-shadow: 0 0 15px rgba(245, 158, 11, 0.3), inset 0 1px 1px rgba(255,255,255,0.1); }
-    .card-red { border: 2px solid #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.3), inset 0 1px 1px rgba(255,255,255,0.1); }
+    /* Siluet Garis Warna Neon Spesifik per Card dengan Efek Glow Hidup */
+    .card-blue { border: 2px solid #3b82f6; box-shadow: 0 0 15px rgba(59, 130, 246, 0.4), inset 0 1px 1px rgba(255,255,255,0.15); }
+    .card-purple { border: 2px solid #8b5cf6; box-shadow: 0 0 15px rgba(139, 92, 246, 0.4), inset 0 1px 1px rgba(255,255,255,0.15); }
+    .card-green { border: 2px solid #10b981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4), inset 0 1px 1px rgba(255,255,255,0.15); }
+    .card-yellow { border: 2px solid #f59e0b; box-shadow: 0 0 15px rgba(245, 158, 11, 0.4), inset 0 1px 1px rgba(255,255,255,0.15); }
+    .card-red { border: 2px solid #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4), inset 0 1px 1px rgba(255,255,255,0.15); }
 
-    .card-title {
+    .kpi-title {
         color: #94a3b8;
         font-size: 11px;
         font-weight: 700;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.8px;
         text-transform: uppercase;
-        margin-bottom: 8px;
-    }
-
-    .card-value {
-        color: #ffffff;
-        font-size: 26px;
-        font-weight: 800;
         margin-bottom: 6px;
     }
 
-    .card-desc {
+    .kpi-value {
+        color: #ffffff;
+        font-size: 32px;
+        font-weight: 800;
+        margin-bottom: 4px;
+        line-height: 1.1;
+    }
+
+    .kpi-desc {
         color: #cbd5e1;
         font-size: 12px;
         font-weight: 500;
@@ -179,7 +179,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# KPI Interaktif ala Card 3D Neon Hidup (Menggunakan Tombol Interaktif Native yang Di-wrap Flexbox Rapat)
+# KPI Interaktif ala Card 3D Hidup dengan Proporsi Font Sempurna
 st.markdown("### 📈 Ringkasan Eksekutif KPI")
 if 'filter_status' not in st.session_state: 
     st.session_state.filter_status = "Semua"
@@ -193,23 +193,54 @@ pct_selesai = f"{(selesai/total_temuan)*100:.1f}% dari Total" if total_temuan > 
 pct_eval = f"{(evaluasi/total_temuan)*100:.1f}% Dalam Proses" if total_temuan > 0 else "0%"
 pct_overdue = f"{(overdue/total_temuan)*100:.1f}% Belum TL" if total_temuan > 0 else "0%"
 
-# Layout Rapat Menggunakan Container Flexbox & Border Glow CSS
+# Tombol interaktif transparan di atas card 3D HTML murni
 cols = st.columns(5)
 with cols[0]:
-    if st.button(f"TOTAL TEMUAN\n\n  {total_temuan}\nJudul LHP Utama", key="b_all"):
+    if st.button("Filter: Total Temuan", key="b_all", help="Klik untuk melihat semua temuan"):
         st.session_state.filter_status = "Semua"
 with cols[1]:
-    if st.button(f"POIN REKOMENDASI\n\n  {total_temuan}\nButir Granular", key="b_rec"):
+    if st.button("Filter: Rekomendasi", key="b_rec", help="Klik untuk melihat semua rekomendasi"):
         st.session_state.filter_status = "Semua"
 with cols[2]:
-    if st.button(f"🟢 SELESAI (SLS)\n\n  {selesai}\n{pct_selesai}", key="b_sls"):
+    if st.button("Filter: Selesai", key="b_sls", help="Klik untuk filter Selesai"):
         st.session_state.filter_status = "Selesai"
 with cols[3]:
-    if st.button(f"🟡 EVALUASI (EVAL)\n\n  {evaluasi}\n{pct_eval}", key="b_eval"):
+    if st.button("Filter: Evaluasi", key="b_eval", help="Klik untuk filter Evaluasi"):
         st.session_state.filter_status = "Evaluasi"
 with cols[4]:
-    if st.button(f"🔴 OVERDUE (BD)\n\n  {overdue}\n{pct_overdue}", key="b_bd"):
+    if st.button("Filter: Overdue", key="b_bd", help="Klik untuk filter Overdue"):
         st.session_state.filter_status = "Overdue"
+
+# Render Tampilan Visual Card 3D Hidup dengan Font Proporsional
+st.markdown(f"""
+<div class="kpi-row">
+    <div class="kpi-card card-blue">
+        <div class="kpi-title">TOTAL TEMUAN</div>
+        <div class="kpi-value">{total_temuan}</div>
+        <div class="kpi-desc">Judul LHP Utama</div>
+    </div>
+    <div class="kpi-card card-purple">
+        <div class="kpi-title">POIN REKOMENDASI</div>
+        <div class="kpi-value">{total_temuan}</div>
+        <div class="kpi-desc">Butir Granular</div>
+    </div>
+    <div class="kpi-card card-green">
+        <div class="kpi-title">🟢 SELESAI (SLS)</div>
+        <div class="kpi-value">{selesai}</div>
+        <div class="kpi-desc">{pct_selesai}</div>
+    </div>
+    <div class="kpi-card card-yellow">
+        <div class="kpi-title">🟡 EVALUASI (EVAL)</div>
+        <div class="kpi-value">{evaluasi}</div>
+        <div class="kpi-desc">{pct_eval}</div>
+    </div>
+    <div class="kpi-card card-red">
+        <div class="kpi-title">🔴 OVERDUE (BD)</div>
+        <div class="kpi-value">{overdue}</div>
+        <div class="kpi-desc">{pct_overdue}</div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
 df_filtered = df_base.copy()
 if st.session_state.filter_status == "Selesai":
