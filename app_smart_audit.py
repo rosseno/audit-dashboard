@@ -24,7 +24,8 @@ st.markdown("""
         margin-bottom: 20px;
         box-shadow: 0 4px 6px rgba(0,0,0,0.3);
     }
-    .header-title { color: #ffffff; font-size: 24px; font-weight: 700; margin-bottom: 3px; }
+    .header-title { color: #ffffff; font-size: 20px; font-weight: 700; margin-bottom: 3px; }
+    .header-subtitle { color: #94a3b8; font-size: 14px; font-weight: 500; }
     
     div.stButton > button {
         width: 100% !important;
@@ -89,7 +90,7 @@ access_role = st.sidebar.selectbox(
 if 'admin_logged_in' not in st.session_state:
     st.session_state.admin_logged_in = False
 
-role_title = "SMART AUDIT MONITORING DASHBOARD - PT PELINDO SOLUSI MARITIM"
+role_subtitle = "SMART AUDIT MONITORING DASHBOARD - PT PELINDO SOLUSI MARITIM"
 
 # --- LOGIKA INPUT PIN ADMIN ---
 if access_role == "Admin SPI":
@@ -144,8 +145,13 @@ else:  # Admin SPI
         df_base = df_filtered_periode.head(0)
         role_title = "SILAKAN LOGIN ADMIN"
 
-# Header Banner
-st.markdown(f"""<div class="header-banner"><div class="header-title">📊 {role_title}</div></div>""", unsafe_allow_html=True)
+# Header Banner dengan nama aplikasi yang jelas di atas
+st.markdown(f"""
+<div class="header-banner">
+    <div class="header-title">📊 SMART AUDIT MONITORING DASHBOARD - PT PELINDO SOLUSI MARITIM</div>
+    <div class="header-subtitle">📌 {role_title}</div>
+</div>
+""", unsafe_allow_html=True)
 
 # KPI Interaktif
 st.markdown("### 📈 Ringkasan Eksekutif KPI (Klik Kartu untuk Filter Status)")
