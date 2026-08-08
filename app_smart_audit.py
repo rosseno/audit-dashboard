@@ -55,20 +55,30 @@ def load_data():
 df_master = load_data()
 PIN_ADMIN = "1234"
 
-# --- SIDEBAR: PENGATURAN HAK AKSES FLEKSIBEL ---
-st.sidebar.markdown("## 🔐 Hak Akses Pengguna")
-access_mode = st.sidebar.radio(
-    "Pilih Mode Akses:", 
-    ["Auditee (Per Bidang)", "Direksi / Manajemen (Semua Bidang)", "Admin SPI (Full Access)"]
+col_bidang = "Bidang" if "Bidang" in df_master.columns else df_master.columns[5]
+all_available_bidang = sorted(list(df_master[col_bidang].dropna().astype(str).unique())) if col_bidang in df_master.columns else []
+
+# --- SIDEBAR: PENGATURAN HAK AKSES BERDASARKAN STRUKTUR DIREKSI PSM ---
+st.sidebar.markdown("## 🔐 Hak Akses & Portofolio")
+access_role = st.sidebar.selectbox(
+    "Pilih Peran / Jabatan:",
+    [
+        "Direktur Utama",
+        "Direktur Operasi & Komersial",
+        "Direktur Keuangan, SDM, HSSE, IT, PAP, Umum & RT",
+        "Auditee (Perorangan / Unit Lain)",
+        "Admin SPI (Full Access)"
+    ]
 )
 
 # Inisialisasi session state login admin
 if 'admin_logged_in' not in st.session_state:
     st.session_state.admin_logged_in = False
 
-list_bidang_available = sorted(list(df_master["Bidang"].dropna().astype(str).unique())) if "Bidang" in df_master.columns else []
+selected_bidang_list = []
+role_title = "SMART AUDIT MONITORING DASHBOARD - PT PELINDO SOLUSI MARITIM"
 
-if access_mode == "Admin SPI (Full Access)":
+if access_role == "Admin SPI (Full Access)":
     if not st.session_state.admin_logged_in:
         entered_pin = st.sidebar.text_input("Masukkan PIN Admin:", type="password")
         if entered_pin == PIN_ADMIN:
@@ -91,32 +101,51 @@ selected_periode = st.sidebar.selectbox("📅 Periode Audit:", ["Semua Periode"]
 
 df_filtered_periode = df_master[df_master[col_periode].astype(str) == str(selected_periode)] if selected_periode != "Semua Periode" else df_master.copy()
 
-col_bidang = "Bidang" if "Bidang" in df_master.columns else df_master.columns[5]
+# --- PEMETAAN DATA BERDASARKAN STRUKTUR DIREKSI ---
+if access_role == "Direktur Utama":
+    st.sidebar.info("ℹ️ Mode Dirut: Meninjau seluruh bidang perusahaan.")
+    sub_choice = st.sidebar.selectbox("Tinjau Cakupan:", ["Semua Bidang (Keseluruhan)", "SPI", "Hukum", "Sekper", "Pengadaan"])
+    if sub_choice == "Semua Bidang (Keseluruhan)":
+        df_base = df_filtered_periode.copy()
+        role_title = "DIREKTORAT UTAMA - SEMUA BIDANG"
+    else:
+        df_base = df_filtered_periode[df_filtered_periode[col_bidang].str.contains(sub_choice, case=False, na=False)]
+        role_title = f"DIREKTORAT UTAMA - {sub_choice.upper()}"
 
-# --- LOGIKA PEMBATASAN BERDASARKAN PILIHAN FLEKSIBEL ---
-if access_mode == "Auditee (Per Bidang)":
-    st.sidebar.info("ℹ️ Mode Auditee: Silakan pilih bidang unit kerja Anda.")
-    selected_bidang = st.sidebar.selectbox("📂 Pilih Bidang Anda:", list_bidang_available)
-    df_base = df_filtered_periode[df_filtered_periode[col_bidang].astype(str) == str(selected_bidang)]
+elif access_role == "Direktur Operasi & Komersial":
+    st.sidebar.info("ℹ️ Portofolio: Operasi, Teknik, & Pemasaran.")
+    ops_choices = ["Operasi", "Teknik", "Pemasaran"]
+    # Filter data yang masuk ke dalam portofolio ini
+    df_base = df_filtered_periode[df_filtered_periode[col_bidang].str.contains('|'.join(ops_choices), case=False, na=False)]
+    role_title = "DIREKTORAT OPERASI & KOMERSIAL"
 
-elif access_mode == "Direksi / Manajemen (Semua Bidang)":
-    st.sidebar.info("ℹ️ Mode Direksi: Menampilkan ringkasan seluruh bidang.")
-    # Direksi bisa melihat "Semua Bidang" secara default atau memfilter bidang tertentu jika ingin
-    selected_bidang = st.sidebar.selectbox("📂 Pilih Bidang / Tinjau Semua:", ["Semua Bidang"] + list_bidang_available)
-    df_base = df_filtered_periode[df_filtered_periode[col_bidang].astype(str) == str(selected_bidang)] if selected_bidang != "Semua Bidang" else df_filtered_periode.copy()
+elif access_role == "Direktur Keuangan, SDM, HSSE, IT, PAP, Umum & RT":
+    st.sidebar.info("ℹ️ Portofolio: Keuangan, SDM, HSSE, IT, PAP, Umum, dll.")
+    fin_choices = ["Keuangan", "SDM", "HSSE", "IT", "PAP", "Umum", "Rumah Tangga"]
+    df_base = df_filtered_periode[df_filtered_periode[col_bidang].str.contains('|'.join(fin_choices), case=False, na=False)]
+    role_title = "DIREKTORAT KEUANGAN, SDM, HSSE, IT, PAP, UMUM & RT"
+
+elif access_role == "Auditee (Perorangan / Unit Lain)":
+    st.sidebar.info("ℹ️ Pilih spesifik unit kerja Anda:")
+    chosen_unit = st.sidebar.selectbox("Pilih Bidang:", all_available_bidang)
+    df_base = df_filtered_periode[df_filtered_periode[col_bidang].astype(str) == str(chosen_unit)]
+    role_title = f"DEPARTEMEN {chosen_unit.upper()}"
 
 else:  # Admin SPI
     if st.session_state.admin_logged_in:
-        selected_bidang = st.sidebar.selectbox("📂 Bidang Workgroup:", ["Semua Bidang"] + list_bidang_available)
-        df_base = df_filtered_periode[df_filtered_periode[col_bidang].astype(str) == str(selected_bidang)] if selected_bidang != "Semua Bidang" else df_filtered_periode.copy()
+        chosen_admin_filter = st.sidebar.selectbox("📂 Filter Bidang:", ["Semua Bidang"] + all_available_bidang)
+        if chosen_admin_filter == "Semua Bidang":
+            df_base = df_filtered_periode.copy()
+        else:
+            df_base = df_filtered_periode[df_filtered_periode[col_bidang].astype(str) == str(chosen_admin_filter)]
+        role_title = "ADMIN SPI - FULL ACCESS"
     else:
-        st.sidebar.warning("⚠️ Masukkan PIN Admin di atas untuk akses penuh.")
-        selected_bidang = list_bidang_available[0] if list_bidang_available else "Semua Bidang"
-        df_base = df_filtered_periode[df_filtered_periode[col_bidang].astype(str) == str(selected_bidang)]
+        st.sidebar.warning("⚠️ Masukkan PIN Admin di atas.")
+        df_base = df_filtered_periode.head(0)
+        role_title = "SILAKAN LOGIN ADMIN"
 
-# Header
-header_label = f"DEPARTEMEN {selected_bidang.upper()}" if selected_bidang != "Semua Bidang" else "SMART AUDIT MONITORING DASHBOARD - PT PELINDO SOLUSI MARITIM"
-st.markdown(f"""<div class="header-banner"><div class="header-title">📊 {header_label}</div></div>""", unsafe_allow_html=True)
+# Header Banner
+st.markdown(f"""<div class="header-banner"><div class="header-title">📊 {role_title}</div></div>""", unsafe_allow_html=True)
 
 # KPI Interaktif (Tombol Kartu)
 st.markdown("### 📈 Ringkasan Eksekutif KPI (Klik Kartu untuk Filter Status)")
@@ -177,22 +206,26 @@ color_map = {
 col_chart_bar, col_chart_pie = st.columns([3, 1.5])
 
 with col_chart_bar:
-    df_chart = df_filtered.groupby([col_bidang, col_status]).size().reset_index(name='Jumlah')
-    fig_bar = px.bar(
-        df_chart, x='Jumlah', y=col_bidang, color=col_status, orientation='h', barmode='stack', 
-        title="Progres Status per Bidang", color_discrete_map=color_map, template='plotly_dark'
-    )
-    fig_bar.update_layout(height=300, margin=dict(l=0, r=10, t=30, b=0))
-    st.plotly_chart(fig_bar, use_container_width=True)
+    if not df_filtered.empty:
+        df_chart = df_filtered.groupby([col_bidang, col_status]).size().reset_index(name='Jumlah')
+        fig_bar = px.bar(
+            df_chart, x='Jumlah', y=col_bidang, color=col_status, orientation='h', barmode='stack', 
+            title="Progres Status per Bidang", color_discrete_map=color_map, template='plotly_dark'
+        )
+        fig_bar.update_layout(height=300, margin=dict(l=0, r=10, t=30, b=0))
+        st.plotly_chart(fig_bar, use_container_width=True)
+    else:
+        st.info("Tidak ada data untuk filter portofolio ini.")
 
 with col_chart_pie:
-    df_pie = df_filtered.groupby(col_status).size().reset_index(name='Total')
-    fig_pie = px.pie(
-        df_pie, values='Total', names=col_status, hole=0.6, 
-        title="Proporsi Status", color=col_status, color_discrete_map=color_map, template='plotly_dark'
-    )
-    fig_pie.update_layout(height=300, margin=dict(l=10, r=10, t=30, b=10), showlegend=False)
-    st.plotly_chart(fig_pie, use_container_width=True)
+    if not df_filtered.empty:
+        df_pie = df_filtered.groupby(col_status).size().reset_index(name='Total')
+        fig_pie = px.pie(
+            df_pie, values='Total', names=col_status, hole=0.6, 
+            title="Proporsi Status", color=col_status, color_discrete_map=color_map, template='plotly_dark'
+        )
+        fig_pie.update_layout(height=300, margin=dict(l=10, r=10, t=30, b=10), showlegend=False)
+        st.plotly_chart(fig_pie, use_container_width=True)
 
 st.markdown("### 📋 Detail Data")
 st.dataframe(df_filtered, use_container_width=True)
