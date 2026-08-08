@@ -53,7 +53,7 @@ def load_data():
         return pd.read_excel("Master_Database_Temuan_Audit_2024_2025_PSM_Ringkas.xlsx")
 
 df_master = load_data()
-PIN_ADMIN = "1234"
+PIN_ADMIN = "020813"
 
 col_bidang = "Bidang" if "Bidang" in df_master.columns else df_master.columns[5]
 col_periode = "Tahun Audit" if "Tahun Audit" in df_master.columns else df_master.columns[3]
