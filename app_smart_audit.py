@@ -56,9 +56,19 @@ df_master = load_data()
 PIN_ADMIN = "1234"
 
 col_bidang = "Bidang" if "Bidang" in df_master.columns else df_master.columns[5]
-all_available_bidang = sorted(list(df_master[col_bidang].dropna().astype(str).unique())) if col_bidang in df_master.columns else []
+col_periode = "Tahun Audit" if "Tahun Audit" in df_master.columns else df_master.columns[3]
 
-# --- SIDEBAR: PENGATURAN HAK AKSES BERDASARKAN STRUKTUR DIREKSI PSM ---
+# --- SIDEBAR: PENGATURAN HAK AKSES & PERIODE DI AWAL ---
+st.sidebar.markdown("## 🎯 Filter Control Panel")
+selected_periode = st.sidebar.selectbox("📅 Periode Audit:", ["Semua Periode"] + sorted(list(df_master[col_periode].dropna().astype(str).unique())))
+
+# Filter data berdasarkan periode terlebih dahulu, agar daftar bidang di bawahnya dinamis sesuai tahun
+df_filtered_periode = df_master[df_master[col_periode].astype(str) == str(selected_periode)] if selected_periode != "Semua Periode" else df_master.copy()
+
+# Daftar bidang sekarang murni mengikuti data yang ada pada periode terpilih saja
+current_available_bidang = sorted(list(df_filtered_periode[col_bidang].dropna().astype(str).unique()))
+
+st.sidebar.markdown("---")
 st.sidebar.markdown("## 🔐 Hak Akses & Portofolio")
 access_role = st.sidebar.selectbox(
     "Pilih Peran / Jabatan:",
@@ -75,7 +85,6 @@ access_role = st.sidebar.selectbox(
 if 'admin_logged_in' not in st.session_state:
     st.session_state.admin_logged_in = False
 
-selected_bidang_list = []
 role_title = "SMART AUDIT MONITORING DASHBOARD - PT PELINDO SOLUSI MARITIM"
 
 if access_role == "Admin SPI (Full Access)":
@@ -93,52 +102,44 @@ if access_role == "Admin SPI (Full Access)":
             st.session_state.admin_logged_in = False
             st.rerun()
 
-st.sidebar.markdown("---")
-st.sidebar.markdown("## 🎯 Filter Control Panel")
-
-col_periode = "Tahun Audit" if "Tahun Audit" in df_master.columns else df_master.columns[3]
-selected_periode = st.sidebar.selectbox("📅 Periode Audit:", ["Semua Periode"] + sorted(list(df_master[col_periode].dropna().astype(str).unique())))
-
-df_filtered_periode = df_master[df_master[col_periode].astype(str) == str(selected_periode)] if selected_periode != "Semua Periode" else df_master.copy()
-
-# --- PEMETAAN DATA BERDASARKAN STRUKTUR DIREKSI ---
+# --- PEMETAAN DATA BERDASARKAN STRUKTUR DIREKSI & PERIODE AKTIF ---
 if access_role == "Direktur Utama":
-    st.sidebar.info("ℹ️ Mode Dirut: Meninjau seluruh bidang perusahaan.")
+    st.sidebar.info("ℹ️ Mode Dirut: Meninjau seluruh bidang.")
     sub_choice = st.sidebar.selectbox("Tinjau Cakupan:", ["Semua Bidang (Keseluruhan)", "SPI", "Hukum", "Sekper", "Pengadaan"])
     if sub_choice == "Semua Bidang (Keseluruhan)":
         df_base = df_filtered_periode.copy()
-        role_title = "DIREKTORAT UTAMA - SEMUA BIDANG"
+        role_title = f"DIREKTORAT UTAMA - PERIODE {selected_periode}"
     else:
         df_base = df_filtered_periode[df_filtered_periode[col_bidang].str.contains(sub_choice, case=False, na=False)]
-        role_title = f"DIREKTORAT UTAMA - {sub_choice.upper()}"
+        role_title = f"DIREKTORAT UTAMA - {sub_choice.upper()} ({selected_periode})"
 
 elif access_role == "Direktur Operasi & Komersial":
     st.sidebar.info("ℹ️ Portofolio: Operasi, Teknik, & Pemasaran.")
     ops_choices = ["Operasi", "Teknik", "Pemasaran"]
-    # Filter data yang masuk ke dalam portofolio ini
     df_base = df_filtered_periode[df_filtered_periode[col_bidang].str.contains('|'.join(ops_choices), case=False, na=False)]
-    role_title = "DIREKTORAT OPERASI & KOMERSIAL"
+    role_title = f"DIREKTORAT OPERASI & KOMERSIAL ({selected_periode})"
 
 elif access_role == "Direktur Keuangan, SDM, HSSE, IT, PAP, Umum & RT":
     st.sidebar.info("ℹ️ Portofolio: Keuangan, SDM, HSSE, IT, PAP, Umum, dll.")
     fin_choices = ["Keuangan", "SDM", "HSSE", "IT", "PAP", "Umum", "Rumah Tangga"]
     df_base = df_filtered_periode[df_filtered_periode[col_bidang].str.contains('|'.join(fin_choices), case=False, na=False)]
-    role_title = "DIREKTORAT KEUANGAN, SDM, HSSE, IT, PAP, UMUM & RT"
+    role_title = f"DIREKTORAT KEUANGAN, SDM, HSSE, IT, PAP, UMUM & RT ({selected_periode})"
 
 elif access_role == "Auditee (Perorangan / Unit Lain)":
-    st.sidebar.info("ℹ️ Pilih spesifik unit kerja Anda:")
-    chosen_unit = st.sidebar.selectbox("Pilih Bidang:", all_available_bidang)
+    st.sidebar.info("ℹ️ Pilih unit kerja Anda di periode ini:")
+    # Hanya menampilkan bidang yang aktif di tahun tersebut
+    chosen_unit = st.sidebar.selectbox("Pilih Bidang:", current_available_bidang if current_available_bidang else ["Tidak ada data"])
     df_base = df_filtered_periode[df_filtered_periode[col_bidang].astype(str) == str(chosen_unit)]
-    role_title = f"DEPARTEMEN {chosen_unit.upper()}"
+    role_title = f"DEPARTEMEN {chosen_unit.upper()} ({selected_periode})"
 
 else:  # Admin SPI
     if st.session_state.admin_logged_in:
-        chosen_admin_filter = st.sidebar.selectbox("📂 Filter Bidang:", ["Semua Bidang"] + all_available_bidang)
+        chosen_admin_filter = st.sidebar.selectbox("📂 Filter Bidang:", ["Semua Bidang"] + current_available_bidang)
         if chosen_admin_filter == "Semua Bidang":
             df_base = df_filtered_periode.copy()
         else:
             df_base = df_filtered_periode[df_filtered_periode[col_bidang].astype(str) == str(chosen_admin_filter)]
-        role_title = "ADMIN SPI - FULL ACCESS"
+        role_title = f"ADMIN SPI - FULL ACCESS ({selected_periode})"
     else:
         st.sidebar.warning("⚠️ Masukkan PIN Admin di atas.")
         df_base = df_filtered_periode.head(0)
@@ -215,7 +216,7 @@ with col_chart_bar:
         fig_bar.update_layout(height=300, margin=dict(l=0, r=10, t=30, b=0))
         st.plotly_chart(fig_bar, use_container_width=True)
     else:
-        st.info("Tidak ada data untuk filter portofolio ini.")
+        st.info("Tidak ada data untuk filter portofolio atau periode ini.")
 
 with col_chart_pie:
     if not df_filtered.empty:
