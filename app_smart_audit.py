@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import os
 import io
 
 st.set_page_config(
@@ -53,19 +54,16 @@ def load_data():
         return pd.read_excel("Master_Database_Temuan_Audit_2024_2025_PSM_Ringkas.xlsx")
 
 df_master = load_data()
-PIN_ADMIN = "1234"  # <-- Ubah angka ini jika ingin mengganti PIN Admin SPI
+PIN_ADMIN = "1234"  # <-- Ubah PIN Admin SPI di sini jika diperlukan
 
 col_bidang = "Bidang" if "Bidang" in df_master.columns else df_master.columns[5]
 col_periode = "Tahun Audit" if "Tahun Audit" in df_master.columns else df_master.columns[3]
 
-# --- SIDEBAR: PENGATURAN HAK AKSES & PERIODE DI AWAL ---
+# --- SIDEBAR: PENGATURAN HAK AKSES & PERIODE ---
 st.sidebar.markdown("## 🎯 Filter Control Panel")
 selected_periode = st.sidebar.selectbox("📅 Periode Audit:", ["Semua Periode"] + sorted(list(df_master[col_periode].dropna().astype(str).unique())))
 
-# Filter data berdasarkan periode terlebih dahulu
 df_filtered_periode = df_master[df_master[col_periode].astype(str) == str(selected_periode)] if selected_periode != "Semua Periode" else df_master.copy()
-
-# Daftar bidang dinamis sesuai periode terpilih
 current_available_bidang = sorted(list(df_filtered_periode[col_bidang].dropna().astype(str).unique()))
 
 st.sidebar.markdown("---")
@@ -81,13 +79,16 @@ access_role = st.sidebar.selectbox(
     ]
 )
 
-# Inisialisasi session state login admin
 if 'admin_logged_in' not in st.session_state:
     st.session_state.admin_logged_in = False
 
+# Simpan riwayat upload bukti dukung sementara dalam session state
+if 'uploaded_evidences' not in st.session_state:
+    st.session_state.uploaded_evidences = []
+
 role_title = "SMART AUDIT MONITORING DASHBOARD - PT PELINDO SOLUSI MARITIM"
 
-# --- LOGIKA INPUT PIN ---
+# --- LOGIKA INPUT PIN ADMIN ---
 if access_role == "Admin SPI":
     if not st.session_state.admin_logged_in:
         entered_pin = st.sidebar.text_input("🔑 Masukkan PIN Admin:", type="password")
@@ -103,7 +104,7 @@ if access_role == "Admin SPI":
             st.session_state.admin_logged_in = False
             st.rerun()
 
-# --- PEMETAAN DATA BERDASARKAN STRUKTUR DIREKSI & PERIODE AKTIF ---
+# --- PEMETAAN DATA BERDASARKAN PERAN ---
 if access_role == "Direktur Utama":
     st.sidebar.info("ℹ️ Mode Dirut: Meninjau seluruh bidang.")
     sub_choice = st.sidebar.selectbox("Tinjau Cakupan:", ["Semua Bidang (Keseluruhan)", "SPI", "Hukum", "Sekper", "Pengadaan"])
@@ -176,7 +177,6 @@ with c5:
     if st.button(f"OVERDUE (BD)\n\n{overdue} Belum TL", key="b_bd"):
         st.session_state.filter_status = "Overdue"
 
-# TERAPKAN FILTER STATUS KE DATA UTAMA
 df_filtered = df_base.copy()
 if st.session_state.filter_status == "Selesai":
     df_filtered = df_base[df_base[col_status].str.contains("Selesai|SLS", case=False, na=False)]
@@ -188,7 +188,6 @@ elif st.session_state.filter_status == "Overdue":
 st.markdown(f"<p style='color: #3b82f6; font-size: 12px; margin-top: -10px;'>Status Filter Aktif: <b>{st.session_state.filter_status}</b></p>", unsafe_allow_html=True)
 st.markdown("---")
 
-# Konsistensi Warna Baku untuk Setiap Status
 color_map = {
     'Selesai (SLS)': '#00BCD4',   
     'Selesai': '#00BCD4',
@@ -202,7 +201,6 @@ color_map = {
     'Belum TL': '#FF7043'
 }
 
-# Chart & Data
 col_chart_bar, col_chart_pie = st.columns([3, 1.5])
 
 with col_chart_bar:
@@ -227,5 +225,40 @@ with col_chart_pie:
         fig_pie.update_layout(height=300, margin=dict(l=10, r=10, t=30, b=10), showlegend=False)
         st.plotly_chart(fig_pie, use_container_width=True)
 
-st.markdown("### 📋 Detail Data")
+st.markdown("### 📋 Detail Data Temuan")
 st.dataframe(df_filtered, use_container_width=True)
+
+# --- FITUR TAMBAHAN: FORM UPLOAD BUKTI DUKUNG (KHUSUS AUDITEE & ADMIN) ---
+if access_role in ["Auditee", "Admin SPI"] and not df_base.empty:
+    st.markdown("---")
+    st.markdown("### 📤 Form Upload Bukti Dukung Tindak Lanjut (Evidence)")
+    st.info("💡 Gunakan form ini untuk mengunggah dokumen pendukung / bukti penyelesaian (format PDF / Foto) untuk dikirimkan kepada tim SPI.")
+
+    col_id_temuan = "ID Temuan" if "ID Temuan" in df_base.columns else df_base.columns[1]
+    list_temuan_ids = df_base[col_id_temuan].dropna().astype(str).tolist()
+
+    with st.form("form_upload_evidence"):
+        selected_temuan_upload = st.selectbox("Pilih ID Temuan Terkait:", list_temuan_ids)
+        keterangan_tindakan = st.text_area("Keterangan Tindak Lanjut / Catatan Penyelesaian:")
+        uploaded_file = st.file_uploader("Unggah Dokumen Evidence (Format: PDF / Foto JPG/PNG):", type=["pdf", "png", "jpg", "jpeg"])
+        
+        submit_upload = st.form_submit_button("Kirim Bukti Dukung ke SPI")
+
+        if submit_upload:
+            if uploaded_file is not None:
+                # Simpan data sementara ke session state riwayat upload
+                st.session_state.uploaded_evidences.append({
+                    "Bidang": selected_bidang if 'selected_bidang' in locals() else access_role,
+                    "ID Temuan": selected_temuan_upload,
+                    "Keterangan": keterangan_tindakan,
+                    "Nama File": uploaded_file.name
+                })
+                st.success(f"Berhasil! Dokumen '{uploaded_file.name}' untuk temuan {selected_temuan_upload} telah dikirim ke SPI.")
+            else:
+                st.warning("Mohon lampirkan file bukti dukung terlebih dahulu sebelum menekan tombol kirim.")
+
+    # Tampilkan daftar riwayat file yang sudah diunggah pada sesi ini
+    if st.session_state.uploaded_evidences:
+        st.markdown("#### 📁 Riwayat Dokumen yang Telah Diunggah:")
+        df_ev = pd.DataFrame(st.session_state.uploaded_evidences)
+        st.dataframe(df_ev, use_container_width=True)
