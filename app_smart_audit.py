@@ -63,9 +63,7 @@ col_bidang = "Bidang" if "Bidang" in df_master.columns else df_master.columns[5]
 col_periode = "Tahun Audit" if "Tahun Audit" in df_master.columns else df_master.columns[3]
 col_status = "Status" if "Status" in df_master.columns else "Status_TL"
 
-# Pastikan kolom verifikasi auditor ada di dataframe
-if "Verifikasi_Auditor" not in df_master.columns:
-    df_master["Verifikasi_Auditor"] = "Belum Diverifikasi"
+# Pastikan kolom catatan auditor ada di dataframe
 if "Catatan_Auditor" not in df_master.columns:
     df_master["Catatan_Auditor"] = "-"
 
@@ -204,11 +202,12 @@ with col_chart_pie:
         fig_pie.update_layout(height=300, margin=dict(l=10, r=10, t=30, b=10), showlegend=False)
         st.plotly_chart(fig_pie, use_container_width=True)
 
-# --- PENGATURAN KOLOM TABEL ---
+# --- PENGATURAN KOLOM TABEL (HAPUS VERIFIKASI AUDITOR) ---
 columns_to_drop = [
     "No", "Poin", "Tahun Audit", "Nama Entitas", "Tingkat Risiko", 
     "Prioritas", "Tag Kata Kunci (#Preventif)", 
-    "Ringkasan Kondisi & Akar Masalah (Root Cause)"
+    "Ringkasan Kondisi & Akar Masalah (Root Cause)",
+    "Verifikasi_Auditor"
 ]
 df_table_display = df_filtered.drop(columns=[col for col in columns_to_drop if col in df_filtered.columns])
 df_table_display.insert(0, "No", range(1, len(df_table_display) + 1))
@@ -219,58 +218,44 @@ st.dataframe(df_table_display, use_container_width=True, hide_index=True)
 # --- PANEL KHUSUS ADMIN SPI UNTUK INPUT VERIFIKASI ---
 if access_role == "Admin SPI" and st.session_state.admin_logged_in:
     st.markdown("---")
-    st.markdown("### ✍️ Panel Update Verifikasi Auditor (Approve / Reject / Sedang Diverifikasi)")
-    st.info("💡 Pilih ID Temuan di bawah ini untuk memperbarui status verifikasi dan memberikan catatan kepada Auditee.")
+    st.markdown("### ✍️ Panel Update Status & Catatan Auditor")
+    st.info("💡 Pilih ID Temuan di bawah ini untuk memperbarui status tindak lanjut dan memberikan catatan kepada Auditee.")
     
     id_list = df_base["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_base.columns else []
     if id_list:
         selected_id = st.selectbox("Pilih ID Temuan:", id_list)
         row_idx = df_master[df_master["ID Temuan"].astype(str) == str(selected_id)].index
         if len(row_idx) > 0:
-            current_verif = df_master.loc[row_idx[0], "Verifikasi_Auditor"]
+            current_status = df_master.loc[row_idx[0], col_status]
             current_note = df_master.loc[row_idx[0], "Catatan_Auditor"]
             
-            # Tentukan index default pilihan selectbox
-            opt_list = [
-                "Belum Diverifikasi", 
-                "⏳ Sedang Diverifikasi Auditor", 
-                "✅ Disetujui (Approve - Status Selesai)", 
-                "❌ Ditolak (Reject - Status Overdue)"
-            ]
+            opt_status = ["BD (Belum Selesai / Overdue)", "EVAL (Sedang Dievaluasi)", "SLS (Selesai)"]
             default_idx = 0
-            if "Sedang" in str(current_verif):
+            if "EVAL" in str(current_status):
                 default_idx = 1
-            elif "Disetujui" in str(current_verif):
+            elif "SLS" in str(current_status) or "Selesai" in str(current_status):
                 default_idx = 2
-            elif "Ditolak" in str(current_verif):
-                default_idx = 3
 
             with st.form(key="form_verifikasi"):
                 col_v1, col_v2 = st.columns(2)
                 with col_v1:
-                    verdict = st.selectbox("Keputusan Auditor:", opt_list, index=default_idx)
+                    new_status_choice = st.selectbox("Ubah Status Temuan:", opt_status, index=default_idx)
                 with col_v2:
                     auditor_note = st.text_area("Catatan / Tanggapan Auditor untuk Auditee:", value=str(current_note))
                 
-                submit_verif = st.form_submit_button("💾 Simpan & Tampilkan ke Auditee")
+                submit_verif = st.form_submit_button("💾 Simpan Perubahan Status & Catatan")
                 
                 if submit_verif:
                     df_master.loc[row_idx, "Catatan_Auditor"] = auditor_note
-                    if "Sedang" in verdict:
-                        df_master.loc[row_idx, "Verifikasi_Auditor"] = "⏳ Sedang Diverifikasi Auditor"
-                        st.info(f"Temuan {selected_id} berstatus Sedang Diverifikasi Auditor.")
-                    elif "Disetujui" in verdict:
-                        df_master.loc[row_idx, "Verifikasi_Auditor"] = "Disetujui"
-                        df_master.loc[row_idx, col_status] = "Selesai (SLS)"
-                        st.success(f"Temuan {selected_id} disetujui. Status otomatis menjadi Selesai.")
-                    elif "Ditolak" in verdict:
-                        df_master.loc[row_idx, "Verifikasi_Auditor"] = "Ditolak"
-                        df_master.loc[row_idx, col_status] = "Overdue (BD)"
-                        st.warning(f"Temuan {selected_id} ditolak. Status otomatis menjadi Overdue.")
-                    else:
-                        df_master.loc[row_idx, "Verifikasi_Auditor"] = "Belum Diverifikasi"
+                    if "BD" in new_status_choice:
+                        df_master.loc[row_idx, col_status] = "BD"
+                    elif "EVAL" in new_status_choice:
+                        df_master.loc[row_idx, col_status] = "EVAL"
+                    elif "SLS" in new_status_choice:
+                        df_master.loc[row_idx, col_status] = "SLS"
                     
                     st.session_state.df_master = df_master
+                    st.success(f"Temuan {selected_id} berhasil diperbarui!")
                     st.rerun()
 
 # --- INTEGRASI GOOGLE FORM / GOOGLE DRIVE (KHUSUS AUDITEE & ADMIN) ---
