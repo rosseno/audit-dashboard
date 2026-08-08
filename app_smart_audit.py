@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS untuk merapikan ukuran dan jarak tombol KPI
+# Custom CSS untuk styling card KPI yang keren dan modern
 st.markdown("""
 <style>
     .main { background-color: #0e1117; }
@@ -26,24 +26,24 @@ st.markdown("""
     }
     .header-title { color: #ffffff; font-size: 22px; font-weight: 700; }
     
-    /* Mengatur ukuran dan kerapatan tombol KPI */
+    /* Styling Tombol agar menyerupai card modern */
     div.stButton > button {
         width: 100% !important;
-        height: 75px !important;
+        height: 95px !important;
         background-color: #1e293b !important;
         color: #ffffff !important;
         border: 1px solid #334155 !important;
-        border-radius: 8px !important;
+        border-radius: 10px !important;
         font-weight: bold !important;
-        font-size: 13px !important;
-        padding: 5px !important;
         text-align: left !important;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        padding: 12px 15px !important;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.2);
         transition: 0.2s ease-in-out;
     }
     div.stButton > button:hover {
         border-color: #3b82f6 !important;
         background-color: #253348 !important;
+        transform: translateY(-2px);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -144,7 +144,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# KPI Interaktif (Menggunakan kolom tambahan agar tersusun rapat dan proporsional)
+# KPI Interaktif ala Card Modern
 st.markdown("### 📈 Ringkasan Eksekutif KPI (Klik Kartu untuk Filter Status)")
 if 'filter_status' not in st.session_state: 
     st.session_state.filter_status = "Semua"
@@ -154,22 +154,26 @@ selesai = len(df_base[df_base[col_status].str.contains("Selesai|SLS", case=False
 evaluasi = len(df_base[df_base[col_status].str.contains("Evaluasi|EVAL", case=False, na=False)])
 overdue = len(df_base[df_base[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)])
 
-# Menggunakan 5 kolom utama + 1 kolom kosong kecil di ujung atau pembagian proporsional yang rapat
+# Hitung persentase untuk sub-teks card
+pct_selesai = f"{(selesai/total_temuan)*100:.1f}% dari Total" if total_temuan > 0 else "0%"
+pct_eval = f"{(evaluasi/total_temuan)*100:.1f}% Dalam Proses" if total_temuan > 0 else "0%"
+pct_overdue = f"{(overdue/total_temuan)*100:.1f}% Belum TL" if total_temuan > 0 else "0%"
+
 cols = st.columns(5)
 with cols[0]:
-    if st.button(f"TOTAL TEMUAN\n{total_temuan} (Semua)", key="b_all"):
+    if st.button(f"TOTAL TEMUAN\n\n  {total_temuan}\nJudul LHP Utama", key="b_all"):
         st.session_state.filter_status = "Semua"
 with cols[1]:
-    if st.button(f"POIN REKOMENDASI\n{total_temuan} (Total)", key="b_rec"):
+    if st.button(f"POIN REKOMENDASI\n\n  {total_temuan}\nButir Granular", key="b_rec"):
         st.session_state.filter_status = "Semua"
 with cols[2]:
-    if st.button(f"SELESAI (SLS)\n{selesai} Selesai", key="b_sls"):
+    if st.button(f"🟢 SELESAI (SLS)\n\n  {selesai}\n{pct_selesai}", key="b_sls"):
         st.session_state.filter_status = "Selesai"
 with cols[3]:
-    if st.button(f"EVALUASI (EVAL)\n{evaluasi} Proses", key="b_eval"):
+    if st.button(f"🟡 EVALUASI (EVAL)\n\n  {evaluasi}\n{pct_eval}", key="b_eval"):
         st.session_state.filter_status = "Evaluasi"
 with cols[4]:
-    if st.button(f"OVERDUE (BD)\n{overdue} Belum TL", key="b_bd"):
+    if st.button(f"🔴 OVERDUE (BD)\n\n  {overdue}\n{pct_overdue}", key="b_bd"):
         st.session_state.filter_status = "Overdue"
 
 df_filtered = df_base.copy()
@@ -180,7 +184,7 @@ elif st.session_state.filter_status == "Evaluasi":
 elif st.session_state.filter_status == "Overdue":
     df_filtered = df_base[df_base[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)]
 
-st.markdown(f"<p style='color: #3b82f6; font-size: 12px; margin-top: -10px;'>Status Filter Aktif: <b>{st.session_state.filter_status}</b></p>", unsafe_allow_html=True)
+st.markdown(f"<p style='color: #3b82f6; font-size: 12px; margin-top: -5px;'>Status Filter Aktif: <b>{st.session_state.filter_status}</b></p>", unsafe_allow_html=True)
 st.markdown("---")
 
 color_map = {'Selesai': '#00BCD4', 'SLS': '#00BCD4', 'Evaluasi': '#FFCA28', 'EVAL': '#FFCA28', 'Overdue': '#FF7043', 'BD': '#FF7043', 'Belum TL': '#FF7043'}
