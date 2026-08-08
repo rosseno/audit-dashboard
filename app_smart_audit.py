@@ -77,7 +77,7 @@ access_role = st.sidebar.selectbox(
         "Direktur Operasi & Komersial",
         "Direktur Keuangan, SDM, HSSE, IT, PAP, Umum & RT",
         "Auditee",
-        "Admin SPI (Full Access)"
+        "Admin SPI"
     ]
 )
 
