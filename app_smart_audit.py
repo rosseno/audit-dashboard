@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS Ultimate untuk Card 3D Hidup, Berpendar Neon, & Proporsi Font Sempurna
+# Custom CSS Ultimate untuk Card 3D, Neon Glow, & Posisi Angka Tabel di Tengah
 st.markdown("""
 <style>
     .main { background-color: #0e1117; }
@@ -261,7 +261,6 @@ with tab_grafik1:
 with tab_tabel_rekap:
     st.markdown("#### 📑 Rekapitulasi Matriks Tindak Lanjut Hasil Audit")
     if not df_base.empty:
-        # Membentuk tabel agregasi mirip matriks laporan eksekutif
         summary_rows = []
         unique_bidang = sorted(df_base[col_bidang].dropna().astype(str).unique())
         
@@ -274,7 +273,7 @@ with tab_tabel_rekap:
         for idx, b in enumerate(unique_bidang):
             df_b = df_base[df_base[col_bidang].astype(str) == b]
             j_t = len(df_b)
-            j_r = j_t # Asumsi 1 temuan mewakili 1 rekomendasi dasar atau disesuaikan
+            j_r = j_t 
             j_sls = len(df_b[df_b[col_status].str.contains("Selesai|SLS", case=False, na=False)])
             j_eval = len(df_b[df_b[col_status].str.contains("Evaluasi|EVAL", case=False, na=False)])
             j_bd = len(df_b[df_b[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)])
@@ -286,7 +285,7 @@ with tab_tabel_rekap:
             tot_bd += j_bd
             
             summary_rows.append({
-                "Objek Audit": f"{chr(65+idx)}. {b}",
+                "Objek Audit": f"{chr(65+idx)}. Bidang {b}",
                 "Jumlah Temuan": j_t,
                 "Jumlah Rekomendasi": j_r,
                 "Selesai (SLS)": j_sls,
@@ -297,7 +296,6 @@ with tab_tabel_rekap:
             
         df_summary = pd.DataFrame(summary_rows)
         
-        # Tambah baris Jumlah
         row_jumlah = {
             "Objek Audit": "JUMLAH",
             "Jumlah Temuan": tot_t,
@@ -308,7 +306,6 @@ with tab_tabel_rekap:
             "TPTD": 0
         }
         
-        # Tambah baris Progres (%)
         p_sls = f"{(tot_sls/tot_r)*100:.2f}" if tot_r > 0 else "0.00"
         p_eval = f"{(tot_eval/tot_r)*100:.2f}" if tot_r > 0 else "0.00"
         p_bd = f"{(tot_bd/tot_r)*100:.2f}" if tot_r > 0 else "0.00"
@@ -324,7 +321,24 @@ with tab_tabel_rekap:
         }
         
         df_summary = pd.concat([df_summary, pd.DataFrame([row_jumlah, row_progres])], ignore_index=True)
-        st.dataframe(df_summary, use_container_width=True, hide_index=True)
+        
+        # Konfigurasi alignment styling pandas agar seluruh kolom angka berada persis di tengah
+        def style_center_alignment(df):
+            return pd.DataFrame(
+                [['text-align: left' if i == 0 else 'text-align: center' for i in range(len(df.columns))] for _ in range(len(df))],
+                index=df.index,
+                columns=df.columns
+            )
+
+        def style_summary_rows(row):
+            if row["Objek Audit"] == "JUMLAH":
+                return ['background-color: #1e3a8a; color: white; font-weight: bold; text-align: left' if idx == 0 else 'background-color: #1e3a8a; color: white; font-weight: bold; text-align: center' for idx in range(len(row))]
+            elif row["Objek Audit"] == "PROGRES (%)":
+                return ['background-color: #0f766e; color: white; font-weight: bold; text-align: left' if idx == 0 else 'background-color: #0f766e; color: white; font-weight: bold; text-align: center' for idx in range(len(row))]
+            return ['text-align: left' if idx == 0 else 'text-align: center' for idx in range(len(row))]
+
+        styled_summary = df_summary.style.apply(style_summary_rows, axis=1)
+        st.dataframe(styled_summary, use_container_width=True, hide_index=True)
     else:
         st.info("Tidak ada data untuk ditampilkan dalam matriks rekapitulasi.")
 
