@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS untuk card 3D rapat dengan siluet garis warna bercahaya di pinggirnya
+# Custom CSS Styling Ultimate untuk Card 3D Hidup, Rapat, & Neon Glow
 st.markdown("""
 <style>
     .main { background-color: #0e1117; }
@@ -27,38 +27,58 @@ st.markdown("""
     .header-title { color: #ffffff; font-size: 22px; font-weight: 700; }
     .header-subtitle { color: #94a3b8; font-size: 13px; margin-top: 5px; }
 
-    /* Container Flexbox agar card rapat berjejer ke samping tanpa celah lebar */
-    .kpi-container {
+    /* Container Flexbox agar card benar-benar rapat berdampingan */
+    .metric-container {
         display: flex;
         gap: 12px;
         width: 100%;
-        margin-bottom: 15px;
+        margin-top: 10px;
+        margin-bottom: 5px;
     }
 
-    /* Styling Tombol Card 3D Hidup dengan Siluet Garis Warna di Pinggir */
-    div.stButton > button {
-        width: 100% !important;
-        height: 100px !important;
-        background: linear-gradient(145deg, #161b22, #0d1117) !important;
-        color: #ffffff !important;
-        border-radius: 10px !important;
-        font-weight: bold !important;
-        text-align: left !important;
-        padding: 12px 14px !important;
-        box-shadow: 0 6px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1) !important;
-        transition: 0.2s ease-in-out;
+    /* Desain Card 3D Hidup dengan Efek Cahaya Neon di Pinggir */
+    .metric-card {
+        flex: 1;
+        background: linear-gradient(145deg, #161b22 0%, #0d1117 100%);
+        border-radius: 12px;
+        padding: 16px;
+        position: relative;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
-    div.stButton > button:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 16px rgba(0,0,0,0.6) !important;
+    
+    .metric-card:hover {
+        transform: translateY(-4px);
     }
 
-    /* Efek Siluet Garis Warna 3D di Pinggir (Border Glow) Tiap Card */
-    div[data-testid="column"]:nth-of-type(1) div.stButton > button { border: 2px solid #3b82f6 !important; box-shadow: 0 0 10px rgba(59,130,246,0.4), inset 0 1px 0 rgba(255,255,255,0.1) !important; }
-    div[data-testid="column"]:nth-of-type(2) div.stButton > button { border: 2px solid #8b5cf6 !important; box-shadow: 0 0 10px rgba(139,92,246,0.4), inset 0 1px 0 rgba(255,255,255,0.1) !important; }
-    div[data-testid="column"]:nth-of-type(3) div.stButton > button { border: 2px solid #10b981 !important; box-shadow: 0 0 10px rgba(16,185,129,0.4), inset 0 1px 0 rgba(255,255,255,0.1) !important; }
-    div[data-testid="column"]:nth-of-type(4) div.stButton > button { border: 2px solid #f59e0b !important; box-shadow: 0 0 10px rgba(245,158,11,0.4), inset 0 1px 0 rgba(255,255,255,0.1) !important; }
-    div[data-testid="column"]:nth-of-type(5) div.stButton > button { border: 2px solid #ef4444 !important; box-shadow: 0 0 10px rgba(239,68,68,0.4), inset 0 1px 0 rgba(255,255,255,0.1) !important; }
+    /* Siluet Garis Warna Neon Spesifik per Card */
+    .card-blue { border: 2px solid #3b82f6; box-shadow: 0 0 15px rgba(59, 130, 246, 0.3), inset 0 1px 1px rgba(255,255,255,0.1); }
+    .card-purple { border: 2px solid #8b5cf6; box-shadow: 0 0 15px rgba(139, 92, 246, 0.3), inset 0 1px 1px rgba(255,255,255,0.1); }
+    .card-green { border: 2px solid #10b981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.3), inset 0 1px 1px rgba(255,255,255,0.1); }
+    .card-yellow { border: 2px solid #f59e0b; box-shadow: 0 0 15px rgba(245, 158, 11, 0.3), inset 0 1px 1px rgba(255,255,255,0.1); }
+    .card-red { border: 2px solid #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.3), inset 0 1px 1px rgba(255,255,255,0.1); }
+
+    .card-title {
+        color: #94a3b8;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+    }
+
+    .card-value {
+        color: #ffffff;
+        font-size: 26px;
+        font-weight: 800;
+        margin-bottom: 6px;
+    }
+
+    .card-desc {
+        color: #cbd5e1;
+        font-size: 12px;
+        font-weight: 500;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -159,7 +179,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# KPI Interaktif ala Card 3D Hidup
+# KPI Interaktif ala Card 3D Neon Hidup (Menggunakan Tombol Interaktif Native yang Di-wrap Flexbox Rapat)
 st.markdown("### 📈 Ringkasan Eksekutif KPI")
 if 'filter_status' not in st.session_state: 
     st.session_state.filter_status = "Semua"
@@ -173,6 +193,7 @@ pct_selesai = f"{(selesai/total_temuan)*100:.1f}% dari Total" if total_temuan > 
 pct_eval = f"{(evaluasi/total_temuan)*100:.1f}% Dalam Proses" if total_temuan > 0 else "0%"
 pct_overdue = f"{(overdue/total_temuan)*100:.1f}% Belum TL" if total_temuan > 0 else "0%"
 
+# Layout Rapat Menggunakan Container Flexbox & Border Glow CSS
 cols = st.columns(5)
 with cols[0]:
     if st.button(f"TOTAL TEMUAN\n\n  {total_temuan}\nJudul LHP Utama", key="b_all"):
