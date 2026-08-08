@@ -228,42 +228,7 @@ df_table_display.insert(0, "No", range(1, len(df_table_display) + 1))
 st.markdown("### 📋 Detail Data Temuan & Rekomendasi")
 st.dataframe(df_table_display, use_container_width=True, hide_index=True)
 
-# --- FITUR EKSPOR LAPORAN KUSTOM (PDF / EXCEL) ---
-st.markdown("---")
-st.markdown("### 📥 Ekspor Laporan Ringkas (Untuk Rapat Direksi / Komite Audit)")
-col_exp1, col_exp2 = st.columns(2)
-
-with col_exp1:
-    # Tombol Ekspor Excel / CSV
-    csv_data = df_table_display.to_csv(index=False).encode('utf-8')
-    st.download_button(
-        label="📥 Download Rekapan Laporan (Format Excel/CSV)",
-        data=csv_data,
-        file_name=f"Laporan_Audit_{selected_periode}_{datetime.now().strftime('%Y%m%d')}.csv",
-        mime="text/csv",
-    )
-
-with col_exp2:
-    # Simulasi Ekspor Laporan Ringkas PDF Profesional untuk Komite Audit
-    def generate_summary_text_report():
-        report = f"=== LAPORAN EKSEKUTIF PENGAWASAN SPI ===\n"
-        report += f"Periode: {selected_periode}\n"
-        report += f"Tanggal Cetak: {datetime.now().strftime('%d-%m-%Y')}\n"
-        report += f"Total Temuan: {total_temuan}\n"
-        report += f"Selesai (SLS): {selesai}\n"
-        report += f"Dalam Evaluasi (EVAL): {evaluasi}\n"
-        report += f"Overdue (BD): {overdue}\n"
-        report += f"===========================================\n"
-        return report.encode('utf-8')
-
-    st.download_button(
-        label="📄 Download Laporan Ringkas (Format Siap Cetak PDF/TXT)",
-        data=generate_summary_text_report(),
-        file_name=f"Ringkasan_Eksekutif_Audit_{selected_periode}.txt",
-        mime="text/plain",
-    )
-
-# --- PANEL KHUSUS ADMIN SPI UNTUK INPUT VERIFIKASI ---
+# --- PANEL KHUSUS ADMIN SPI UNTUK INPUT VERIFIKASI & EKSPOR LAPORAN ---
 if access_role == "Admin SPI" and st.session_state.admin_logged_in:
     st.markdown("---")
     st.markdown("### ✍️ Panel Update Status & Catatan Auditor")
@@ -305,6 +270,39 @@ if access_role == "Admin SPI" and st.session_state.admin_logged_in:
                     st.session_state.df_master = df_master
                     st.success(f"Temuan {selected_id} berhasil diperbarui!")
                     st.rerun()
+
+    # --- FITUR EKSPOR LAPORAN KUSTOM (HANYA MUNCUL DI ADMIN SPI) ---
+    st.markdown("---")
+    st.markdown("### 📥 Ekspor Laporan Ringkas (Untuk Rapat Direksi / Komite Audit)")
+    col_exp1, col_exp2 = st.columns(2)
+
+    with col_exp1:
+        csv_data = df_table_display.to_csv(index=False).encode('utf-8')
+        st.download_button(
+            label="📥 Download Rekapan Laporan (Format Excel/CSV)",
+            data=csv_data,
+            file_name=f"Laporan_Audit_{selected_periode}_{datetime.now().strftime('%Y%m%d')}.csv",
+            mime="text/csv",
+        )
+
+    with col_exp2:
+        def generate_summary_text_report():
+            report = f"=== LAPORAN EKSEKUTIF PENGAWASAN SPI ===\n"
+            report += f"Periode: {selected_periode}\n"
+            report += f"Tanggal Cetak: {datetime.now().strftime('%d-%m-%Y')}\n"
+            report += f"Total Temuan: {total_temuan}\n"
+            report += f"Selesai (SLS): {selesai}\n"
+            report += f"Dalam Evaluasi (EVAL): {evaluasi}\n"
+            report += f"Overdue (BD): {overdue}\n"
+            report += f"===========================================\n"
+            return report.encode('utf-8')
+
+        st.download_button(
+            label="📄 Download Laporan Ringkas (Format Siap Cetak PDF/TXT)",
+            data=generate_summary_text_report(),
+            file_name=f"Ringkasan_Eksekutif_Audit_{selected_periode}.txt",
+            mime="text/plain",
+        )
 
 # --- INTEGRASI GOOGLE FORM / GOOGLE DRIVE (KHUSUS AUDITEE & ADMIN) ---
 if access_role in ["Auditee", "Admin SPI"]:
