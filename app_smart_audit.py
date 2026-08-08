@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS untuk card KPI modern dengan border warna di atas
+# Custom CSS untuk card 3D rapat dengan siluet garis warna bercahaya di pinggirnya
 st.markdown("""
 <style>
     .main { background-color: #0e1117; }
@@ -27,32 +27,38 @@ st.markdown("""
     .header-title { color: #ffffff; font-size: 22px; font-weight: 700; }
     .header-subtitle { color: #94a3b8; font-size: 13px; margin-top: 5px; }
 
-    /* Styling Card KPI dengan Border Aksen di Atas */
+    /* Container Flexbox agar card rapat berjejer ke samping tanpa celah lebar */
+    .kpi-container {
+        display: flex;
+        gap: 12px;
+        width: 100%;
+        margin-bottom: 15px;
+    }
+
+    /* Styling Tombol Card 3D Hidup dengan Siluet Garis Warna di Pinggir */
     div.stButton > button {
         width: 100% !important;
-        height: 105px !important;
-        background-color: #161b22 !important;
+        height: 100px !important;
+        background: linear-gradient(145deg, #161b22, #0d1117) !important;
         color: #ffffff !important;
-        border: 1px solid #30363d !important;
-        border-radius: 8px !important;
+        border-radius: 10px !important;
         font-weight: bold !important;
         text-align: left !important;
         padding: 12px 14px !important;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1) !important;
         transition: 0.2s ease-in-out;
     }
     div.stButton > button:hover {
-        border-color: #58a6ff !important;
-        background-color: #1f242c !important;
-        transform: translateY(-2px);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.6) !important;
     }
-    
-    /* Warna Aksen Garis Atas Khusus Tiap Card */
-    div[data-testid="column"]:nth-of-type(1) div.stButton > button { border-top: 3px solid #3b82f6 !important; }
-    div[data-testid="column"]:nth-of-type(2) div.stButton > button { border-top: 3px solid #8b5cf6 !important; }
-    div[data-testid="column"]:nth-of-type(3) div.stButton > button { border-top: 3px solid #10b981 !important; }
-    div[data-testid="column"]:nth-of-type(4) div.stButton > button { border-top: 3px solid #f59e0b !important; }
-    div[data-testid="column"]:nth-of-type(5) div.stButton > button { border-top: 3px solid #ef4444 !important; }
+
+    /* Efek Siluet Garis Warna 3D di Pinggir (Border Glow) Tiap Card */
+    div[data-testid="column"]:nth-of-type(1) div.stButton > button { border: 2px solid #3b82f6 !important; box-shadow: 0 0 10px rgba(59,130,246,0.4), inset 0 1px 0 rgba(255,255,255,0.1) !important; }
+    div[data-testid="column"]:nth-of-type(2) div.stButton > button { border: 2px solid #8b5cf6 !important; box-shadow: 0 0 10px rgba(139,92,246,0.4), inset 0 1px 0 rgba(255,255,255,0.1) !important; }
+    div[data-testid="column"]:nth-of-type(3) div.stButton > button { border: 2px solid #10b981 !important; box-shadow: 0 0 10px rgba(16,185,129,0.4), inset 0 1px 0 rgba(255,255,255,0.1) !important; }
+    div[data-testid="column"]:nth-of-type(4) div.stButton > button { border: 2px solid #f59e0b !important; box-shadow: 0 0 10px rgba(245,158,11,0.4), inset 0 1px 0 rgba(255,255,255,0.1) !important; }
+    div[data-testid="column"]:nth-of-type(5) div.stButton > button { border: 2px solid #ef4444 !important; box-shadow: 0 0 10px rgba(239,68,68,0.4), inset 0 1px 0 rgba(255,255,255,0.1) !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -153,7 +159,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# KPI Interaktif ala Card Modern
+# KPI Interaktif ala Card 3D Hidup
 st.markdown("### 📈 Ringkasan Eksekutif KPI")
 if 'filter_status' not in st.session_state: 
     st.session_state.filter_status = "Semua"
