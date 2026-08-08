@@ -43,7 +43,6 @@ st.markdown("""
         padding: 16px 18px;
         box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7), inset 0 1px 1px rgba(255, 255, 255, 0.15);
         transition: transform 0.2s ease, box-shadow 0.2s ease;
-        cursor: pointer;
     }
     
     .kpi-card:hover {
@@ -179,7 +178,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# KPI Interaktif ala Card 3D Hidup dengan Proporsi Font Sempurna
+# KPI Interaktif ala Card 3D Hidup dengan Proporsi Font Sempurna (Tanpa Tombol Kecil)
 st.markdown("### 📈 Ringkasan Eksekutif KPI")
 if 'filter_status' not in st.session_state: 
     st.session_state.filter_status = "Semua"
@@ -193,25 +192,7 @@ pct_selesai = f"{(selesai/total_temuan)*100:.1f}% dari Total" if total_temuan > 
 pct_eval = f"{(evaluasi/total_temuan)*100:.1f}% Dalam Proses" if total_temuan > 0 else "0%"
 pct_overdue = f"{(overdue/total_temuan)*100:.1f}% Belum TL" if total_temuan > 0 else "0%"
 
-# Tombol interaktif transparan di atas card 3D HTML murni
-cols = st.columns(5)
-with cols[0]:
-    if st.button("Filter: Total Temuan", key="b_all", help="Klik untuk melihat semua temuan"):
-        st.session_state.filter_status = "Semua"
-with cols[1]:
-    if st.button("Filter: Rekomendasi", key="b_rec", help="Klik untuk melihat semua rekomendasi"):
-        st.session_state.filter_status = "Semua"
-with cols[2]:
-    if st.button("Filter: Selesai", key="b_sls", help="Klik untuk filter Selesai"):
-        st.session_state.filter_status = "Selesai"
-with cols[3]:
-    if st.button("Filter: Evaluasi", key="b_eval", help="Klik untuk filter Evaluasi"):
-        st.session_state.filter_status = "Evaluasi"
-with cols[4]:
-    if st.button("Filter: Overdue", key="b_bd", help="Klik untuk filter Overdue"):
-        st.session_state.filter_status = "Overdue"
-
-# Render Tampilan Visual Card 3D Hidup dengan Font Proporsional
+# Render Tampilan Visual Card 3D Hidup Bersih Tanpa Tombol
 st.markdown(f"""
 <div class="kpi-row">
     <div class="kpi-card card-blue">
