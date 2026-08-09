@@ -18,14 +18,17 @@ st.markdown("""
     .main { background-color: #0e1117; }
     .header-banner {
         background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-        padding: 20px;
+        padding: 20px 25px;
         border-radius: 10px;
         border-left: 5px solid #3b82f6;
         margin-bottom: 20px;
         box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
-    .header-title { color: #ffffff; font-size: 22px; font-weight: 700; }
-    .header-subtitle { color: #94a3b8; font-size: 13px; margin-top: 5px; }
+    .header-title { color: #ffffff; font-size: 20px; font-weight: 700; }
+    .header-subtitle { color: #94a3b8; font-size: 12px; margin-top: 5px; }
 
     /* Container Card KPI agar rapat berjejer rapi & proporsional */
     .kpi-row {
@@ -170,15 +173,16 @@ else:  # Admin SPI
     else:
         df_base = df_filtered_periode.head(0)
 
-# --- HEADER BANNER UTUH DENGAN IDENTITAS DANANTARA INDONESIA ---
+# --- HEADER BANNER UTAMA DENGAN DUA IDENTITAS LOGO ---
 st.markdown("""
-<div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding: 20px 25px; border-radius: 10px; border-left: 5px solid #3b82f6; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); display: flex; justify-content: space-between; align-items: center;">
+<div class="header-banner">
     <div>
-        <div style="color: #ffffff; font-size: 20px; font-weight: 700;">SMART AUDIT MONITORING DASHBOARD - PT PELINDO SOLUSI MARITIM</div>
-        <div style="color: #94a3b8; font-size: 12px; margin-top: 5px;">Sistem Pemantauan Granular Hasil Audit Kepatuhan & Performansi — Internal Audit Unit</div>
+        <div class="header-title">SMART AUDIT MONITORING DASHBOARD - PT PELINDO SOLUSI MARITIM</div>
+        <div class="header-subtitle">Sistem Pemantauan Granular Hasil Audit Kepatuhan & Performansi — Internal Audit Unit</div>
     </div>
-    <div style="text-align: right; padding-left: 15px;">
-        <span style="color: #ffffff; font-size: 14px; font-weight: bold; letter-spacing: 1px;">DANANTARA INDONESIA</span>
+    <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+        <span style="background-color: #0ea5e9; color: white; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; letter-spacing: 0.5px;">PELINDO JASA MARITIM</span>
+        <span style="background-color: #e2e8f0; color: #0f172a; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; letter-spacing: 0.5px;">DANANTARA INDONESIA</span>
     </div>
 </div>
 """, unsafe_allow_html=True)
