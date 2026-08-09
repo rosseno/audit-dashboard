@@ -236,7 +236,7 @@ st.markdown("---")
 
 color_map = {'Selesai': '#00BCD4', 'SLS': '#00BCD4', 'Evaluasi': '#FFCA28', 'EVAL': '#FFCA28', 'Overdue': '#FF7043', 'BD': '#FF7043', 'Belum TL': '#FF7043'}
 
-# --- TABEL REKAPITULASI MATRIKS AUDIT (FORMAT DATAFRAME STABIL) ---
+# --- TABEL REKAPITULASI MATRIKS AUDIT (DENGAN KOLOM DALAM EVALUASI / EVAL) ---
 st.markdown("### Rekapitulasi Matriks Tindak Lanjut Hasil Audit")
 if not df_base.empty:
     summary_rows = []
@@ -268,7 +268,7 @@ if not df_base.empty:
             "Jumlah Temuan": j_t,
             "Jumlah Rekomendasi": j_r,
             "Selesai (SLS)": j_sls,
-            "Belum Sesuai (BS)": j_eval,
+            "Dalam Evaluasi (EVAL)": j_eval,
             "Belum Ditindaklanjuti (BD)": j_bd,
             "TPTD": 0
         })
@@ -282,7 +282,7 @@ if not df_base.empty:
         "Jumlah Temuan": tot_t,
         "Jumlah Rekomendasi": tot_r,
         "Selesai (SLS)": tot_sls,
-        "Belum Sesuai (BS)": tot_eval,
+        "Dalam Evaluasi (EVAL)": tot_eval,
         "Belum Ditindaklanjuti (BD)": tot_bd,
         "TPTD": 0
     })
@@ -292,7 +292,7 @@ if not df_base.empty:
         "Jumlah Temuan": "-",
         "Jumlah Rekomendasi": "-",
         "Selesai (SLS)": p_sls,
-        "Belum Sesuai (BS)": p_eval,
+        "Dalam Evaluasi (EVAL)": p_eval,
         "Belum Ditindaklanjuti (BD)": p_bd,
         "TPTD": 0
     })
