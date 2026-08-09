@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS Ultimate untuk Card 3D, Neon Glow, & Styling Tabel HTML Kustom
+# Custom CSS Ultimate untuk Card 3D, Neon Glow, & Styling Global
 st.markdown("""
 <style>
     .main { background-color: #0e1117; }
@@ -236,7 +236,7 @@ st.markdown("---")
 
 color_map = {'Selesai': '#00BCD4', 'SLS': '#00BCD4', 'Evaluasi': '#FFCA28', 'EVAL': '#FFCA28', 'Overdue': '#FF7043', 'BD': '#FF7043', 'Belum TL': '#FF7043'}
 
-# --- TABEL REKAPITULASI MATRIKS AUDIT MENGGUNAKAN HTML KUSTOM (FONT BESAR & RATA TENGAH) ---
+# --- TABEL REKAPITULASI MATRIKS AUDIT MENGGUNAKAN HTML KUSTOM DENGAN unsafe_allow_html=True ---
 st.markdown("### 📑 Rekapitulasi Matriks Tindak Lanjut Hasil Audit")
 if not df_base.empty:
     summary_rows = []
@@ -277,7 +277,6 @@ if not df_base.empty:
     p_eval = f"{(tot_eval/tot_r)*100:.2f}" if tot_r > 0 else "0.00"
     p_bd = f"{(tot_bd/tot_r)*100:.2f}" if tot_r > 0 else "0.00"
 
-    # Membangun Tabel HTML Murni untuk Kontrol Ukuran Font 100% Sempurna
     html_table = """
     <div style="width: 100%; overflow-x: auto; margin-bottom: 20px;">
         <table style="width: 100%; border-collapse: collapse; background-color: #161b22; color: #ffffff; font-family: sans-serif; border: 1px solid #30363d;">
@@ -308,7 +307,6 @@ if not df_base.empty:
                 </tr>
         """
         
-    # Baris Jumlah
     html_table += f"""
                 <tr style="background-color: #1e3a8a; border-bottom: 1px solid #30363d; font-weight: bold;">
                     <td style="padding: 18px; text-align: left; font-size: 22px; border-right: 1px solid #30363d;">JUMLAH</td>
@@ -321,7 +319,6 @@ if not df_base.empty:
                 </tr>
     """
     
-    # Baris Progres (%)
     html_table += f"""
                 <tr style="background-color: #0f766e; font-weight: bold;">
                     <td style="padding: 18px; text-align: left; font-size: 22px; border-right: 1px solid #30363d;">PROGRES (%)</td>
