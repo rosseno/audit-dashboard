@@ -4,6 +4,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import io
 from datetime import datetime
+import os
 
 st.set_page_config(
     page_title="Executive Audit Dashboard - PT Pelindo Solusi Maritim",
@@ -100,20 +101,35 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+EXCEL_FILE = "Master_Database_Temuan_Audit_2024_2025_PSM_Ringkas.xlsx"
+EXCEL_DOCS_FILE = "Database_Multi_Auditor_PA_KKA.xlsx"
+
 @st.cache_data
 def load_data():
     try:
-        df = pd.read_excel("Master_Database_Temuan_Audit_2024_2025_PSM_Ringkas.xlsx")
+        df = pd.read_excel(EXCEL_FILE)
     except:
-        df = pd.read_excel("Master_Database_Temuan_Audit_2024_2025_PSM_Ringkas.xlsx")
+        df = pd.read_excel(EXCEL_FILE)
     return df
 
 if 'df_master' not in st.session_state:
     st.session_state.df_master = load_data()
 
-# Inisialisasi list penyimpanan multi-auditor PA & KKA di session state agar fleksibel dan dinamis
+# Memuat data multi-auditor PA & KKA secara permanen dari file Excel terpisah jika ada
 if 'multi_audit_docs' not in st.session_state:
-    st.session_state.multi_audit_docs = []
+    if os.path.exists(EXCEL_DOCS_FILE):
+        try:
+            df_docs = pd.read_excel(EXCEL_DOCS_FILE)
+            st.session_state.multi_audit_docs = df_docs.to_dict('records')
+        except:
+            st.session_state.multi_audit_docs = []
+    else:
+        st.session_state.multi_audit_docs = []
+
+def save_docs_to_excel():
+    if st.session_state.multi_audit_docs:
+        df_docs_to_save = pd.DataFrame(st.session_state.multi_audit_docs)
+        df_docs_to_save.to_excel(EXCEL_DOCS_FILE, index=False)
 
 df_master = st.session_state.df_master
 PIN_ADMIN = "1234"  # <-- PIN Admin SPI
@@ -369,10 +385,10 @@ with tab_dash:
     st.dataframe(df_table_display, use_container_width=True, hide_index=True)
 
 
-# ================= TAB 2: PROGRAM AUDIT & KERTAS KERJA MULTI-AUDITOR (DENGAN TOMBOL TAMBAH +) =================
+# ================= TAB 2: PROGRAM AUDIT & KERTAS KERJA MULTI-AUDITOR (TERSIMPAN PERMANEN) =================
 with tab_prog_kk:
-    st.markdown("### Modul Program Audit & Kertas Kerja Multi-Auditor")
-    st.info("💡 Setiap auditor dapat membuat bagian Program Audit (PA) dan Kertas Kerja Audit (KKA) secara mandiri menggunakan tombol tambah (+) di bawah.")
+    st.markdown("### Modul Program Audit & Kertas Kerja Multi-Auditor (Penyimpanan Permanen)")
+    st.info("💡 Setiap auditor dapat membuat bagian Program Audit (PA) dan Kertas Kerja Audit (KKA) secara mandiri. Data akan tersimpan otomatis ke file sistem.")
     
     if access_role == "Admin SPI":
         id_pk_list = df_master["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_master.columns else []
@@ -390,12 +406,12 @@ with tab_prog_kk:
                         "audit_program": "-",
                         "kertas_kerja": "-"
                     })
+                    save_docs_to_excel()
                     st.rerun()
             
             st.markdown("---")
             
-            # Filter dokumen yang sesuai dengan ID Temuan yang sedang dipilih
-            filtered_docs = [d for d in st.session_state.multi_audit_docs if d["target_temuan"] == selected_pk_id]
+            filtered_docs = [d for d in st.session_state.multi_audit_docs if str(d.get("target_temuan")) == str(selected_pk_id)]
             
             if not filtered_docs:
                 st.info("Belum ada dokumen Program Audit & KKA yang dibuat untuk penugasan ini. Klik tombol ➕ di atas untuk membuat lembar kerja baru.")
@@ -417,15 +433,16 @@ with tab_prog_kk:
                                 doc["auditor_name"] = auditor_input
                                 doc["audit_program"] = prog_input
                                 doc["kertas_kerja"] = kk_input
-                                st.success(f"Dokumen {doc['doc_id']} berhasil diperbarui!")
+                                save_docs_to_excel()
+                                st.success(f"Dokumen {doc['doc_id']} berhasil disimpan secara permanen!")
                                 st.rerun()
                                 
                             if del_sub_btn:
                                 st.session_state.multi_audit_docs.remove(doc)
+                                save_docs_to_excel()
                                 st.success(f"Dokumen {doc['doc_id']} berhasil dihapus!")
                                 st.rerun()
                                 
-                        # Tombol Download per dokumen mandiri
                         doc_text_export = f"""==================================================
 PROGRAM AUDIT & KERTAS KERJA AUDIT (KKA)
 PT PELINDO SOLUSI MARITIM
