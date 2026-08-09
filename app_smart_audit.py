@@ -103,9 +103,20 @@ st.markdown("""
 @st.cache_data
 def load_data():
     try:
-        return pd.read_excel("Master_Database_Temuan_Audit_2024_2025_PSM_Ringkas.xlsx")
+        df = pd.read_excel("Master_Database_Temuan_Audit_2024_2025_PSM_Ringkas.xlsx")
     except:
-        return pd.read_excel("Master_Database_Temuan_Audit_2024_2025_PSM_Ringkas.xlsx")
+        df = pd.read_excel("Master_Database_Temuan_Audit_2024_2025_PSM_Ringkas.xlsx")
+    
+    # Memastikan opsi periode 2026 tersedia pada data master
+    col_p = "Tahun Audit" if "Tahun Audit" in df.columns else df.columns[3]
+    if "2026" not in df[col_p].astype(str).values:
+        # Menambahkan baris dummy representatif untuk rencana audit Oktober 2026 jika belum ada
+        sample_row = df.iloc[0].copy()
+        sample_row[col_p] = "2026 (Rencana Oktober)"
+        if "ID Temuan" in df.columns:
+            sample_row["ID Temuan"] = "AUD-2026-OCT-01"
+        df = pd.concat([df, pd.DataFrame([sample_row])], ignore_index=True)
+    return df
 
 if 'df_master' not in st.session_state:
     st.session_state.df_master = load_data()
@@ -120,7 +131,6 @@ col_status = "Status" if "Status" in df_master.columns else "Status_TL"
 if "Catatan_Auditor" not in df_master.columns:
     df_master["Catatan_Auditor"] = "-"
 
-# Inisialisasi kolom pendukung LHA jika belum ada di master data
 for col_lha in ["Observasi_Kondisi", "Root_Cause", "Rekomendasi_Detail", "Implikasi_Risiko"]:
     if col_lha not in df_master.columns:
         if col_lha == "Root_Cause":
@@ -134,7 +144,8 @@ for col_lha in ["Observasi_Kondisi", "Root_Cause", "Rekomendasi_Detail", "Implik
 
 # --- SIDEBAR: PENGATURAN HAK AKSES & PERIODE ---
 st.sidebar.markdown("## Filter Control Panel")
-selected_periode = st.sidebar.selectbox("Periode Audit:", ["Semua Periode"] + sorted(list(df_master[col_periode].dropna().astype(str).unique())))
+periode_options = ["Semua Periode"] + sorted(list(df_master[col_periode].dropna().astype(str).unique()))
+selected_periode = st.sidebar.selectbox("Periode Audit:", periode_options)
 
 df_filtered_periode = df_master[df_master[col_periode].astype(str) == str(selected_periode)] if selected_periode != "Semua Periode" else df_master.copy()
 current_available_bidang = sorted(list(df_filtered_periode[col_bidang].dropna().astype(str).unique()))
@@ -155,7 +166,6 @@ access_role = st.sidebar.selectbox(
 if 'admin_logged_in' not in st.session_state:
     st.session_state.admin_logged_in = False
 
-# --- LOGIKA INPUT PIN ADMIN ---
 if access_role == "Admin SPI":
     if not st.session_state.admin_logged_in:
         entered_pin = st.sidebar.text_input("Masukkan PIN Admin:", type="password")
@@ -171,7 +181,6 @@ if access_role == "Admin SPI":
             st.session_state.admin_logged_in = False
             st.rerun()
 
-# --- PEMETAAN DATA BERDASARKAN PERAN ---
 if access_role == "Direktur Utama":
     sub_choice = st.sidebar.selectbox("Tinjau Cakupan:", ["Semua Bidang (Keseluruhan)", "SPI", "Hukum", "Sekper", "Pengadaan"])
     if sub_choice == "Semua Bidang (Keseluruhan)":
@@ -209,11 +218,9 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# --- FITUR UTAMA DALAM BENTUK TAB NAVIGASI (DASHBOARD VS MODUL LHA & KERTAS KERJA) ---
 main_tab_dashboard, main_tab_lha = st.tabs(["📊 Dashboard Monitoring Eksekutif", "📝 Modul Kertas Kerja, Audit Program & Generator LHA"])
 
 with main_tab_dashboard:
-    # --- FITUR NOTIFIKASI BERKEDIP & DAFTAR RINCIAN OVERDUE ---
     if not df_base.empty:
         overdue_df = df_base[
             df_base[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)
@@ -236,7 +243,6 @@ with main_tab_dashboard:
                 cols_show = [col for col in target_cols if col in overdue_df.columns]
                 st.dataframe(overdue_df[cols_show], use_container_width=True, hide_index=True)
 
-    # KPI Interaktif ala Card 3D Hidup dengan Proporsi Sempurna
     st.markdown("### Ringkasan Eksekutif KPI")
     if 'filter_status' not in st.session_state: 
         st.session_state.filter_status = "Semua"
@@ -290,7 +296,6 @@ with main_tab_dashboard:
 
     st.markdown("---")
 
-    # --- TABEL REKAPITULASI MATRIKS AUDIT ---
     st.markdown("### Rekapitulasi Matriks Tindak Lanjut Hasil Audit")
     if not df_base.empty:
         summary_rows = []
@@ -342,7 +347,6 @@ with main_tab_dashboard:
 
     st.markdown("---")
     
-    # Detail Tabel Utama
     columns_to_drop = ["No", "Poin", "Tahun Audit", "Nama Entitas", "Tingkat Risiko", "Prioritas", "Tag Kata Kunci (#Preventif)", "Ringkasan Kondisi & Akar Masalah (Root Cause)", "Verifikasi_Auditor"]
     df_table_display = df_filtered.drop(columns=[col for col in columns_to_drop if col in df_filtered.columns])
     df_table_display.insert(0, "No", range(1, len(df_table_display) + 1))
@@ -350,7 +354,6 @@ with main_tab_dashboard:
     st.markdown("### Detail Data Temuan & Rekomendasi")
     st.dataframe(df_table_display, use_container_width=True, hide_index=True)
 
-# --- MODUL KERTAS KERJA & GENERATOR LHA (OBSERVASI, ROOT CAUSE, REKOMENDASI, IMPLIKASI) ---
 with main_tab_lha:
     st.markdown("### Modul Penyusunan Kertas Kerja & Lembar Hasil Audit (LHA)")
     st.info("💡 Modul ini digunakan oleh Auditor untuk menyusun dan menyunting Program Audit, Kertas Kerja, serta LHA (Observasi, Root Cause, Rekomendasi, Implikasi) secara terintegrasi.")
@@ -419,7 +422,6 @@ Status TL : {df_master.loc[lha_row_idx, col_status]}
     else:
         st.warning("⚠️ Menu penyuntingan Kertas Kerja dan LHA dikhususkan untuk peran Admin SPI (Auditor). Anda dapat melihat rekapitulasi data temuan melalui Dashboard Utama.")
 
-# --- PANEL KHUSUS ADMIN SPI UNTUK INPUT VERIFIKASI & EKSPOR LAPORAN ---
 if access_role == "Admin SPI" and st.session_state.admin_logged_in:
     st.markdown("---")
     st.markdown("### Panel Update Status & Catatan Auditor")
@@ -462,7 +464,6 @@ if access_role == "Admin SPI" and st.session_state.admin_logged_in:
                     st.success(f"Temuan {selected_id} berhasil diperbarui!")
                     st.rerun()
 
-    # --- FITUR EKSPOR LAPORAN KUSTOM ---
     st.markdown("---")
     st.markdown("### Ekspor Laporan Ringkas (Untuk Rapat Direksi / Komite Audit)")
     col_exp1, col_exp2 = st.columns(2)
@@ -495,7 +496,6 @@ if access_role == "Admin SPI" and st.session_state.admin_logged_in:
             mime="text/plain",
         )
 
-# --- INTEGRASI GOOGLE FORM / GOOGLE DRIVE & MONITORING UPLOAD ---
 if access_role in ["Auditee", "Admin SPI"]:
     st.markdown("---")
     st.markdown("### Pengunggahan Bukti Dukung (Evidence) Tindak Lanjut")
