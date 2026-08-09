@@ -120,6 +120,18 @@ col_status = "Status" if "Status" in df_master.columns else "Status_TL"
 if "Catatan_Auditor" not in df_master.columns:
     df_master["Catatan_Auditor"] = "-"
 
+# Inisialisasi kolom pendukung LHA jika belum ada di master data
+for col_lha in ["Observasi_Kondisi", "Root_Cause", "Rekomendasi_Detail", "Implikasi_Risiko"]:
+    if col_lha not in df_master.columns:
+        if col_lha == "Root_Cause":
+            df_master[col_lha] = df_master.get("Ringkasan Kondisi & Akar Masalah (Root Cause)", "-")
+        elif col_lha == "Rekomendasi_Detail":
+            df_master[col_lha] = df_master.get("Rekomendasi", "-")
+        elif col_lha == "Observasi_Kondisi":
+            df_master[col_lha] = df_master.get("Temuan", "-")
+        else:
+            df_master[col_lha] = "-"
+
 # --- SIDEBAR: PENGATURAN HAK AKSES & PERIODE ---
 st.sidebar.markdown("## Filter Control Panel")
 selected_periode = st.sidebar.selectbox("Periode Audit:", ["Semua Periode"] + sorted(list(df_master[col_periode].dropna().astype(str).unique())))
@@ -197,212 +209,215 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# --- FITUR NOTIFIKASI BERKEDIP & DAFTAR RINCIAN OVERDUE DENGAN KOLOM REKOMENDASI ---
-if not df_base.empty:
-    overdue_df = df_base[
-        df_base[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)
-    ]
-    
-    overdue_count = len(overdue_df)
-    if overdue_count > 0:
-        st.markdown(f"""
-        <div class="alert-blink">
-            <div style="font-size: 24px;">🚨</div>
-            <div>
-                <div style="color: #f87171; font-weight: 700; font-size: 15px;">PERINGATAN: ADA {overdue_count} REKOMENDASI OVERDUE (BELUM DITINDAKLANJUTI)</div>
-                <div style="color: #cbd5e1; font-size: 12px; margin-top: 3px;">Terdapat temuan dengan status Belum Selesai (BD) yang melewati batas jadwal rencana departemen. Mohon segera diselesaikan.</div>
+# --- FITUR UTAMA DALAM BENTUK TAB NAVIGASI (DASHBOARD VS MODUL LHA & KERTAS KERJA) ---
+main_tab_dashboard, main_tab_lha = st.tabs(["📊 Dashboard Monitoring Eksekutif", "📝 Modul Kertas Kerja, Audit Program & Generator LHA"])
+
+with main_tab_dashboard:
+    # --- FITUR NOTIFIKASI BERKEDIP & DAFTAR RINCIAN OVERDUE ---
+    if not df_base.empty:
+        overdue_df = df_base[
+            df_base[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)
+        ]
+        
+        overdue_count = len(overdue_df)
+        if overdue_count > 0:
+            st.markdown(f"""
+            <div class="alert-blink">
+                <div style="font-size: 24px;">🚨</div>
+                <div>
+                    <div style="color: #f87171; font-weight: 700; font-size: 15px;">PERINGATAN: ADA {overdue_count} REKOMENDASI OVERDUE (BELUM DITINDAKLANJUTI)</div>
+                    <div style="color: #cbd5e1; font-size: 12px; margin-top: 3px;">Terdapat temuan dengan status Belum Selesai (BD) yang melewati batas jadwal rencana departemen. Mohon segera diselesaikan.</div>
+                </div>
             </div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        with st.expander("📋 Klik di sini untuk melihat daftar rincian temuan Overdue (BD)"):
-            # Memastikan kolom Rekomendasi/Uraian Rekomendasi dimunculkan secara presisi
-            target_cols = ["ID Temuan", col_bidang, "Temuan", "Rekomendasi", col_status]
-            cols_show = [col for col in target_cols if col in overdue_df.columns]
+            """, unsafe_allow_html=True)
             
-            # Jika nama kolom rekomendasi sedikit berbeda di excel, dicari alternatifnya
-            if "Rekomendasi" not in cols_show:
-                for c in overdue_df.columns:
-                    if "rekomendasi" in c.lower():
-                        cols_show.append(c)
-                        
-            st.dataframe(overdue_df[cols_show], use_container_width=True, hide_index=True)
+            with st.expander("📋 Klik di sini untuk melihat daftar rincian temuan Overdue (BD)"):
+                target_cols = ["ID Temuan", col_bidang, "Temuan", "Rekomendasi", col_status]
+                cols_show = [col for col in target_cols if col in overdue_df.columns]
+                st.dataframe(overdue_df[cols_show], use_container_width=True, hide_index=True)
 
-# KPI Interaktif ala Card 3D Hidup dengan Proporsi Sempurna
-st.markdown("### Ringkasan Eksekutif KPI")
-if 'filter_status' not in st.session_state: 
-    st.session_state.filter_status = "Semua"
+    # KPI Interaktif ala Card 3D Hidup dengan Proporsi Sempurna
+    st.markdown("### Ringkasan Eksekutif KPI")
+    if 'filter_status' not in st.session_state: 
+        st.session_state.filter_status = "Semua"
 
-total_temuan = len(df_base)
-selesai = len(df_base[df_base[col_status].str.contains("Selesai|SLS", case=False, na=False)])
-evaluasi = len(df_base[df_base[col_status].str.contains("Evaluasi|EVAL", case=False, na=False)])
-overdue = len(df_base[df_base[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)])
+    total_temuan = len(df_base)
+    selesai = len(df_base[df_base[col_status].str.contains("Selesai|SLS", case=False, na=False)])
+    evaluasi = len(df_base[df_base[col_status].str.contains("Evaluasi|EVAL", case=False, na=False)])
+    overdue = len(df_base[df_base[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)])
 
-pct_selesai = f"{(selesai/total_temuan)*100:.1f}% dari Total" if total_temuan > 0 else "0%"
-pct_eval = f"{(evaluasi/total_temuan)*100:.1f}% Dalam Proses" if total_temuan > 0 else "0%"
-pct_overdue = f"{(overdue/total_temuan)*100:.1f}% Belum TL" if total_temuan > 0 else "0%"
+    pct_selesai = f"{(selesai/total_temuan)*100:.1f}% dari Total" if total_temuan > 0 else "0%"
+    pct_eval = f"{(evaluasi/total_temuan)*100:.1f}% Dalam Proses" if total_temuan > 0 else "0%"
+    pct_overdue = f"{(overdue/total_temuan)*100:.1f}% Belum TL" if total_temuan > 0 else "0%"
 
-# Render Tampilan Visual Card Proporsional
-st.markdown(f"""
-<div class="kpi-row">
-    <div class="kpi-card card-blue">
-        <div class="kpi-title">TOTAL TEMUAN</div>
-        <div class="kpi-value">{total_temuan}</div>
-        <div class="kpi-desc">Judul LHP Utama</div>
+    st.markdown(f"""
+    <div class="kpi-row">
+        <div class="kpi-card card-blue">
+            <div class="kpi-title">TOTAL TEMUAN</div>
+            <div class="kpi-value">{total_temuan}</div>
+            <div class="kpi-desc">Judul LHP Utama</div>
+        </div>
+        <div class="kpi-card card-purple">
+            <div class="kpi-title">POIN REKOMENDASI</div>
+            <div class="kpi-value">{total_temuan}</div>
+            <div class="kpi-desc">Butir Granular</div>
+        </div>
+        <div class="kpi-card card-green">
+            <div class="kpi-title">SELESAI (SLS)</div>
+            <div class="kpi-value">{selesai}</div>
+            <div class="kpi-desc">{pct_selesai}</div>
+        </div>
+        <div class="kpi-card card-yellow">
+            <div class="kpi-title">EVALUASI (EVAL)</div>
+            <div class="kpi-value">{evaluasi}</div>
+            <div class="kpi-desc">{pct_eval}</div>
+        </div>
+        <div class="kpi-card card-red">
+            <div class="kpi-title">OVERDUE (BD)</div>
+            <div class="kpi-value">{overdue}</div>
+            <div class="kpi-desc">{pct_overdue}</div>
+        </div>
     </div>
-    <div class="kpi-card card-purple">
-        <div class="kpi-title">POIN REKOMENDASI</div>
-        <div class="kpi-value">{total_temuan}</div>
-        <div class="kpi-desc">Butir Granular</div>
-    </div>
-    <div class="kpi-card card-green">
-        <div class="kpi-title">SELESAI (SLS)</div>
-        <div class="kpi-value">{selesai}</div>
-        <div class="kpi-desc">{pct_selesai}</div>
-    </div>
-    <div class="kpi-card card-yellow">
-        <div class="kpi-title">EVALUASI (EVAL)</div>
-        <div class="kpi-value">{evaluasi}</div>
-        <div class="kpi-desc">{pct_eval}</div>
-    </div>
-    <div class="kpi-card card-red">
-        <div class="kpi-title">OVERDUE (BD)</div>
-        <div class="kpi-value">{overdue}</div>
-        <div class="kpi-desc">{pct_overdue}</div>
-    </div>
-</div>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
-df_filtered = df_base.copy()
-if st.session_state.filter_status == "Selesai":
-    df_filtered = df_base[df_base[col_status].str.contains("Selesai|SLS", case=False, na=False)]
-elif st.session_state.filter_status == "Evaluasi":
-    df_filtered = df_base[df_base[col_status].str.contains("Evaluasi|EVAL", case=False, na=False)]
-elif st.session_state.filter_status == "Overdue":
-    df_filtered = df_base[df_base[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)]
+    df_filtered = df_base.copy()
+    if st.session_state.filter_status == "Selesai":
+        df_filtered = df_base[df_base[col_status].str.contains("Selesai|SLS", case=False, na=False)]
+    elif st.session_state.filter_status == "Evaluasi":
+        df_filtered = df_base[df_base[col_status].str.contains("Evaluasi|EVAL", case=False, na=False)]
+    elif st.session_state.filter_status == "Overdue":
+        df_filtered = df_base[df_base[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)]
 
-st.markdown(f"<p style='color: #3b82f6; font-size: 12px; margin-top: 5px;'>Status Filter Aktif: <b>{st.session_state.filter_status}</b></p>", unsafe_allow_html=True)
-st.markdown("---")
+    st.markdown("---")
 
-color_map = {'Selesai': '#00BCD4', 'SLS': '#00BCD4', 'Evaluasi': '#FFCA28', 'EVAL': '#FFCA28', 'Overdue': '#FF7043', 'BD': '#FF7043', 'Belum TL': '#FF7043'}
+    # --- TABEL REKAPITULASI MATRIKS AUDIT ---
+    st.markdown("### Rekapitulasi Matriks Tindak Lanjut Hasil Audit")
+    if not df_base.empty:
+        summary_rows = []
+        unique_bidang = sorted(df_base[col_bidang].dropna().astype(str).unique())
+        
+        tot_t, tot_r, tot_sls, tot_eval, tot_bd = 0, 0, 0, 0, 0
+        
+        for idx, b in enumerate(unique_bidang):
+            clean_b_name = b.replace("Bidang ", "").strip()
+            df_b = df_base[df_base[col_bidang].astype(str) == b]
+            j_t = len(df_b)
+            j_r = j_t 
+            j_sls = len(df_b[df_b[col_status].str.contains("Selesai|SLS", case=False, na=False)])
+            j_eval = len(df_b[df_b[col_status].str.contains("Evaluasi|EVAL", case=False, na=False)])
+            j_bd = len(df_b[df_b[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)])
+            
+            tot_t += j_t
+            tot_r += j_r
+            tot_sls += j_sls
+            tot_eval += j_eval
+            tot_bd += j_bd
+            
+            summary_rows.append({
+                "Objek Audit": f"{chr(65+idx)}. Bidang {clean_b_name}",
+                "Jumlah Temuan": j_t,
+                "Jumlah Rekomendasi": j_r,
+                "Selesai (SLS)": j_sls,
+                "EVALUASI AUDITOR": j_eval,
+                "Belum Ditindaklanjuti (BD)": j_bd,
+                "TPTD": 0
+            })
+            
+        p_sls = f"{(tot_sls/tot_r)*100:.2f}%" if tot_r > 0 else "0.00%"
+        p_eval = f"{(tot_eval/tot_r)*100:.2f}%" if tot_r > 0 else "0.00%"
+        p_bd = f"{(tot_bd/tot_r)*100:.2f}%" if tot_r > 0 else "0.00%"
 
-# --- TABEL REKAPITULASI MATRIKS AUDIT ---
-st.markdown("### Rekapitulasi Matriks Tindak Lanjut Hasil Audit")
-if not df_base.empty:
-    summary_rows = []
-    unique_bidang = sorted(df_base[col_bidang].dropna().astype(str).unique())
+        summary_rows.append({"Objek Audit": "JUMLAH", "Jumlah Temuan": tot_t, "Jumlah Rekomendasi": tot_r, "Selesai (SLS)": tot_sls, "EVALUASI AUDITOR": tot_eval, "Belum Ditindaklanjuti (BD)": tot_bd, "TPTD": 0})
+        summary_rows.append({"Objek Audit": "PROGRES (%)", "Jumlah Temuan": "-", "Jumlah Rekomendasi": "-", "Selesai (SLS)": p_sls, "EVALUASI AUDITOR": p_eval, "Belum Ditindaklanjuti (BD)": p_bd, "TPTD": 0})
+
+        df_summary_display = pd.DataFrame(summary_rows)
+        def highlight_summary_rows(row):
+            if row["Objek Audit"] == "JUMLAH":
+                return ['background-color: #1e3a8a; color: white; font-weight: bold;'] * len(row)
+            elif row["Objek Audit"] == "PROGRES (%)":
+                return ['background-color: #0f766e; color: white; font-weight: bold;'] * len(row)
+            return [''] * len(row)
+
+        st.dataframe(df_summary_display.style.apply(highlight_summary_rows, axis=1), use_container_width=True, hide_index=True)
+
+    st.markdown("---")
     
-    tot_t = 0
-    tot_r = 0
-    tot_sls = 0
-    tot_eval = 0
-    tot_bd = 0
+    # Detail Tabel Utama
+    columns_to_drop = ["No", "Poin", "Tahun Audit", "Nama Entitas", "Tingkat Risiko", "Prioritas", "Tag Kata Kunci (#Preventif)", "Ringkasan Kondisi & Akar Masalah (Root Cause)", "Verifikasi_Auditor"]
+    df_table_display = df_filtered.drop(columns=[col for col in columns_to_drop if col in df_filtered.columns])
+    df_table_display.insert(0, "No", range(1, len(df_table_display) + 1))
+
+    st.markdown("### Detail Data Temuan & Rekomendasi")
+    st.dataframe(df_table_display, use_container_width=True, hide_index=True)
+
+# --- MODUL KERTAS KERJA & GENERATOR LHA (OBSERVASI, ROOT CAUSE, REKOMENDASI, IMPLIKASI) ---
+with main_tab_lha:
+    st.markdown("### Modul Penyusunan Kertas Kerja & Lembar Hasil Audit (LHA)")
+    st.info("💡 Modul ini digunakan oleh Auditor untuk menyusun dan menyunting Program Audit, Kertas Kerja, serta LHA (Observasi, Root Cause, Rekomendasi, Implikasi) secara terintegrasi.")
     
-    for idx, b in enumerate(unique_bidang):
-        clean_b_name = b.replace("Bidang ", "").strip()
-        df_b = df_base[df_base[col_bidang].astype(str) == b]
-        j_t = len(df_b)
-        j_r = j_t 
-        j_sls = len(df_b[df_b[col_status].str.contains("Selesai|SLS", case=False, na=False)])
-        j_eval = len(df_b[df_b[col_status].str.contains("Evaluasi|EVAL", case=False, na=False)])
-        j_bd = len(df_b[df_b[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)])
-        
-        tot_t += j_t
-        tot_r += j_r
-        tot_sls += j_sls
-        tot_eval += j_eval
-        tot_bd += j_bd
-        
-        summary_rows.append({
-            "Objek Audit": f"{chr(65+idx)}. Bidang {clean_b_name}",
-            "Jumlah Temuan": j_t,
-            "Jumlah Rekomendasi": j_r,
-            "Selesai (SLS)": j_sls,
-            "EVALUASI AUDITOR": j_eval,
-            "Belum Ditindaklanjuti (BD)": j_bd,
-            "TPTD": 0
-        })
-        
-    p_sls = f"{(tot_sls/tot_r)*100:.2f}%" if tot_r > 0 else "0.00%"
-    p_eval = f"{(tot_eval/tot_r)*100:.2f}%" if tot_r > 0 else "0.00%"
-    p_bd = f"{(tot_bd/tot_r)*100:.2f}%" if tot_r > 0 else "0.00%"
+    if access_role == "Admin SPI":
+        id_lha_list = df_master["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_master.columns else []
+        if id_lha_list:
+            selected_lha_id = st.selectbox("Pilih ID Temuan untuk Penyusunan LHA:", id_lha_list, key="lha_id_select")
+            lha_row_idx = df_master[df_master["ID Temuan"].astype(str) == str(selected_lha_id)].index[0]
+            
+            cur_obs = str(df_master.loc[lha_row_idx, "Observasi_Kondisi"])
+            cur_root = str(df_master.loc[lha_row_idx, "Root_Cause"])
+            cur_rek = str(df_master.loc[lha_row_idx, "Rekomendasi_Detail"])
+            cur_imp = str(df_master.loc[lha_row_idx, "Implikasi_Risiko"])
+            
+            with st.form(key="form_edit_lha"):
+                st.markdown("#### Form Penyuntingan Elemen LHA")
+                edit_obs = st.text_area("1. Observasi / Kondisi:", value=cur_obs, height=100)
+                edit_root = st.text_area("2. Akar Masalah (Root Cause):", value=cur_root, height=100)
+                edit_rek = st.text_area("3. Rekomendasi:", value=cur_rek, height=100)
+                edit_imp = st.text_area("4. Implikasi / Risiko:", value=cur_imp, height=100)
+                
+                save_lha_btn = st.form_submit_button("Simpan Perubahan LHA")
+                if save_lha_btn:
+                    df_master.loc[lha_row_idx, "Observasi_Kondisi"] = edit_obs
+                    df_master.loc[lha_row_idx, "Root_Cause"] = edit_root
+                    df_master.loc[lha_row_idx, "Rekomendasi_Detail"] = edit_rek
+                    df_master.loc[lha_row_idx, "Implikasi_Risiko"] = edit_imp
+                    st.session_state.df_master = df_master
+                    st.success(f"Elemen LHA untuk Temuan {selected_lha_id} berhasil diperbarui dan disimpan ke database!")
+                    st.rerun()
+            
+            st.markdown("---")
+            st.markdown("#### Pratinjau & Cetak Lembar Hasil Audit (LHA)")
+            
+            preview_lha_text = f"""==================================================
+LEMBAR HASIL AUDIT (LHA) — INTERNAL AUDIT UNIT
+PT PELINDO SOLUSI MARITIM
+==================================================
+ID Temuan : {selected_lha_id}
+Bidang    : {df_master.loc[lha_row_idx, col_bidang]}
+Periode   : {df_master.loc[lha_row_idx, col_periode]}
+Status TL : {df_master.loc[lha_row_idx, col_status]}
+--------------------------------------------------
+1. OBSERVASI / KONDISI:
+{df_master.loc[lha_row_idx, "Observasi_Kondisi"]}
 
-    summary_rows.append({
-        "Objek Audit": "JUMLAH",
-        "Jumlah Temuan": tot_t,
-        "Jumlah Rekomendasi": tot_r,
-        "Selesai (SLS)": tot_sls,
-        "EVALUASI AUDITOR": tot_eval,
-        "Belum Ditindaklanjuti (BD)": tot_bd,
-        "TPTD": 0
-    })
+2. AKAR MASALAH (ROOT CAUSE):
+{df_master.loc[lha_row_idx, "Root_Cause"]}
 
-    summary_rows.append({
-        "Objek Audit": "PROGRES (%)",
-        "Jumlah Temuan": "-",
-        "Jumlah Rekomendasi": "-",
-        "Selesai (SLS)": p_sls,
-        "EVALUASI AUDITOR": p_eval,
-        "Belum Ditindaklanjuti (BD)": p_bd,
-        "TPTD": 0
-    })
+3. REKOMENDASI:
+{df_master.loc[lha_row_idx, "Rekomendasi_Detail"]}
 
-    df_summary_display = pd.DataFrame(summary_rows)
-
-    def highlight_summary_rows(row):
-        if row["Objek Audit"] == "JUMLAH":
-            return ['background-color: #1e3a8a; color: white; font-weight: bold;'] * len(row)
-        elif row["Objek Audit"] == "PROGRES (%)":
-            return ['background-color: #0f766e; color: white; font-weight: bold;'] * len(row)
-        return [''] * len(row)
-
-    styled_summary = df_summary_display.style.apply(highlight_summary_rows, axis=1)
-    st.dataframe(styled_summary, use_container_width=True, hide_index=True)
-else:
-    st.info("Tidak ada data untuk ditampilkan dalam matriks rekapitulasi.")
-
-st.markdown("---")
-
-# --- VISUALISASI GRAFIK ---
-tab_grafik1, tab_grafik2 = st.tabs(["Visualisasi Grafik Progres & Sebaran", "Grafik Tren Perbandingan Antar Tahun"])
-
-with tab_grafik1:
-    col_chart_bar, col_chart_pie = st.columns([3, 1.5])
-    with col_chart_bar:
-        if not df_filtered.empty:
-            df_chart = df_filtered.groupby([col_bidang, col_status]).size().reset_index(name='Jumlah')
-            fig_bar = px.bar(df_chart, x='Jumlah', y=col_bidang, color=col_status, orientation='h', barmode='stack', title="Progres Status per Bidang", color_discrete_map=color_map, template='plotly_dark')
-            fig_bar.update_layout(height=300, margin=dict(l=0, r=10, t=30, b=0))
-            st.plotly_chart(fig_bar, use_container_width=True)
-    with col_chart_pie:
-        if not df_filtered.empty:
-            df_pie = df_filtered.groupby(col_status).size().reset_index(name='Total')
-            fig_pie = px.pie(df_pie, values='Total', names=col_status, hole=0.6, title="Proporsi Status", color=col_status, color_discrete_map=color_map, template='plotly_dark')
-            fig_pie.update_layout(height=300, margin=dict(l=10, r=10, t=30, b=10), showlegend=False)
-            st.plotly_chart(fig_pie, use_container_width=True)
-
-with tab_grafik2:
-    st.markdown("#### Analisis Komparasi Temuan & Penyelesaian Antar Tahun")
-    if col_periode in df_master.columns:
-        df_trend = df_master.groupby([col_periode, col_status]).size().reset_index(name='Jumlah')
-        fig_trend = px.bar(df_trend, x=col_periode, y='Jumlah', color=col_status, barmode='group', title="Tren Perbandingan Temuan Audit Berdasarkan Tahun", color_discrete_map=color_map, template='plotly_dark')
-        fig_trend.update_layout(height=350)
-        st.plotly_chart(fig_trend, use_container_width=True)
+4. IMPLIKASI / RISIKO:
+{df_master.loc[lha_row_idx, "Implikasi_Risiko"]}
+=================================================="""
+            
+            st.text_area("Format Teks LHA:", value=preview_lha_text, height=300)
+            
+            st.download_button(
+                label="📥 Download Dokumen LHA (Format Siap Cetak Word/TXT)",
+                data=preview_lha_text.encode('utf-8'),
+                file_name=f"LHA_{selected_lha_id}_{datetime.now().strftime('%Y%m%d')}.txt",
+                mime="text/plain"
+            )
     else:
-        st.info("Kolom periode tahun tidak ditemukan dalam dataset.")
-
-# --- PENGATURAN KOLOM TABEL UTAMA ---
-columns_to_drop = [
-    "No", "Poin", "Tahun Audit", "Nama Entitas", "Tingkat Risiko", 
-    "Prioritas", "Tag Kata Kunci (#Preventif)", 
-    "Ringkasan Kondisi & Akar Masalah (Root Cause)",
-    "Verifikasi_Auditor"
-]
-df_table_display = df_filtered.drop(columns=[col for col in columns_to_drop if col in df_filtered.columns])
-df_table_display.insert(0, "No", range(1, len(df_table_display) + 1))
-
-st.markdown("### Detail Data Temuan & Rekomendasi")
-st.dataframe(df_table_display, use_container_width=True, hide_index=True)
+        st.warning("⚠️ Menu penyuntingan Kertas Kerja dan LHA dikhususkan untuk peran Admin SPI (Auditor). Anda dapat melihat rekapitulasi data temuan melalui Dashboard Utama.")
 
 # --- PANEL KHUSUS ADMIN SPI UNTUK INPUT VERIFIKASI & EKSPOR LAPORAN ---
 if access_role == "Admin SPI" and st.session_state.admin_logged_in:
