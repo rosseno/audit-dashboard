@@ -236,7 +236,7 @@ st.markdown("---")
 
 color_map = {'Selesai': '#00BCD4', 'SLS': '#00BCD4', 'Evaluasi': '#FFCA28', 'EVAL': '#FFCA28', 'Overdue': '#FF7043', 'BD': '#FF7043', 'Belum TL': '#FF7043'}
 
-# --- TABEL REKAPITULASI MATRIKS AUDIT (DENGAN KOLOM DALAM EVALUASI / EVAL) ---
+# --- TABEL REKAPITULASI MATRIKS AUDIT (DENGAN URUTAN: SELESAI, EVALUASI AUDITOR, BELUM DITINDAKLANJUTI DAN PEWARNAAN STYLER) ---
 st.markdown("### Rekapitulasi Matriks Tindak Lanjut Hasil Audit")
 if not df_base.empty:
     summary_rows = []
@@ -268,7 +268,7 @@ if not df_base.empty:
             "Jumlah Temuan": j_t,
             "Jumlah Rekomendasi": j_r,
             "Selesai (SLS)": j_sls,
-            "Dalam Evaluasi (EVAL)": j_eval,
+            "EVALUASI AUDITOR": j_eval,
             "Belum Ditindaklanjuti (BD)": j_bd,
             "TPTD": 0
         })
@@ -282,7 +282,7 @@ if not df_base.empty:
         "Jumlah Temuan": tot_t,
         "Jumlah Rekomendasi": tot_r,
         "Selesai (SLS)": tot_sls,
-        "Dalam Evaluasi (EVAL)": tot_eval,
+        "EVALUASI AUDITOR": tot_eval,
         "Belum Ditindaklanjuti (BD)": tot_bd,
         "TPTD": 0
     })
@@ -292,13 +292,23 @@ if not df_base.empty:
         "Jumlah Temuan": "-",
         "Jumlah Rekomendasi": "-",
         "Selesai (SLS)": p_sls,
-        "Dalam Evaluasi (EVAL)": p_eval,
+        "EVALUASI AUDITOR": p_eval,
         "Belum Ditindaklanjuti (BD)": p_bd,
         "TPTD": 0
     })
 
     df_summary_display = pd.DataFrame(summary_rows)
-    st.dataframe(df_summary_display, use_container_width=True, hide_index=True)
+
+    # Fungsi Pewarnaan Baris Khusus Menggunakan Pandas Styler
+    def highlight_summary_rows(row):
+        if row["Objek Audit"] == "JUMLAH":
+            return ['background-color: #1e3a8a; color: white; font-weight: bold;'] * len(row)
+        elif row["Objek Audit"] == "PROGRES (%)":
+            return ['background-color: #0f766e; color: white; font-weight: bold;'] * len(row)
+        return [''] * len(row)
+
+    styled_summary = df_summary_display.style.apply(highlight_summary_rows, axis=1)
+    st.dataframe(styled_summary, use_container_width=True, hide_index=True)
 else:
     st.info("Tidak ada data untuk ditampilkan dalam matriks rekapitulasi.")
 
