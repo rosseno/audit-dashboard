@@ -1,3 +1,15 @@
+# --- HEADER BANNER UTUH DENGAN LOGO DI DALAMNYA ---
+st.markdown(f"""
+<div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding: 20px 25px; border-radius: 10px; border-left: 5px solid #3b82f6; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); display: flex; justify-content: space-between; align-items: center;">
+    <div>
+        <div style="color: #ffffff; font-size: 20px; font-weight: 700;">SMART AUDIT MONITORING DASHBOARD - PT PELINDO SOLUSI MARITIM</div>
+        <div style="color: #94a3b8; font-size: 12px; margin-top: 5px;">Sistem Pemantauan Granular Hasil Audit Kepatuhan & Performansi — Internal Audit Unit</div>
+    </div>
+    <div style="text-align: right; padding-left: 15px;">
+        <span style="color: #ffffff; font-size: 14px; font-weight: bold; letter-spacing: 1px;">DANANTARA INDONESIA</span>
+    </div>
+</div>
+""", unsafe_allow_html=True)
 import streamlit as st
 import pandas as pd
 import plotly.express as px
