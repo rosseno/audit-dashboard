@@ -106,14 +106,6 @@ def load_data():
         df = pd.read_excel("Master_Database_Temuan_Audit_2024_2025_PSM_Ringkas.xlsx")
     except:
         df = pd.read_excel("Master_Database_Temuan_Audit_2024_2025_PSM_Ringkas.xlsx")
-    
-    col_p = "Tahun Audit" if "Tahun Audit" in df.columns else df.columns[3]
-    if "2026" not in df[col_p].astype(str).values:
-        sample_row = df.iloc[0].copy()
-        sample_row[col_p] = "2026"
-        if "ID Temuan" in df.columns:
-            sample_row["ID Temuan"] = "AUD-2026-OCT-01"
-        df = pd.concat([df, pd.DataFrame([sample_row])], ignore_index=True)
     return df
 
 if 'df_master' not in st.session_state:
@@ -142,11 +134,22 @@ for col_lha in ["Observasi_Kondisi", "Root_Cause", "Rekomendasi_Detail", "Implik
 
 # --- SIDEBAR: PENGATURAN HAK AKSES & PERIODE ---
 st.sidebar.markdown("## Filter Control Panel")
-periode_options = ["Semua Periode"] + sorted(list(df_master[col_periode].dropna().astype(str).unique()))
+
+# Memasukkan tahun 2026 secara manual ke pilihan filter agar bisa dipilih untuk rencana audit bulan Oktober tanpa isi data dummy
+existing_periods = sorted(list(df_master[col_periode].dropna().astype(str).unique()))
+if "2026" not in existing_periods:
+    existing_periods.append("2026")
+
+periode_options = ["Semua Periode"] + existing_periods
 selected_periode = st.sidebar.selectbox("Periode Audit:", periode_options)
 
-df_filtered_periode = df_master[df_master[col_periode].astype(str) == str(selected_periode)] if selected_periode != "Semua Periode" else df_master.copy()
-current_available_bidang = sorted(list(df_filtered_periode[col_bidang].dropna().astype(str).unique()))
+if selected_periode == "2026":
+    # Membuat dataframe kosong khusus untuk tahun 2026 (rencana audit Oktober)
+    df_filtered_periode = df_master.head(0).copy()
+else:
+    df_filtered_periode = df_master[df_master[col_periode].astype(str) == str(selected_periode)] if selected_periode != "Semua Periode" else df_master.copy()
+
+current_available_bidang = sorted(list(df_filtered_periode[col_bidang].dropna().astype(str).unique())) if not df_filtered_periode.empty else sorted(list(df_master[col_bidang].dropna().astype(str).unique()))
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("## Hak Akses & Portofolio")
@@ -215,6 +218,9 @@ st.markdown("""
     <div class="header-subtitle">Sistem Pemantauan Granular Hasil Audit Kepatuhan & Performansi — Internal Audit Unit</div>
 </div>
 """, unsafe_allow_html=True)
+
+if selected_periode == "2026":
+    st.info("📅 **Periode 2026 (Rencana Audit Pelaksanaan Bulan Oktober):** Belum ada temuan atau LHP yang diterbitkan karena audit baru akan dijadwalkan pada bulan Oktober.")
 
 main_tab_dashboard, main_tab_lha = st.tabs(["📊 Dashboard Monitoring Eksekutif", "📝 Modul Kertas Kerja, Audit Program & Generator LHA"])
 
@@ -342,6 +348,8 @@ with main_tab_dashboard:
             return [''] * len(row)
 
         st.dataframe(df_summary_display.style.apply(highlight_summary_rows, axis=1), use_container_width=True, hide_index=True)
+    else:
+        st.info("Belum ada data temuan untuk periode ini.")
 
     st.markdown("---")
     
