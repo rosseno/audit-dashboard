@@ -236,7 +236,7 @@ st.markdown("---")
 
 color_map = {'Selesai': '#00BCD4', 'SLS': '#00BCD4', 'Evaluasi': '#FFCA28', 'EVAL': '#FFCA28', 'Overdue': '#FF7043', 'BD': '#FF7043', 'Belum TL': '#FF7043'}
 
-# --- TABEL REKAPITULASI MATRIKS AUDIT MENGGUNAKAN ST.DATAFRAME BAWAAN (DESAIN AWAL YANG AMAN & STABIL) ---
+# --- TABEL REKAPITULASI MATRIKS AUDIT DENGAN PEWARNAAN STYLER YANG CAKEP ---
 st.markdown("### 📑 Rekapitulasi Matriks Tindak Lanjut Hasil Audit")
 if not df_base.empty:
     summary_rows = []
@@ -298,7 +298,17 @@ if not df_base.empty:
     })
 
     df_summary_display = pd.DataFrame(summary_rows)
-    st.dataframe(df_summary_display, use_container_width=True, hide_index=True)
+
+    # Fungsi Pewarnaan Baris Khusus Menggunakan Pandas Styler
+    def highlight_summary_rows(row):
+        if row["Objek Audit"] == "JUMLAH":
+            return ['background-color: #1e3a8a; color: white; font-weight: bold;'] * len(row)
+        elif row["Objek Audit"] == "PROGRES (%)":
+            return ['background-color: #0f766e; color: white; font-weight: bold;'] * len(row)
+        return [''] * len(row)
+
+    styled_summary = df_summary_display.style.apply(highlight_summary_rows, axis=1)
+    st.dataframe(styled_summary, use_container_width=True, hide_index=True)
 else:
     st.info("Tidak ada data untuk ditampilkan dalam matriks rekapitulasi.")
 
