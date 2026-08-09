@@ -170,23 +170,23 @@ else:  # Admin SPI
     else:
         df_base = df_filtered_periode.head(0)
 
-# --- BAGIAN ATAS: LOGO BERJEJER DI POJOK KANAN ATAS ---
-col_space, col_logo1, col_logo2 = st.columns([6, 1.8, 1.8])
+# --- MENAMPILKAN KEDUA LOGO BERJEJER DI POJOK KANAN ATAS ---
+col_space, col_logo1, col_logo2 = st.columns([5, 1.5, 1.5])
 
 with col_space:
-    st.empty() # Ruangan kosong di sebelah kiri
+    st.empty()
 
 with col_logo1:
     try:
-        st.image("logo.png", width=160) # Logo Danantara Indonesia
+        st.image("logo.png", width=140) # Logo Danantara Indonesia
     except:
-        st.markdown("<div style='text-align: right; font-weight: bold; color: white; font-size: 13px; padding-top: 10px;'>Danantara Indonesia</div>", unsafe_allow_html=True)
+        st.write("Logo Danantara")
 
 with col_logo2:
     try:
-        st.image("logo_pelindo.png", width=160) # Logo Pelindo Jasa Maritim (Opsional, jika ada filenya)
+        st.image("logo_pelindo.png", width=140) # Logo Pelindo Jasa Maritim
     except:
-        st.markdown("<div style='text-align: right; font-weight: bold; color: #38bdf8; font-size: 13px; padding-top: 10px;'>PELINDO JASA MARITIM</div>", unsafe_allow_html=True)
+        st.write("Logo Pelindo")
 
 # Header Banner Judul Aplikasi
 st.markdown("""
@@ -417,7 +417,7 @@ if access_role == "Admin SPI" and st.session_state.admin_logged_in:
 
     # --- FITUR EKSPOR LAPORAN KUSTOM ---
     st.markdown("---")
-    st.markdown("### Ekspor Laporan Ringkas (Untuk Rapat Direksi / Komite Audit)")
+    st.markdown("### Ekspor Laporan Ringkas (For Rapat Direksi / Komite Audit)")
     col_exp1, col_exp2 = st.columns(2)
 
     with col_exp1:
