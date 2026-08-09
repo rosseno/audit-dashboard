@@ -121,21 +121,21 @@ col_status = "Status" if "Status" in df_master.columns else "Status_TL"
 if "Catatan_Auditor" not in df_master.columns:
     df_master["Catatan_Auditor"] = "-"
 
-for col_lha in ["Observasi_Kondisi", "Root_Cause", "Rekomendasi_Detail", "Implikasi_Risiko"]:
-    if col_lha not in df_master.columns:
-        if col_lha == "Root_Cause":
-            df_master[col_lha] = df_master.get("Ringkasan Kondisi & Akar Masalah (Root Cause)", "-")
-        elif col_lha == "Rekomendasi_Detail":
-            df_master[col_lha] = df_master.get("Rekomendasi", "-")
-        elif col_lha == "Observasi_Kondisi":
-            df_master[col_lha] = df_master.get("Temuan", "-")
+# Inisialisasi kolom pendukung Audit Program, Kertas Kerja, & LHA jika belum ada
+for col_col in ["Audit_Program_Langkah", "Kertas_Kerja_Pengujian", "Observasi_Kondisi", "Root_Cause", "Rekomendasi_Detail", "Implikasi_Risiko"]:
+    if col_col not in df_master.columns:
+        if col_col == "Root_Cause":
+            df_master[col_col] = df_master.get("Ringkasan Kondisi & Akar Masalah (Root Cause)", "-")
+        elif col_col == "Rekomendasi_Detail":
+            df_master[col_col] = df_master.get("Rekomendasi", "-")
+        elif col_col == "Observasi_Kondisi":
+            df_master[col_col] = df_master.get("Temuan", "-")
         else:
-            df_master[col_lha] = "-"
+            df_master[col_col] = "-"
 
 # --- SIDEBAR: PENGATURAN HAK AKSES & PERIODE ---
 st.sidebar.markdown("## Filter Control Panel")
 
-# Memasukkan tahun 2026 secara manual ke pilihan filter agar bisa dipilih untuk rencana audit bulan Oktober tanpa isi data dummy
 existing_periods = sorted(list(df_master[col_periode].dropna().astype(str).unique()))
 if "2026" not in existing_periods:
     existing_periods.append("2026")
@@ -144,7 +144,6 @@ periode_options = ["Semua Periode"] + existing_periods
 selected_periode = st.sidebar.selectbox("Periode Audit:", periode_options)
 
 if selected_periode == "2026":
-    # Membuat dataframe kosong khusus untuk tahun 2026 (rencana audit Oktober)
     df_filtered_periode = df_master.head(0).copy()
 else:
     df_filtered_periode = df_master[df_master[col_periode].astype(str) == str(selected_periode)] if selected_periode != "Semua Periode" else df_master.copy()
@@ -222,9 +221,15 @@ st.markdown("""
 if selected_periode == "2026":
     st.info("📅 **Periode 2026 (Rencana Audit Pelaksanaan Bulan Oktober):** Belum ada temuan atau LHP yang diterbitkan karena audit baru akan dijadwalkan pada bulan Oktober.")
 
-main_tab_dashboard, main_tab_lha = st.tabs(["📊 Dashboard Monitoring Eksekutif", "📝 Modul Kertas Kerja, Audit Program & Generator LHA"])
+# --- NAVIGASI UTAMA BERBENTUK TAB ---
+tab_dash, tab_prog_kk, tab_lha = st.tabs([
+    "📊 Dashboard Monitoring Eksekutif", 
+    "📋 Modul Program Audit & Kertas Kerja", 
+    "📝 Modul Generator Lembar Hasil Audit (LHA)"
+])
 
-with main_tab_dashboard:
+# ================= TAB 1: DASHBOARD MONITORING =================
+with tab_dash:
     if not df_base.empty:
         overdue_df = df_base[
             df_base[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)
@@ -360,14 +365,71 @@ with main_tab_dashboard:
     st.markdown("### Detail Data Temuan & Rekomendasi")
     st.dataframe(df_table_display, use_container_width=True, hide_index=True)
 
-with main_tab_lha:
-    st.markdown("### Modul Penyusunan Kertas Kerja & Lembar Hasil Audit (LHA)")
-    st.info("💡 Modul ini digunakan oleh Auditor untuk menyusun dan menyunting Program Audit, Kertas Kerja, serta LHA (Observasi, Root Cause, Rekomendasi, Implikasi) secara terintegrasi.")
+
+# ================= TAB 2: PROGRAM AUDIT & KERTAS KERJA =================
+with tab_prog_kk:
+    st.markdown("### Modul Penyusunan Program Audit & Kertas Kerja")
+    st.info("💡 Menu ini digunakan auditor untuk menyusun langkah-langkah **Program Audit** serta rincian pengujian dalam **Kertas Kerja Audit (KK)”** per temuan.")
+    
+    if access_role == "Admin SPI":
+        id_pk_list = df_master["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_master.columns else []
+        if id_pk_list:
+            selected_pk_id = st.selectbox("Pilih ID Temuan / Penugasan:", id_pk_list, key="pk_id_select")
+            pk_row_idx = df_master[df_master["ID Temuan"].astype(str) == str(selected_pk_id)].index[0]
+            
+            cur_prog = str(df_master.loc[pk_row_idx, "Audit_Program_Langkah"])
+            cur_kk = str(df_master.loc[pk_row_idx, "Kertas_Kerja_Pengujian"])
+            
+            with st.form(key="form_edit_prog_kk"):
+                st.markdown("#### Form Penyusunan Program Audit & Kertas Kerja")
+                edit_prog = st.text_area("Langkah-langkah Program Audit (Audit Program):", value=cur_prog, height=150)
+                edit_kk = st.text_area("Rincian Pengujian & Catatan Kertas Kerja Audit (KK):", value=cur_kk, height=180)
+                
+                save_pk_btn = st.form_submit_button("Simpan Program Audit & Kertas Kerja")
+                if save_pk_btn:
+                    df_master.loc[pk_row_idx, "Audit_Program_Langkah"] = edit_prog
+                    df_master.loc[pk_row_idx, "Kertas_Kerja_Pengujian"] = edit_kk
+                    st.session_state.df_master = df_master
+                    st.success(f"Program Audit & Kertas Kerja untuk {selected_pk_id} berhasil disimpan!")
+                    st.rerun()
+            
+            st.markdown("---")
+            st.markdown("#### Pratinjau & Unduh Dokumen Program Audit & Kertas Kerja")
+            preview_pk_text = f"""==================================================
+DOKUMEN PROGRAM AUDIT & KERTAS KERJA
+PT PELINDO SOLUSI MARITIM
+==================================================
+ID Penugasan : {selected_pk_id}
+Bidang       : {df_master.loc[pk_row_idx, col_bidang]}
+Periode      : {df_master.loc[pk_row_idx, col_periode]}
+--------------------------------------------------
+1. PROGRAM AUDIT (LANGKAH PENGUJIAN):
+{df_master.loc[pk_row_idx, "Audit_Program_Langkah"]}
+
+2. KERTAS KERJA AUDIT (KK):
+{df_master.loc[pk_row_idx, "Kertas_Kerja_Pengujian"]}
+=================================================="""
+            
+            st.text_area("Teks Dokumen:", value=preview_pk_text, height=250, key="preview_pk_textarea")
+            st.download_button(
+                label="📥 Download Dokumen Program Audit & KK (Format Word/TXT)",
+                data=preview_pk_text.encode('utf-8'),
+                file_name=f"Program_Audit_KK_{selected_pk_id}_{datetime.now().strftime('%Y%m%d')}.txt",
+                mime="text/plain"
+            )
+    else:
+        st.warning("⚠️ Menu penyusunan Program Audit & Kertas Kerja dikhususkan untuk peran Admin SPI (Auditor).")
+
+
+# ================= TAB 3: GENERATOR LHA =================
+with tab_lha:
+    st.markdown("### Modul Generator Lembar Hasil Audit (LHA)")
+    st.info("💡 Menu khusus untuk menyusun dan mencetak LHA yang memuat **Observasi**, **Root Cause**, **Rekomendasi**, dan **Implikasi**.")
     
     if access_role == "Admin SPI":
         id_lha_list = df_master["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_master.columns else []
         if id_lha_list:
-            selected_lha_id = st.selectbox("Pilih ID Temuan untuk Penyusunan LHA:", id_lha_list, key="lha_id_select")
+            selected_lha_id = st.selectbox("Pilih ID Temuan untuk LHA:", id_lha_list, key="lha_id_select")
             lha_row_idx = df_master[df_master["ID Temuan"].astype(str) == str(selected_lha_id)].index[0]
             
             cur_obs = str(df_master.loc[lha_row_idx, "Observasi_Kondisi"])
@@ -376,20 +438,20 @@ with main_tab_lha:
             cur_imp = str(df_master.loc[lha_row_idx, "Implikasi_Risiko"])
             
             with st.form(key="form_edit_lha"):
-                st.markdown("#### Form Penyuntingan Elemen LHA")
+                st.markdown("#### Form Elemen Lembar Hasil Audit (LHA)")
                 edit_obs = st.text_area("1. Observasi / Kondisi:", value=cur_obs, height=100)
                 edit_root = st.text_area("2. Akar Masalah (Root Cause):", value=cur_root, height=100)
                 edit_rek = st.text_area("3. Rekomendasi:", value=cur_rek, height=100)
                 edit_imp = st.text_area("4. Implikasi / Risiko:", value=cur_imp, height=100)
                 
-                save_lha_btn = st.form_submit_button("Simpan Perubahan LHA")
+                save_lha_btn = st.form_submit_button("Simpan Elemen LHA")
                 if save_lha_btn:
                     df_master.loc[lha_row_idx, "Observasi_Kondisi"] = edit_obs
                     df_master.loc[lha_row_idx, "Root_Cause"] = edit_root
                     df_master.loc[lha_row_idx, "Rekomendasi_Detail"] = edit_rek
                     df_master.loc[lha_row_idx, "Implikasi_Risiko"] = edit_imp
                     st.session_state.df_master = df_master
-                    st.success(f"Elemen LHA untuk Temuan {selected_lha_id} berhasil diperbarui dan disimpan ke database!")
+                    st.success(f"Elemen LHA untuk Temuan {selected_lha_id} berhasil diperbarui!")
                     st.rerun()
             
             st.markdown("---")
@@ -417,7 +479,7 @@ Status TL : {df_master.loc[lha_row_idx, col_status]}
 {df_master.loc[lha_row_idx, "Implikasi_Risiko"]}
 =================================================="""
             
-            st.text_area("Format Teks LHA:", value=preview_lha_text, height=300)
+            st.text_area("Format Teks LHA:", value=preview_lha_text, height=300, key="preview_lha_textarea")
             
             st.download_button(
                 label="📥 Download Dokumen LHA (Format Siap Cetak Word/TXT)",
@@ -426,8 +488,10 @@ Status TL : {df_master.loc[lha_row_idx, col_status]}
                 mime="text/plain"
             )
     else:
-        st.warning("⚠️ Menu penyuntingan Kertas Kerja dan LHA dikhususkan untuk peran Admin SPI (Auditor). Anda dapat melihat rekapitulasi data temuan melalui Dashboard Utama.")
+        st.warning("⚠️ Menu penyusunan LHA dikhususkan untuk peran Admin SPI (Auditor).")
 
+
+# --- PANEL KHUSUS ADMIN SPI UNTUK INPUT VERIFIKASI & EKSPOR LAPORAN ---
 if access_role == "Admin SPI" and st.session_state.admin_logged_in:
     st.markdown("---")
     st.markdown("### Panel Update Status & Catatan Auditor")
@@ -435,7 +499,7 @@ if access_role == "Admin SPI" and st.session_state.admin_logged_in:
     
     id_list = df_base["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_base.columns else []
     if id_list:
-        selected_id = st.selectbox("Pilih ID Temuan:", id_list)
+        selected_id = st.selectbox("Pilih ID Temuan:", id_list, key="panel_status_select")
         row_idx = df_master[df_master["ID Temuan"].astype(str) == str(selected_id)].index
         if len(row_idx) > 0:
             current_status = df_master.loc[row_idx[0], col_status]
