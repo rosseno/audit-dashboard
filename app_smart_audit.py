@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS Ultimate untuk Card 3D, Neon Glow, & Posisi Angka Tabel di Tengah
+# Custom CSS Ultimate untuk Card 3D, Neon Glow, & Perbesaran Font Tabel Matriks
 st.markdown("""
 <style>
     .main { background-color: #0e1117; }
@@ -77,6 +77,18 @@ st.markdown("""
         color: #cbd5e1;
         font-size: 12px;
         font-weight: 500;
+    }
+
+    /* Memperbesar ukuran font isi tabel rekapitulasi secara keseluruhan */
+    [data-testid="stDataFrame"] div[data-testid="stTable"] td, 
+    [data-testid="stDataFrame"] table tr td,
+    [data-testid="stDataFrame"] div[role="grid"] div[role="gridcell"] {
+        font-size: 15px !important;
+    }
+    [data-testid="stDataFrame"] table tr th,
+    [data-testid="stDataFrame"] div[role="grid"] div[role="columnheader"] {
+        font-size: 15px !important;
+        font-weight: bold !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -236,7 +248,7 @@ st.markdown("---")
 
 color_map = {'Selesai': '#00BCD4', 'SLS': '#00BCD4', 'Evaluasi': '#FFCA28', 'EVAL': '#FFCA28', 'Overdue': '#FF7043', 'BD': '#FF7043', 'Belum TL': '#FF7043'}
 
-# --- TABEL REKAPITULASI MATRIKS AUDIT (DITAMPILKAN LANGSUNG DI ATAS GRAFIK) ---
+# --- TABEL REKAPITULASI MATRIKS AUDIT (DENGAN FONT DIPERBESAR & RATA TENGAH) ---
 st.markdown("### 📑 Rekapitulasi Matriks Tindak Lanjut Hasil Audit")
 if not df_base.empty:
     summary_rows = []
@@ -249,6 +261,8 @@ if not df_base.empty:
     tot_bd = 0
     
     for idx, b in enumerate(unique_bidang):
+        # Membersihkan nama bidang jika sudah mengandung kata 'Bidang' agar tidak double
+        clean_b_name = b.replace("Bidang ", "").strip()
         df_b = df_base[df_base[col_bidang].astype(str) == b]
         j_t = len(df_b)
         j_r = j_t 
@@ -263,7 +277,7 @@ if not df_base.empty:
         tot_bd += j_bd
         
         summary_rows.append({
-            "Objek Audit": f"{chr(65+idx)}. Bidang {b}",
+            "Objek Audit": f"{chr(65+idx)}. Bidang {clean_b_name}",
             "Jumlah Temuan": j_t,
             "Jumlah Rekomendasi": j_r,
             "Selesai (SLS)": j_sls,
@@ -302,10 +316,10 @@ if not df_base.empty:
 
     def style_summary_rows(row):
         if row["Objek Audit"] == "JUMLAH":
-            return ['background-color: #1e3a8a; color: white; font-weight: bold; text-align: left' if idx == 0 else 'background-color: #1e3a8a; color: white; font-weight: bold; text-align: center' for idx in range(len(row))]
+            return ['background-color: #1e3a8a; color: white; font-weight: bold; font-size: 15px; text-align: left' if idx == 0 else 'background-color: #1e3a8a; color: white; font-weight: bold; font-size: 15px; text-align: center' for idx in range(len(row))]
         elif row["Objek Audit"] == "PROGRES (%)":
-            return ['background-color: #0f766e; color: white; font-weight: bold; text-align: left' if idx == 0 else 'background-color: #0f766e; color: white; font-weight: bold; text-align: center' for idx in range(len(row))]
-        return ['text-align: left' if idx == 0 else 'text-align: center' for idx in range(len(row))]
+            return ['background-color: #0f766e; color: white; font-weight: bold; font-size: 15px; text-align: left' if idx == 0 else 'background-color: #0f766e; color: white; font-weight: bold; font-size: 15px; text-align: center' for idx in range(len(row))]
+        return ['font-size: 15px; text-align: left' if idx == 0 else 'font-size: 15px; text-align: center' for idx in range(len(row))]
 
     styled_summary = df_summary.style.apply(style_summary_rows, axis=1)
     st.dataframe(styled_summary, use_container_width=True, hide_index=True)
