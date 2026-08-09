@@ -170,13 +170,24 @@ else:  # Admin SPI
     else:
         df_base = df_filtered_periode.head(0)
 
-# Header Banner
-st.markdown("""
-<div class="header-banner">
-    <div class="header-title">SMART AUDIT MONITORING DASHBOARD - PT PELINDO SOLUSI MARITIM</div>
-    <div class="header-subtitle">Sistem Pemantauan Granular Hasil Audit Kepatuhan & Performansi — Internal Audit Unit</div>
-</div>
-""", unsafe_allow_html=True)
+# Header Banner dengan Logo di Pojok Kanan
+col_banner_text, col_banner_logo = st.columns([4, 1])
+
+with col_banner_text:
+    st.markdown("""
+    <div class="header-banner" style="margin-bottom: 0px;">
+        <div class="header-title">SMART AUDIT MONITORING DASHBOARD - PT PELINDO SOLUSI MARITIM</div>
+        <div class="header-subtitle">Sistem Pemantauan Granular Hasil Audit Kepatuhan & Performansi — Internal Audit Unit</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col_banner_logo:
+    try:
+        st.image("logo_danantara.png", width=180) # Ganti nama file logo sesuai penyimpanan lokal Bapak
+    except:
+        st.markdown("<div style='text-align: right; color: #94a3b8; font-size: 12px; padding-top: 20px;'><b>DANANTARA INDONESIA</b></div>", unsafe_allow_html=True)
+
+st.markdown("<br>", unsafe_allow_html=True)
 
 # KPI Interaktif ala Card 3D Hidup dengan Proporsi Sempurna
 st.markdown("### Ringkasan Eksekutif KPI")
