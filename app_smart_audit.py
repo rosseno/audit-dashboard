@@ -197,7 +197,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# --- FITUR NOTIFIKASI BERKEDIP & DAFTAR RINCIAN OVERDUE ---
+# --- FITUR NOTIFIKASI BERKEDIP & DAFTAR RINCIAN OVERDUE DENGAN KOLOM REKOMENDASI ---
 if not df_base.empty:
     overdue_df = df_base[
         df_base[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)
@@ -216,7 +216,16 @@ if not df_base.empty:
         """, unsafe_allow_html=True)
         
         with st.expander("📋 Klik di sini untuk melihat daftar rincian temuan Overdue (BD)"):
-            cols_show = [col for col in ["ID Temuan", col_bidang, "Temuan", "Rekomendasi", col_status] if col in overdue_df.columns]
+            # Memastikan kolom Rekomendasi/Uraian Rekomendasi dimunculkan secara presisi
+            target_cols = ["ID Temuan", col_bidang, "Temuan", "Rekomendasi", col_status]
+            cols_show = [col for col in target_cols if col in overdue_df.columns]
+            
+            # Jika nama kolom rekomendasi sedikit berbeda di excel, dicari alternatifnya
+            if "Rekomendasi" not in cols_show:
+                for c in overdue_df.columns:
+                    if "rekomendasi" in c.lower():
+                        cols_show.append(c)
+                        
             st.dataframe(overdue_df[cols_show], use_container_width=True, hide_index=True)
 
 # KPI Interaktif ala Card 3D Hidup dengan Proporsi Sempurna
