@@ -103,6 +103,7 @@ st.markdown("""
 
 EXCEL_FILE = "Master_Database_Temuan_Audit_2024_2025_PSM_Ringkas.xlsx"
 EXCEL_DOCS_FILE = "Database_Multi_Auditor_PA_KKA.xlsx"
+EXCEL_LHA_FILE = "Database_Multi_Auditor_LHA.xlsx"
 
 @st.cache_data
 def load_data():
@@ -115,7 +116,7 @@ def load_data():
 if 'df_master' not in st.session_state:
     st.session_state.df_master = load_data()
 
-# Memuat data multi-auditor PA & KKA secara permanen dari file Excel terpisah jika ada
+# Memuat data multi-auditor PA & KKA secara permanen
 if 'multi_audit_docs' not in st.session_state:
     if os.path.exists(EXCEL_DOCS_FILE):
         try:
@@ -126,10 +127,24 @@ if 'multi_audit_docs' not in st.session_state:
     else:
         st.session_state.multi_audit_docs = []
 
+# Memuat data multi-auditor LHA secara permanen
+if 'multi_lha_docs' not in st.session_state:
+    if os.path.exists(EXCEL_LHA_FILE):
+        try:
+            df_lha = pd.read_excel(EXCEL_LHA_FILE)
+            st.session_state.multi_lha_docs = df_lha.to_dict('records')
+        except:
+            st.session_state.multi_lha_docs = []
+    else:
+        st.session_state.multi_lha_docs = []
+
 def save_docs_to_excel():
     if st.session_state.multi_audit_docs:
-        df_docs_to_save = pd.DataFrame(st.session_state.multi_audit_docs)
-        df_docs_to_save.to_excel(EXCEL_DOCS_FILE, index=False)
+        pd.DataFrame(st.session_state.multi_audit_docs).to_excel(EXCEL_DOCS_FILE, index=False)
+
+def save_lha_to_excel():
+    if st.session_state.multi_lha_docs:
+        pd.DataFrame(st.session_state.multi_lha_docs).to_excel(EXCEL_LHA_FILE, index=False)
 
 df_master = st.session_state.df_master
 PIN_ADMIN = "1234"  # <-- PIN Admin SPI
@@ -140,17 +155,6 @@ col_status = "Status" if "Status" in df_master.columns else "Status_TL"
 
 if "Catatan_Auditor" not in df_master.columns:
     df_master["Catatan_Auditor"] = "-"
-
-for col_lha in ["Observasi_Kondisi", "Root_Cause", "Rekomendasi_Detail", "Implikasi_Risiko"]:
-    if col_lha not in df_master.columns:
-        if col_lha == "Root_Cause":
-            df_master[col_lha] = df_master.get("Ringkasan Kondisi & Akar Masalah (Root Cause)", "-")
-        elif col_lha == "Rekomendasi_Detail":
-            df_master[col_lha] = df_master.get("Rekomendasi", "-")
-        elif col_lha == "Observasi_Kondisi":
-            df_master[col_lha] = df_master.get("Temuan", "-")
-        else:
-            df_master[col_lha] = "-"
 
 # --- SIDEBAR: PENGATURAN HAK AKSES & PERIODE ---
 st.sidebar.markdown("## Filter Control Panel")
@@ -244,7 +248,7 @@ if selected_periode == "2026":
 tab_dash, tab_prog_kk, tab_lha = st.tabs([
     "📊 Dashboard Monitoring Eksekutif", 
     "📋 Modul Program Audit & Kertas Kerja Multi-Auditor", 
-    "📝 Modul Generator Lembar Hasil Audit (LHA)"
+    "📝 Modul Generator Lembar Hasil Audit (LHA) Multi-Auditor"
 ])
 
 # ================= TAB 1: DASHBOARD MONITORING =================
@@ -385,10 +389,10 @@ with tab_dash:
     st.dataframe(df_table_display, use_container_width=True, hide_index=True)
 
 
-# ================= TAB 2: PROGRAM AUDIT & KERTAS KERJA MULTI-AUDITOR (TERSIMPAN PERMANEN) =================
+# ================= TAB 2: PROGRAM AUDIT & KERTAS KERJA MULTI-AUDITOR =================
 with tab_prog_kk:
     st.markdown("### Modul Program Audit & Kertas Kerja Multi-Auditor (Penyimpanan Permanen)")
-    st.info("💡 Setiap auditor dapat membuat bagian Program Audit (PA) dan Kertas Kerja Audit (KKA) secara mandiri. Data akan tersimpan otomatis ke file sistem.")
+    st.info("💡 Setiap auditor dapat membuat bagian Program Audit (PA) dan Kertas Kerja Audit (KKA) secara mandiri.")
     
     if access_role == "Admin SPI":
         id_pk_list = df_master["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_master.columns else []
@@ -469,72 +473,98 @@ Tanggal Cetak: {datetime.now().strftime('%d-%m-%Y')}
         st.warning("⚠️ Menu penyusunan Program Audit & Kertas Kerja dikhususkan untuk peran Admin SPI (Auditor).")
 
 
-# ================= TAB 3: GENERATOR LHA =================
+# ================= TAB 3: GENERATOR LHA MULTI-AUDITOR (DENGAN TOMBOL TAMBAH + & PENYIMPANAN PERMANEN) =================
 with tab_lha:
-    st.markdown("### Modul Generator Lembar Hasil Audit (LHA)")
-    st.info("💡 Menu khusus untuk menyusun dan mencetak LHA yang memuat **Observasi**, **Root Cause**, **Rekomendasi**, dan **Implikasi**.")
+    st.markdown("### Modul Generator Lembar Hasil Audit (LHA) Multi-Auditor")
+    st.info("💡 Setiap auditor dapat membuat dan mengenerate LHA mandiri (Observasi, Root Cause, Rekomendasi, Implikasi) menggunakan tombol tambah (+) di bawah.")
     
     if access_role == "Admin SPI":
         id_lha_list = df_master["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_master.columns else []
         if id_lha_list:
-            selected_lha_id = st.selectbox("Pilih ID Temuan untuk LHA:", id_lha_list, key="lha_id_select")
-            lha_row_idx = df_master[df_master["ID Temuan"].astype(str) == str(selected_lha_id)].index[0]
+            selected_lha_id = st.selectbox("Pilih ID Temuan / Penugasan untuk LHA:", id_lha_list, key="lha_id_select_multi")
             
-            cur_obs = str(df_master.loc[lha_row_idx, "Observasi_Kondisi"])
-            cur_root = str(df_master.loc[lha_row_idx, "Root_Cause"])
-            cur_rek = str(df_master.loc[lha_row_idx, "Rekomendasi_Detail"])
-            cur_imp = str(df_master.loc[lha_row_idx, "Implikasi_Risiko"])
-            
-            with st.form(key="form_edit_lha"):
-                st.markdown("#### Form Elemen Lembar Hasil Audit (LHA)")
-                edit_obs = st.text_area("1. Observasi / Kondisi:", value=cur_obs, height=100)
-                edit_root = st.text_area("2. Akar Masalah (Root Cause):", value=cur_root, height=100)
-                edit_rek = st.text_area("3. Rekomendasi:", value=cur_rek, height=100)
-                edit_imp = st.text_area("4. Implikasi / Risiko:", value=cur_imp, height=100)
-                
-                save_lha_btn = st.form_submit_button("Simpan Elemen LHA")
-                if save_lha_btn:
-                    df_master.loc[lha_row_idx, "Observasi_Kondisi"] = edit_obs
-                    df_master.loc[lha_row_idx, "Root_Cause"] = edit_root
-                    df_master.loc[lha_row_idx, "Rekomendasi_Detail"] = edit_rek
-                    df_master.loc[lha_row_idx, "Implikasi_Risiko"] = edit_imp
-                    st.session_state.df_master = df_master
-                    st.success(f"Elemen LHA untuk Temuan {selected_lha_id} berhasil diperbarui!")
+            col_lha_add, _ = st.columns([1, 3])
+            with col_lha_add:
+                if st.button("➕ Buat LHA Baru"):
+                    new_lha_id = f"LHA-DOC-{len(st.session_state.multi_lha_docs) + 1}"
+                    st.session_state.multi_lha_docs.append({
+                        "lha_doc_id": new_lha_id,
+                        "target_temuan": selected_lha_id,
+                        "auditor_name": f"Auditor LHA {len(st.session_state.multi_lha_docs) + 1}",
+                        "observasi": "-",
+                        "root_cause": "-",
+                        "rekomendasi": "-",
+                        "implikasi": "-"
+                    })
+                    save_lha_to_excel()
                     st.rerun()
             
             st.markdown("---")
-            st.markdown("#### Pratinjau & Cetak Lembar Hasil Audit (LHA)")
             
-            preview_lha_text = f"""==================================================
+            filtered_lhas = [l for l in st.session_state.multi_lha_docs if str(l.get("target_temuan")) == str(selected_lha_id)]
+            
+            if not filtered_lhas:
+                st.info("Belum ada dokumen LHA yang dibuat untuk penugasan ini. Klik tombol ➕ di atas untuk membuat lembar LHA baru.")
+            else:
+                for idx, lha_doc in enumerate(filtered_lhas):
+                    with st.expander(f"📄 [{lha_doc['lha_doc_id']}] Lembar LHA — Disusun oleh: {lha_doc['auditor_name']}", expanded=True):
+                        with st.form(key=f"form_multi_lha_{lha_doc['lha_doc_id']}_{idx}"):
+                            auditor_lha_input = st.text_input("Nama / Inisial Auditor LHA:", value=lha_doc["auditor_name"])
+                            obs_input = st.text_area("1. Observasi / Kondisi:", value=lha_doc["observasi"], height=100)
+                            root_input = st.text_area("2. Akar Masalah (Root Cause):", value=lha_doc["root_cause"], height=100)
+                            rek_input = st.text_area("3. Rekomendasi:", value=lha_doc["rekomendasi"], height=100)
+                            imp_input = st.text_area("4. Implikasi / Risiko:", value=lha_doc["implikasi"], height=100)
+                            
+                            col_lha_f1, col_lha_f2 = st.columns(2)
+                            with col_lha_f1:
+                                save_lha_sub_btn = st.form_submit_button("Simpan Perubahan LHA Ini")
+                            with col_lha_f2:
+                                del_lha_sub_btn = st.form_submit_button("🗑️ Hapus LHA Ini")
+                                
+                            if save_lha_sub_btn:
+                                lha_doc["auditor_name"] = auditor_lha_input
+                                lha_doc["observasi"] = obs_input
+                                lha_doc["root_cause"] = root_input
+                                lha_doc["rekomendasi"] = rek_input
+                                lha_doc["implikasi"] = imp_input
+                                save_lha_to_excel()
+                                st.success(f"Dokumen LHA {lha_doc['lha_doc_id']} berhasil disimpan secara permanen!")
+                                st.rerun()
+                                
+                            if del_lha_sub_btn:
+                                st.session_state.multi_lha_docs.remove(lha_doc)
+                                save_lha_to_excel()
+                                st.success(f"Dokumen LHA {lha_doc['lha_doc_id']} berhasil dihapus!")
+                                st.rerun()
+                                
+                        lha_text_export = f"""==================================================
 LEMBAR HASIL AUDIT (LHA) — INTERNAL AUDIT UNIT
 PT PELINDO SOLUSI MARITIM
 ==================================================
-ID Temuan : {selected_lha_id}
-Bidang    : {df_master.loc[lha_row_idx, col_bidang]}
-Periode   : {df_master.loc[lha_row_idx, col_periode]}
-Status TL : {df_master.loc[lha_row_idx, col_status]}
+ID Penugasan : {lha_doc['target_temuan']}
+Nomor Dokumen: {lha_doc['lha_doc_id']}
+Auditor      : {lha_doc['auditor_name']}
+Tanggal Cetak: {datetime.now().strftime('%d-%m-%Y')}
 --------------------------------------------------
 1. OBSERVASI / KONDISI:
-{df_master.loc[lha_row_idx, "Observasi_Kondisi"]}
+{lha_doc['observasi']}
 
 2. AKAR MASALAH (ROOT CAUSE):
-{df_master.loc[lha_row_idx, "Root_Cause"]}
+{lha_doc['root_cause']}
 
 3. REKOMENDASI:
-{df_master.loc[lha_row_idx, "Rekomendasi_Detail"]}
+{lha_doc['rekomendasi']}
 
 4. IMPLIKASI / RISIKO:
-{df_master.loc[lha_row_idx, "Implikasi_Risiko"]}
+{lha_doc['implikasi']}
 =================================================="""
-            
-            st.text_area("Format Teks LHA:", value=preview_lha_text, height=300, key="preview_lha_textarea")
-            
-            st.download_button(
-                label="📥 Download Dokumen LHA (Format Siap Cetak Word/TXT)",
-                data=preview_lha_text.encode('utf-8'),
-                file_name=f"LHA_{selected_lha_id}_{datetime.now().strftime('%Y%m%d')}.txt",
-                mime="text/plain"
-            )
+                        st.download_button(
+                            label=f"📥 Download Dokumen LHA {lha_doc['lha_doc_id']} (Format Word/TXT)",
+                            data=lha_text_export.encode('utf-8'),
+                            file_name=f"LHA_{lha_doc['target_temuan']}_{lha_doc['lha_doc_id']}.txt",
+                            mime="text/plain",
+                            key=f"dl_lha_btn_{lha_doc['lha_doc_id']}_{idx}"
+                        )
     else:
         st.warning("⚠️ Menu penyusunan LHA dikhususkan untuk peran Admin SPI (Auditor).")
 
