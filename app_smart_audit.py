@@ -18,7 +18,7 @@ st.markdown("""
     .main { background-color: #0e1117; }
     .header-banner {
         background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-        padding: 20px;
+        padding: 20px 25px;
         border-radius: 10px;
         border-left: 5px solid #3b82f6;
         margin-bottom: 20px;
@@ -170,25 +170,7 @@ else:  # Admin SPI
     else:
         df_base = df_filtered_periode.head(0)
 
-# --- MENAMPILKAN LOGO AMAN DI POJOK KANAN ATAS ---
-col_space, col_logo1, col_logo2 = st.columns([5, 1.5, 1.5])
-
-with col_space:
-    st.empty()
-
-with col_logo1:
-    try:
-        st.image("logo.png", width=130)
-    except:
-        st.markdown("<div style='text-align: right; color: white; font-weight: bold; font-size: 11px;'>DANANTARA INDONESIA</div>", unsafe_allow_html=True)
-
-with col_logo2:
-    try:
-        st.image("logo_pelindo.png", width=130)
-    except:
-        st.markdown("<div style='text-align: right; color: #38bdf8; font-weight: bold; font-size: 11px;'>PELINDO JASA MARITIM</div>", unsafe_allow_html=True)
-
-# Header Banner Judul Aplikasi
+# --- HEADER BANNER UTAMA BERSIH TANPA LOGO ---
 st.markdown("""
 <div class="header-banner">
     <div class="header-title">SMART AUDIT MONITORING DASHBOARD - PT PELINDO SOLUSI MARITIM</div>
