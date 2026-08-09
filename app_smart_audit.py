@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS Ultimate untuk Card 3D, Neon Glow, & Styling Global
+# Custom CSS Ultimate untuk Card KPI Proporsional, Neon Glow, & Tabel HTML Custom Ukuran Besar
 st.markdown("""
 <style>
     .main { background-color: #0e1117; }
@@ -27,55 +27,55 @@ st.markdown("""
     .header-title { color: #ffffff; font-size: 22px; font-weight: 700; }
     .header-subtitle { color: #94a3b8; font-size: 13px; margin-top: 5px; }
 
-    /* Container untuk membuat card rapat berjejer ke samping */
+    /* Container Card KPI agar rapat berjejer rapi & proporsional */
     .kpi-row {
         display: flex;
-        gap: 12px;
+        gap: 14px;
         width: 100%;
-        margin-bottom: 15px;
+        margin-bottom: 20px;
     }
 
-    /* Desain Card 3D Hidup dengan Efek Cahaya Neon & Kedalaman */
+    /* Desain Card 3D Hidup dengan Proporsi Ukuran Pas & Estetik */
     .kpi-card {
         flex: 1;
         background: linear-gradient(145deg, #161b22 0%, #0d1117 100%);
-        border-radius: 12px;
-        padding: 16px 18px;
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7), inset 0 1px 1px rgba(255, 255, 255, 0.15);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border-radius: 10px;
+        padding: 14px 16px;
+        box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+        transition: transform 0.2s ease;
     }
     
     .kpi-card:hover {
-        transform: translateY(-4px);
+        transform: translateY(-3px);
     }
 
-    /* Siluet Garis Warna Neon Spesifik per Card dengan Efek Glow Hidup */
-    .card-blue { border: 2px solid #3b82f6; box-shadow: 0 0 15px rgba(59, 130, 246, 0.4), inset 0 1px 1px rgba(255,255,255,0.15); }
-    .card-purple { border: 2px solid #8b5cf6; box-shadow: 0 0 15px rgba(139, 92, 246, 0.4), inset 0 1px 1px rgba(255,255,255,0.15); }
-    .card-green { border: 2px solid #10b981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4), inset 0 1px 1px rgba(255,255,255,0.15); }
-    .card-yellow { border: 2px solid #f59e0b; box-shadow: 0 0 15px rgba(245, 158, 11, 0.4), inset 0 1px 1px rgba(255,255,255,0.15); }
-    .card-red { border: 2px solid #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4), inset 0 1px 1px rgba(255,255,255,0.15); }
+    /* Siluet Garis Warna Neon Spesifik per Card */
+    .card-blue { border: 2px solid #3b82f6; box-shadow: 0 0 12px rgba(59, 130, 246, 0.35); }
+    .card-purple { border: 2px solid #8b5cf6; box-shadow: 0 0 12px rgba(139, 92, 246, 0.35); }
+    .card-green { border: 2px solid #10b981; box-shadow: 0 0 12px rgba(16, 185, 129, 0.35); }
+    .card-yellow { border: 2px solid #f59e0b; box-shadow: 0 0 12px rgba(245, 158, 11, 0.35); }
+    .card-red { border: 2px solid #ef4444; box-shadow: 0 0 12px rgba(239, 68, 68, 0.35); }
 
     .kpi-title {
         color: #94a3b8;
-        font-size: 11px;
+        font-size: 10.5px;
         font-weight: 700;
         letter-spacing: 0.8px;
         text-transform: uppercase;
-        margin-bottom: 6px;
+        margin-bottom: 4px;
     }
 
     .kpi-value {
         color: #ffffff;
-        font-size: 32px;
+        font-size: 28px;
         font-weight: 800;
-        margin-bottom: 4px;
+        margin-bottom: 2px;
         line-height: 1.1;
     }
 
     .kpi-desc {
         color: #cbd5e1;
-        font-size: 12px;
+        font-size: 11.5px;
         font-weight: 500;
     }
 </style>
@@ -178,7 +178,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# KPI Interaktif ala Card 3D Hidup dengan Proporsi Font Sempurna
+# KPI Interaktif ala Card 3D Hidup dengan Proporsi Sempurna
 st.markdown("### 📈 Ringkasan Eksekutif KPI")
 if 'filter_status' not in st.session_state: 
     st.session_state.filter_status = "Semua"
@@ -192,7 +192,7 @@ pct_selesai = f"{(selesai/total_temuan)*100:.1f}% dari Total" if total_temuan > 
 pct_eval = f"{(evaluasi/total_temuan)*100:.1f}% Dalam Proses" if total_temuan > 0 else "0%"
 pct_overdue = f"{(overdue/total_temuan)*100:.1f}% Belum TL" if total_temuan > 0 else "0%"
 
-# Render Tampilan Visual Card 3D Hidup
+# Render Tampilan Visual Card Proporsional
 st.markdown(f"""
 <div class="kpi-row">
     <div class="kpi-card card-blue">
@@ -236,7 +236,7 @@ st.markdown("---")
 
 color_map = {'Selesai': '#00BCD4', 'SLS': '#00BCD4', 'Evaluasi': '#FFCA28', 'EVAL': '#FFCA28', 'Overdue': '#FF7043', 'BD': '#FF7043', 'Belum TL': '#FF7043'}
 
-# --- TABEL REKAPITULASI MATRIKS AUDIT MENGGUNAKAN HTML KUSTOM ---
+# --- TABEL REKAPITULASI MATRIKS AUDIT MENGGUNAKAN HTML KUSTOM (FONT BESAR 20PX TER-RENDER SEMPURNA) ---
 st.markdown("### 📑 Rekapitulasi Matriks Tindak Lanjut Hasil Audit")
 if not df_base.empty:
     summary_rows = []
@@ -336,7 +336,7 @@ else:
 
 st.markdown("---")
 
-# --- VISUALISASI GRAFIK (DI BAWAH TABEL REKAPITULASI) ---
+# --- VISUALISASI GRAFIK ---
 tab_grafik1, tab_grafik2 = st.tabs(["📊 Visualisasi Grafik Progres & Sebaran", "📉 Grafik Tren Perbandingan Antar Tahun"])
 
 with tab_grafik1:
@@ -420,7 +420,7 @@ if access_role == "Admin SPI" and st.session_state.admin_logged_in:
                     st.success(f"Temuan {selected_id} berhasil diperbarui!")
                     st.rerun()
 
-    # --- FITUR EKSPOR LAPORAN KUSTOM (HANYA MUNCUL DI ADMIN SPI) ---
+    # --- FITUR EKSPOR LAPORAN KUSTOM ---
     st.markdown("---")
     st.markdown("### 📥 Ekspor Laporan Ringkas (Untuk Rapat Direksi / Komite Audit)")
     col_exp1, col_exp2 = st.columns(2)
@@ -453,7 +453,7 @@ if access_role == "Admin SPI" and st.session_state.admin_logged_in:
             mime="text/plain",
         )
 
-# --- INTEGRASI GOOGLE FORM / GOOGLE DRIVE (KHUSUS AUDITEE & ADMIN) ---
+# --- INTEGRASI GOOGLE FORM / GOOGLE DRIVE ---
 if access_role in ["Auditee", "Admin SPI"]:
     st.markdown("---")
     st.markdown("### 📤 Pengunggahan Bukti Dukung (Evidence) Tindak Lanjut")
