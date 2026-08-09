@@ -18,17 +18,14 @@ st.markdown("""
     .main { background-color: #0e1117; }
     .header-banner {
         background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-        padding: 20px 25px;
+        padding: 20px;
         border-radius: 10px;
         border-left: 5px solid #3b82f6;
         margin-bottom: 20px;
         box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
     }
-    .header-title { color: #ffffff; font-size: 20px; font-weight: 700; }
-    .header-subtitle { color: #94a3b8; font-size: 12px; margin-top: 5px; }
+    .header-title { color: #ffffff; font-size: 22px; font-weight: 700; }
+    .header-subtitle { color: #94a3b8; font-size: 13px; margin-top: 5px; }
 
     /* Container Card KPI agar rapat berjejer rapi & proporsional */
     .kpi-row {
@@ -173,17 +170,29 @@ else:  # Admin SPI
     else:
         df_base = df_filtered_periode.head(0)
 
-# --- HEADER BANNER DENGAN POSISI LOGO: DANANTARA (KIRI) & PELINDO (KANAN) ---
+# --- BAGIAN ATAS: LOGO BERJEJER DI POJOK KANAN ATAS ---
+col_space, col_logo1, col_logo2 = st.columns([6, 1.8, 1.8])
+
+with col_space:
+    st.empty() # Ruangan kosong di sebelah kiri
+
+with col_logo1:
+    try:
+        st.image("logo.png", width=160) # Logo Danantara Indonesia
+    except:
+        st.markdown("<div style='text-align: right; font-weight: bold; color: white; font-size: 13px; padding-top: 10px;'>Danantara Indonesia</div>", unsafe_allow_html=True)
+
+with col_logo2:
+    try:
+        st.image("logo_pelindo.png", width=160) # Logo Pelindo Jasa Maritim (Opsional, jika ada filenya)
+    except:
+        st.markdown("<div style='text-align: right; font-weight: bold; color: #38bdf8; font-size: 13px; padding-top: 10px;'>PELINDO JASA MARITIM</div>", unsafe_allow_html=True)
+
+# Header Banner Judul Aplikasi
 st.markdown("""
 <div class="header-banner">
-    <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 4px;">
-        <span style="background-color: #e2e8f0; color: #0f172a; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; letter-spacing: 0.5px;">DANANTARA INDONESIA</span>
-        <span style="background-color: #0ea5e9; color: white; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; letter-spacing: 0.5px;">PELINDO JASA MARITIM</span>
-    </div>
-    <div style="text-align: right; padding-left: 15px;">
-        <div class="header-title">SMART AUDIT MONITORING DASHBOARD</div>
-        <div class="header-subtitle">Sistem Pemantauan Granular Hasil Audit Kepatuhan & Performansi — Internal Audit Unit</div>
-    </div>
+    <div class="header-title">SMART AUDIT MONITORING DASHBOARD - PT PELINDO SOLUSI MARITIM</div>
+    <div class="header-subtitle">Sistem Pemantauan Granular Hasil Audit Kepatuhan & Performansi — Internal Audit Unit</div>
 </div>
 """, unsafe_allow_html=True)
 
