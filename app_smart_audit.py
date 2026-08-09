@@ -236,6 +236,74 @@ st.markdown("---")
 
 color_map = {'Selesai': '#00BCD4', 'SLS': '#00BCD4', 'Evaluasi': '#FFCA28', 'EVAL': '#FFCA28', 'Overdue': '#FF7043', 'BD': '#FF7043', 'Belum TL': '#FF7043'}
 
+# --- TABEL REKAPITULASI MATRIKS AUDIT (FORMAT DATAFRAME STABIL) ---
+st.markdown("### Rekapitulasi Matriks Tindak Lanjut Hasil Audit")
+if not df_base.empty:
+    summary_rows = []
+    unique_bidang = sorted(df_base[col_bidang].dropna().astype(str).unique())
+    
+    tot_t = 0
+    tot_r = 0
+    tot_sls = 0
+    tot_eval = 0
+    tot_bd = 0
+    
+    for idx, b in enumerate(unique_bidang):
+        clean_b_name = b.replace("Bidang ", "").strip()
+        df_b = df_base[df_base[col_bidang].astype(str) == b]
+        j_t = len(df_b)
+        j_r = j_t 
+        j_sls = len(df_b[df_b[col_status].str.contains("Selesai|SLS", case=False, na=False)])
+        j_eval = len(df_b[df_b[col_status].str.contains("Evaluasi|EVAL", case=False, na=False)])
+        j_bd = len(df_b[df_b[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)])
+        
+        tot_t += j_t
+        tot_r += j_r
+        tot_sls += j_sls
+        tot_eval += j_eval
+        tot_bd += j_bd
+        
+        summary_rows.append({
+            "Objek Audit": f"{chr(65+idx)}. Bidang {clean_b_name}",
+            "Jumlah Temuan": j_t,
+            "Jumlah Rekomendasi": j_r,
+            "Selesai (SLS)": j_sls,
+            "Belum Sesuai (BS)": j_eval,
+            "Belum Ditindaklanjuti (BD)": j_bd,
+            "TPTD": 0
+        })
+        
+    p_sls = f"{(tot_sls/tot_r)*100:.2f}%" if tot_r > 0 else "0.00%"
+    p_eval = f"{(tot_eval/tot_r)*100:.2f}%" if tot_r > 0 else "0.00%"
+    p_bd = f"{(tot_bd/tot_r)*100:.2f}%" if tot_r > 0 else "0.00%"
+
+    summary_rows.append({
+        "Objek Audit": "JUMLAH",
+        "Jumlah Temuan": tot_t,
+        "Jumlah Rekomendasi": tot_r,
+        "Selesai (SLS)": tot_sls,
+        "Belum Sesuai (BS)": tot_eval,
+        "Belum Ditindaklanjuti (BD)": tot_bd,
+        "TPTD": 0
+    })
+
+    summary_rows.append({
+        "Objek Audit": "PROGRES (%)",
+        "Jumlah Temuan": "-",
+        "Jumlah Rekomendasi": "-",
+        "Selesai (SLS)": p_sls,
+        "Belum Sesuai (BS)": p_eval,
+        "Belum Ditindaklanjuti (BD)": p_bd,
+        "TPTD": 0
+    })
+
+    df_summary_display = pd.DataFrame(summary_rows)
+    st.dataframe(df_summary_display, use_container_width=True, hide_index=True)
+else:
+    st.info("Tidak ada data untuk ditampilkan dalam matriks rekapitulasi.")
+
+st.markdown("---")
+
 # --- VISUALISASI GRAFIK ---
 tab_grafik1, tab_grafik2 = st.tabs(["Visualisasi Grafik Progres & Sebaran", "Grafik Tren Perbandingan Antar Tahun"])
 
