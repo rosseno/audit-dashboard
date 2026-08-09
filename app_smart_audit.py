@@ -178,7 +178,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# --- FITUR NOTIFIKASI & DAFTAR RINCIAN OVERDUE (HANYA STATUS BD, KECUALIKAN EVAL) ---
+# --- FITUR NOTIFIKASI & DAFTAR RINCIAN OVERDUE (MUNCUL UNTUK SEMUA PERAN TERMASUK AUDITEE) ---
 if not df_base.empty:
     overdue_df = df_base[
         df_base[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)
@@ -190,8 +190,8 @@ if not df_base.empty:
         <div style="background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; padding: 15px 20px; border-radius: 8px; margin-bottom: 10px; display: flex; align-items: center; gap: 15px;">
             <div style="font-size: 24px;">🚨</div>
             <div>
-                <div style="color: #f87171; font-weight: 700; font-size: 15px;">PERINGATAN SISTEM: ADA {overdue_count} REKOMENDASI OVERDUE (BELUM DITINDAKLANJUTI)</div>
-                <div style="color: #cbd5e1; font-size: 12px; margin-top: 3px;">Terdeteksi temuan dengan status Belum Selesai (BD) yang telah melewati jadwal target rencana departemen tahun 2026.</div>
+                <div style="color: #f87171; font-weight: 700; font-size: 15px;">PERINGATAN: ADA {overdue_count} REKOMENDASI OVERDUE (BELUM DITINDAKLANJUTI)</div>
+                <div style="color: #cbd5e1; font-size: 12px; margin-top: 3px;">Terdapat temuan dengan status Belum Selesai (BD) yang melewati batas jadwal rencana departemen. Mohon segera diselesaikan.</div>
             </div>
         </div>
         """, unsafe_allow_html=True)
