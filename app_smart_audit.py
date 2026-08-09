@@ -107,12 +107,10 @@ def load_data():
     except:
         df = pd.read_excel("Master_Database_Temuan_Audit_2024_2025_PSM_Ringkas.xlsx")
     
-    # Memastikan opsi periode 2026 tersedia pada data master
     col_p = "Tahun Audit" if "Tahun Audit" in df.columns else df.columns[3]
     if "2026" not in df[col_p].astype(str).values:
-        # Menambahkan baris dummy representatif untuk rencana audit Oktober 2026 jika belum ada
         sample_row = df.iloc[0].copy()
-        sample_row[col_p] = "2026 (Rencana Oktober)"
+        sample_row[col_p] = "2026"
         if "ID Temuan" in df.columns:
             sample_row["ID Temuan"] = "AUD-2026-OCT-01"
         df = pd.concat([df, pd.DataFrame([sample_row])], ignore_index=True)
