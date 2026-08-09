@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS Ultimate untuk Card KPI Proporsional, Neon Glow, & Styling Global
+# Custom CSS Ultimate untuk Card KPI Proporsional, Neon Glow, & Animasi Kedip Peringatan
 st.markdown("""
 <style>
     .main { background-color: #0e1117; }
@@ -26,6 +26,25 @@ st.markdown("""
     }
     .header-title { color: #ffffff; font-size: 22px; font-weight: 700; }
     .header-subtitle { color: #94a3b8; font-size: 13px; margin-top: 5px; }
+
+    /* Animasi Kedip (Blink) untuk Kotak Peringatan Darurat */
+    @keyframes blink-animation {
+        0% { opacity: 1; border-color: #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.6); }
+        50% { opacity: 0.4; border-color: #7f1d1d; box-shadow: 0 0 2px rgba(239, 68, 68, 0.1); }
+        100% { opacity: 1; border-color: #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.6); }
+    }
+
+    .alert-blink {
+        background: rgba(239, 68, 68, 0.15);
+        border: 2px solid #ef4444;
+        padding: 15px 20px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        animation: blink-animation 1.5s infinite ease-in-out;
+    }
 
     /* Container Card KPI agar rapat berjejer rapi & proporsional */
     .kpi-row {
@@ -178,7 +197,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# --- FITUR NOTIFIKASI & DAFTAR RINCIAN OVERDUE (MUNCUL UNTUK SEMUA PERAN TERMASUK AUDITEE) ---
+# --- FITUR NOTIFIKASI BERKEDIP & DAFTAR RINCIAN OVERDUE ---
 if not df_base.empty:
     overdue_df = df_base[
         df_base[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)
@@ -187,7 +206,7 @@ if not df_base.empty:
     overdue_count = len(overdue_df)
     if overdue_count > 0:
         st.markdown(f"""
-        <div style="background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; padding: 15px 20px; border-radius: 8px; margin-bottom: 10px; display: flex; align-items: center; gap: 15px;">
+        <div class="alert-blink">
             <div style="font-size: 24px;">🚨</div>
             <div>
                 <div style="color: #f87171; font-weight: 700; font-size: 15px;">PERINGATAN: ADA {overdue_count} REKOMENDASI OVERDUE (BELUM DITINDAKLANJUTI)</div>
