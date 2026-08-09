@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS Ultimate untuk Card KPI Proporsional, Neon Glow, & Tabel HTML Custom Ukuran Besar
+# Custom CSS Ultimate untuk Card KPI Proporsional, Neon Glow, & Styling Global
 st.markdown("""
 <style>
     .main { background-color: #0e1117; }
@@ -236,7 +236,7 @@ st.markdown("---")
 
 color_map = {'Selesai': '#00BCD4', 'SLS': '#00BCD4', 'Evaluasi': '#FFCA28', 'EVAL': '#FFCA28', 'Overdue': '#FF7043', 'BD': '#FF7043', 'Belum TL': '#FF7043'}
 
-# --- TABEL REKAPITULASI MATRIKS AUDIT MENGGUNAKAN HTML KUSTOM (FONT BESAR 20PX TER-RENDER SEMPURNA) ---
+# --- TABEL REKAPITULASI MATRIKS AUDIT MENGGUNAKAN HTML KUSTOM (DENGAN unsafe_allow_html=True) ---
 st.markdown("### 📑 Rekapitulasi Matriks Tindak Lanjut Hasil Audit")
 if not df_base.empty:
     summary_rows = []
