@@ -111,6 +111,10 @@ def load_data():
 if 'df_master' not in st.session_state:
     st.session_state.df_master = load_data()
 
+# Inisialisasi list penyimpanan multi-auditor PA & KKA di session state agar fleksibel dan dinamis
+if 'multi_audit_docs' not in st.session_state:
+    st.session_state.multi_audit_docs = []
+
 df_master = st.session_state.df_master
 PIN_ADMIN = "1234"  # <-- PIN Admin SPI
 
@@ -121,17 +125,16 @@ col_status = "Status" if "Status" in df_master.columns else "Status_TL"
 if "Catatan_Auditor" not in df_master.columns:
     df_master["Catatan_Auditor"] = "-"
 
-# Inisialisasi kolom pendukung Audit Program, Kertas Kerja, & LHA jika belum ada
-for col_col in ["Audit_Program_Langkah", "Kertas_Kerja_Pengujian", "Observasi_Kondisi", "Root_Cause", "Rekomendasi_Detail", "Implikasi_Risiko"]:
-    if col_col not in df_master.columns:
-        if col_col == "Root_Cause":
-            df_master[col_col] = df_master.get("Ringkasan Kondisi & Akar Masalah (Root Cause)", "-")
-        elif col_col == "Rekomendasi_Detail":
-            df_master[col_col] = df_master.get("Rekomendasi", "-")
-        elif col_col == "Observasi_Kondisi":
-            df_master[col_col] = df_master.get("Temuan", "-")
+for col_lha in ["Observasi_Kondisi", "Root_Cause", "Rekomendasi_Detail", "Implikasi_Risiko"]:
+    if col_lha not in df_master.columns:
+        if col_lha == "Root_Cause":
+            df_master[col_lha] = df_master.get("Ringkasan Kondisi & Akar Masalah (Root Cause)", "-")
+        elif col_lha == "Rekomendasi_Detail":
+            df_master[col_lha] = df_master.get("Rekomendasi", "-")
+        elif col_lha == "Observasi_Kondisi":
+            df_master[col_lha] = df_master.get("Temuan", "-")
         else:
-            df_master[col_col] = "-"
+            df_master[col_lha] = "-"
 
 # --- SIDEBAR: PENGATURAN HAK AKSES & PERIODE ---
 st.sidebar.markdown("## Filter Control Panel")
@@ -224,7 +227,7 @@ if selected_periode == "2026":
 # --- NAVIGASI UTAMA BERBENTUK TAB ---
 tab_dash, tab_prog_kk, tab_lha = st.tabs([
     "📊 Dashboard Monitoring Eksekutif", 
-    "📋 Modul Program Audit & Kertas Kerja", 
+    "📋 Modul Program Audit & Kertas Kerja Multi-Auditor", 
     "📝 Modul Generator Lembar Hasil Audit (LHA)"
 ])
 
@@ -366,57 +369,85 @@ with tab_dash:
     st.dataframe(df_table_display, use_container_width=True, hide_index=True)
 
 
-# ================= TAB 2: PROGRAM AUDIT & KERTAS KERJA =================
+# ================= TAB 2: PROGRAM AUDIT & KERTAS KERJA MULTI-AUDITOR (DENGAN TOMBOL TAMBAH +) =================
 with tab_prog_kk:
-    st.markdown("### Modul Penyusunan Program Audit & Kertas Kerja")
-    st.info("💡 Menu ini digunakan auditor untuk menyusun langkah-langkah **Program Audit** serta rincian pengujian dalam **Kertas Kerja Audit (KK)”** per temuan.")
+    st.markdown("### Modul Program Audit & Kertas Kerja Multi-Auditor")
+    st.info("💡 Setiap auditor dapat membuat bagian Program Audit (PA) dan Kertas Kerja Audit (KKA) secara mandiri menggunakan tombol tambah (+) di bawah.")
     
     if access_role == "Admin SPI":
         id_pk_list = df_master["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_master.columns else []
         if id_pk_list:
-            selected_pk_id = st.selectbox("Pilih ID Temuan / Penugasan:", id_pk_list, key="pk_id_select")
-            pk_row_idx = df_master[df_master["ID Temuan"].astype(str) == str(selected_pk_id)].index[0]
+            selected_pk_id = st.selectbox("Pilih ID Temuan / Penugasan untuk KKA:", id_pk_list, key="pk_id_select_multi")
             
-            cur_prog = str(df_master.loc[pk_row_idx, "Audit_Program_Langkah"])
-            cur_kk = str(df_master.loc[pk_row_idx, "Kertas_Kerja_Pengujian"])
-            
-            with st.form(key="form_edit_prog_kk"):
-                st.markdown("#### Form Penyusunan Program Audit & Kertas Kerja")
-                edit_prog = st.text_area("Langkah-langkah Program Audit (Audit Program):", value=cur_prog, height=150)
-                edit_kk = st.text_area("Rincian Pengujian & Catatan Kertas Kerja Audit (KK):", value=cur_kk, height=180)
-                
-                save_pk_btn = st.form_submit_button("Simpan Program Audit & Kertas Kerja")
-                if save_pk_btn:
-                    df_master.loc[pk_row_idx, "Audit_Program_Langkah"] = edit_prog
-                    df_master.loc[pk_row_idx, "Kertas_Kerja_Pengujian"] = edit_kk
-                    st.session_state.df_master = df_master
-                    st.success(f"Program Audit & Kertas Kerja untuk {selected_pk_id} berhasil disimpan!")
+            col_btn_add, _ = st.columns([1, 3])
+            with col_btn_add:
+                if st.button("➕ Buat Program & KKA Baru"):
+                    new_id_doc = f"DOC-{len(st.session_state.multi_audit_docs) + 1}"
+                    st.session_state.multi_audit_docs.append({
+                        "doc_id": new_id_doc,
+                        "target_temuan": selected_pk_id,
+                        "auditor_name": f"Auditor {len(st.session_state.multi_audit_docs) + 1}",
+                        "audit_program": "-",
+                        "kertas_kerja": "-"
+                    })
                     st.rerun()
             
             st.markdown("---")
-            st.markdown("#### Pratinjau & Unduh Dokumen Program Audit & Kertas Kerja")
-            preview_pk_text = f"""==================================================
-DOKUMEN PROGRAM AUDIT & KERTAS KERJA
+            
+            # Filter dokumen yang sesuai dengan ID Temuan yang sedang dipilih
+            filtered_docs = [d for d in st.session_state.multi_audit_docs if d["target_temuan"] == selected_pk_id]
+            
+            if not filtered_docs:
+                st.info("Belum ada dokumen Program Audit & KKA yang dibuat untuk penugasan ini. Klik tombol ➕ di atas untuk membuat lembar kerja baru.")
+            else:
+                for idx, doc in enumerate(filtered_docs):
+                    with st.expander(f"📄 [{doc['doc_id']}] Lembar Kerja — Disusun oleh: {doc['auditor_name']}", expanded=True):
+                        with st.form(key=f"form_multi_doc_{doc['doc_id']}_{idx}"):
+                            auditor_input = st.text_input("Nama / Inisial Auditor:", value=doc["auditor_name"])
+                            prog_input = st.text_area("Langkah-langkah Program Audit (AP):", value=doc["audit_program"], height=120)
+                            kk_input = st.text_area("Rincian Pengujian Kertas Kerja Audit (KKA):", value=doc["kertas_kerja"], height=140)
+                            
+                            col_f1, col_f2 = st.columns(2)
+                            with col_f1:
+                                save_sub_btn = st.form_submit_button("Simpan Perubahan Dokumen Ini")
+                            with col_f2:
+                                del_sub_btn = st.form_submit_button("🗑️ Hapus Dokumen Ini")
+                                
+                            if save_sub_btn:
+                                doc["auditor_name"] = auditor_input
+                                doc["audit_program"] = prog_input
+                                doc["kertas_kerja"] = kk_input
+                                st.success(f"Dokumen {doc['doc_id']} berhasil diperbarui!")
+                                st.rerun()
+                                
+                            if del_sub_btn:
+                                st.session_state.multi_audit_docs.remove(doc)
+                                st.success(f"Dokumen {doc['doc_id']} berhasil dihapus!")
+                                st.rerun()
+                                
+                        # Tombol Download per dokumen mandiri
+                        doc_text_export = f"""==================================================
+PROGRAM AUDIT & KERTAS KERJA AUDIT (KKA)
 PT PELINDO SOLUSI MARITIM
 ==================================================
-ID Penugasan : {selected_pk_id}
-Bidang       : {df_master.loc[pk_row_idx, col_bidang]}
-Periode      : {df_master.loc[pk_row_idx, col_periode]}
+ID Penugasan : {doc['target_temuan']}
+Nomor Dokumen: {doc['doc_id']}
+Auditor      : {doc['auditor_name']}
+Tanggal Cetak: {datetime.now().strftime('%d-%m-%Y')}
 --------------------------------------------------
-1. PROGRAM AUDIT (LANGKAH PENGUJIAN):
-{df_master.loc[pk_row_idx, "Audit_Program_Langkah"]}
+1. PROGRAM AUDIT (AP):
+{doc['audit_program']}
 
-2. KERTAS KERJA AUDIT (KK):
-{df_master.loc[pk_row_idx, "Kertas_Kerja_Pengujian"]}
+2. KERTAS KERJA AUDIT (KKA):
+{doc['kertas_kerja']}
 =================================================="""
-            
-            st.text_area("Teks Dokumen:", value=preview_pk_text, height=250, key="preview_pk_textarea")
-            st.download_button(
-                label="📥 Download Dokumen Program Audit & KK (Format Word/TXT)",
-                data=preview_pk_text.encode('utf-8'),
-                file_name=f"Program_Audit_KK_{selected_pk_id}_{datetime.now().strftime('%Y%m%d')}.txt",
-                mime="text/plain"
-            )
+                        st.download_button(
+                            label=f"📥 Download Dokumen {doc['doc_id']} (Format Word/TXT)",
+                            data=doc_text_export.encode('utf-8'),
+                            file_name=f"KKA_{doc['target_temuan']}_{doc['doc_id']}.txt",
+                            mime="text/plain",
+                            key=f"dl_btn_{doc['doc_id']}_{idx}"
+                        )
     else:
         st.warning("⚠️ Menu penyusunan Program Audit & Kertas Kerja dikhususkan untuk peran Admin SPI (Auditor).")
 
