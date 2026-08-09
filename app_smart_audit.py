@@ -173,16 +173,16 @@ else:  # Admin SPI
     else:
         df_base = df_filtered_periode.head(0)
 
-# --- HEADER BANNER UTAMA DENGAN DUA IDENTITAS LOGO ---
+# --- HEADER BANNER DENGAN POSISI LOGO: DANANTARA (KIRI) & PELINDO (KANAN) ---
 st.markdown("""
 <div class="header-banner">
-    <div>
-        <div class="header-title">SMART AUDIT MONITORING DASHBOARD - PT PELINDO SOLUSI MARITIM</div>
-        <div class="header-subtitle">Sistem Pemantauan Granular Hasil Audit Kepatuhan & Performansi — Internal Audit Unit</div>
-    </div>
-    <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
-        <span style="background-color: #0ea5e9; color: white; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; letter-spacing: 0.5px;">PELINDO JASA MARITIM</span>
+    <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 4px;">
         <span style="background-color: #e2e8f0; color: #0f172a; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; letter-spacing: 0.5px;">DANANTARA INDONESIA</span>
+        <span style="background-color: #0ea5e9; color: white; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; letter-spacing: 0.5px;">PELINDO JASA MARITIM</span>
+    </div>
+    <div style="text-align: right; padding-left: 15px;">
+        <div class="header-title">SMART AUDIT MONITORING DASHBOARD</div>
+        <div class="header-subtitle">Sistem Pemantauan Granular Hasil Audit Kepatuhan & Performansi — Internal Audit Unit</div>
     </div>
 </div>
 """, unsafe_allow_html=True)
