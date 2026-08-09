@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS Ultimate untuk Card 3D, Neon Glow, & Perbesaran Font Tabel Matriks Ekstra Besar (3x Lipat)
+# Custom CSS Ultimate untuk Card 3D, Neon Glow, & Styling Tabel HTML Kustom
 st.markdown("""
 <style>
     .main { background-color: #0e1117; }
@@ -77,20 +77,6 @@ st.markdown("""
         color: #cbd5e1;
         font-size: 12px;
         font-weight: 500;
-    }
-
-    /* Memperbesar ukuran font isi tabel rekapitulasi secara ekstrem (3x lipat) */
-    [data-testid="stDataFrame"] div[data-testid="stTable"] td, 
-    [data-testid="stDataFrame"] table tr td,
-    [data-testid="stDataFrame"] div[role="grid"] div[role="gridcell"] {
-        font-size: 24px !important;
-        padding-top: 14px !important;
-        padding-bottom: 14px !important;
-    }
-    [data-testid="stDataFrame"] table tr th,
-    [data-testid="stDataFrame"] div[role="grid"] div[role="columnheader"] {
-        font-size: 24px !important;
-        font-weight: bold !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -250,7 +236,7 @@ st.markdown("---")
 
 color_map = {'Selesai': '#00BCD4', 'SLS': '#00BCD4', 'Evaluasi': '#FFCA28', 'EVAL': '#FFCA28', 'Overdue': '#FF7043', 'BD': '#FF7043', 'Belum TL': '#FF7043'}
 
-# --- TABEL REKAPITULASI MATRIKS AUDIT (DENGAN FONT EKSTRA BESAR 24PX & RATA TENGAH) ---
+# --- TABEL REKAPITULASI MATRIKS AUDIT MENGGUNAKAN HTML KUSTOM (FONT BESAR & RATA TENGAH) ---
 st.markdown("### 📑 Rekapitulasi Matriks Tindak Lanjut Hasil Audit")
 if not df_base.empty:
     summary_rows = []
@@ -287,43 +273,71 @@ if not df_base.empty:
             "TPTD": 0
         })
         
-    df_summary = pd.DataFrame(summary_rows)
-    
-    row_jumlah = {
-        "Objek Audit": "JUMLAH",
-        "Jumlah Temuan": tot_t,
-        "Jumlah Rekomendasi": tot_r,
-        "Selesai (SLS)": tot_sls,
-        "Belum Sesuai (BS)": tot_eval,
-        "Belum Ditindaklanjuti (BD)": tot_bd,
-        "TPTD": 0
-    }
-    
     p_sls = f"{(tot_sls/tot_r)*100:.2f}" if tot_r > 0 else "0.00"
     p_eval = f"{(tot_eval/tot_r)*100:.2f}" if tot_r > 0 else "0.00"
     p_bd = f"{(tot_bd/tot_r)*100:.2f}" if tot_r > 0 else "0.00"
-    
-    row_progres = {
-        "Objek Audit": "PROGRES (%)",
-        "Jumlah Temuan": "",
-        "Jumlah Rekomendasi": "",
-        "Selesai (SLS)": p_sls,
-        "Belum Sesuai (BS)": p_eval,
-        "Belum Ditindaklanjuti (BD)": p_bd,
-        "TPTD": "0"
-    }
-    
-    df_summary = pd.concat([df_summary, pd.DataFrame([row_jumlah, row_progres])], ignore_index=True)
 
-    def style_summary_rows(row):
-        if row["Objek Audit"] == "JUMLAH":
-            return ['background-color: #1e3a8a; color: white; font-weight: bold; font-size: 24px; text-align: left' if idx == 0 else 'background-color: #1e3a8a; color: white; font-weight: bold; font-size: 24px; text-align: center' for idx in range(len(row))]
-        elif row["Objek Audit"] == "PROGRES (%)":
-            return ['background-color: #0f766e; color: white; font-weight: bold; font-size: 24px; text-align: left' if idx == 0 else 'background-color: #0f766e; color: white; font-weight: bold; font-size: 24px; text-align: center' for idx in range(len(row))]
-        return ['font-size: 24px; text-align: left' if idx == 0 else 'font-size: 24px; text-align: center' for idx in range(len(row))]
-
-    styled_summary = df_summary.style.apply(style_summary_rows, axis=1)
-    st.dataframe(styled_summary, use_container_width=True, hide_index=True)
+    # Membangun Tabel HTML Murni untuk Kontrol Ukuran Font 100% Sempurna
+    html_table = """
+    <div style="width: 100%; overflow-x: auto; margin-bottom: 20px;">
+        <table style="width: 100%; border-collapse: collapse; background-color: #161b22; color: #ffffff; font-family: sans-serif; border: 1px solid #30363d;">
+            <thead>
+                <tr style="background-color: #21262d; border-bottom: 2px solid #30363d;">
+                    <th style="padding: 16px; text-align: left; font-size: 20px; font-weight: bold; border-right: 1px solid #30363d;">Objek Audit</th>
+                    <th style="padding: 16px; text-align: center; font-size: 20px; font-weight: bold; border-right: 1px solid #30363d;">Jumlah Temuan</th>
+                    <th style="padding: 16px; text-align: center; font-size: 20px; font-weight: bold; border-right: 1px solid #30363d;">Jumlah Rekomendasi</th>
+                    <th style="padding: 16px; text-align: center; font-size: 20px; font-weight: bold; border-right: 1px solid #30363d;">Selesai (SLS)</th>
+                    <th style="padding: 16px; text-align: center; font-size: 20px; font-weight: bold; border-right: 1px solid #30363d;">Belum Sesuai (BS)</th>
+                    <th style="padding: 16px; text-align: center; font-size: 20px; font-weight: bold; border-right: 1px solid #30363d;">Belum Ditindaklanjuti (BD)</th>
+                    <th style="padding: 16px; text-align: center; font-size: 20px; font-weight: bold;">TPTD</th>
+                </tr>
+            </thead>
+            <tbody>
+    """
+    
+    for row in summary_rows:
+        html_table += f"""
+                <tr style="border-bottom: 1px solid #30363d;">
+                    <td style="padding: 16px; text-align: left; font-size: 20px; border-right: 1px solid #30363d;">{row['Objek Audit']}</td>
+                    <td style="padding: 16px; text-align: center; font-size: 20px; border-right: 1px solid #30363d;">{row['Jumlah Temuan']}</td>
+                    <td style="padding: 16px; text-align: center; font-size: 20px; border-right: 1px solid #30363d;">{row['Jumlah Rekomendasi']}</td>
+                    <td style="padding: 16px; text-align: center; font-size: 20px; border-right: 1px solid #30363d;">{row['Selesai (SLS)']}</td>
+                    <td style="padding: 16px; text-align: center; font-size: 20px; border-right: 1px solid #30363d;">{row['Belum Sesuai (BS)']}</td>
+                    <td style="padding: 16px; text-align: center; font-size: 20px; border-right: 1px solid #30363d;">{row['Belum Ditindaklanjuti (BD)']}</td>
+                    <td style="padding: 16px; text-align: center; font-size: 20px;">{row['TPTD']}</td>
+                </tr>
+        """
+        
+    # Baris Jumlah
+    html_table += f"""
+                <tr style="background-color: #1e3a8a; border-bottom: 1px solid #30363d; font-weight: bold;">
+                    <td style="padding: 18px; text-align: left; font-size: 22px; border-right: 1px solid #30363d;">JUMLAH</td>
+                    <td style="padding: 18px; text-align: center; font-size: 22px; border-right: 1px solid #30363d;">{tot_t}</td>
+                    <td style="padding: 18px; text-align: center; font-size: 22px; border-right: 1px solid #30363d;">{tot_r}</td>
+                    <td style="padding: 18px; text-align: center; font-size: 22px; border-right: 1px solid #30363d;">{tot_sls}</td>
+                    <td style="padding: 18px; text-align: center; font-size: 22px; border-right: 1px solid #30363d;">{tot_eval}</td>
+                    <td style="padding: 18px; text-align: center; font-size: 22px; border-right: 1px solid #30363d;">{tot_bd}</td>
+                    <td style="padding: 18px; text-align: center; font-size: 22px;">0</td>
+                </tr>
+    """
+    
+    # Baris Progres (%)
+    html_table += f"""
+                <tr style="background-color: #0f766e; font-weight: bold;">
+                    <td style="padding: 18px; text-align: left; font-size: 22px; border-right: 1px solid #30363d;">PROGRES (%)</td>
+                    <td style="padding: 18px; text-align: center; font-size: 22px; border-right: 1px solid #30363d;">-</td>
+                    <td style="padding: 18px; text-align: center; font-size: 22px; border-right: 1px solid #30363d;">-</td>
+                    <td style="padding: 18px; text-align: center; font-size: 22px; border-right: 1px solid #30363d;">{p_sls}</td>
+                    <td style="padding: 18px; text-align: center; font-size: 22px; border-right: 1px solid #30363d;">{p_eval}</td>
+                    <td style="padding: 18px; text-align: center; font-size: 22px; border-right: 1px solid #30363d;">{p_bd}</td>
+                    <td style="padding: 18px; text-align: center; font-size: 22px;">0</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    """
+    
+    st.markdown(html_table, unsafe_allow_html=True)
 else:
     st.info("Tidak ada data untuk ditampilkan dalam matriks rekapitulasi.")
 
