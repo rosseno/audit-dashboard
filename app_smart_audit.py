@@ -236,7 +236,7 @@ st.markdown("---")
 
 color_map = {'Selesai': '#00BCD4', 'SLS': '#00BCD4', 'Evaluasi': '#FFCA28', 'EVAL': '#FFCA28', 'Overdue': '#FF7043', 'BD': '#FF7043', 'Belum TL': '#FF7043'}
 
-# --- TABEL REKAPITULASI MATRIKS AUDIT MENGGUNAKAN HTML KUSTOM DENGAN unsafe_allow_html=True ---
+# --- TABEL REKAPITULASI MATRIKS AUDIT MENGGUNAKAN HTML KUSTOM ---
 st.markdown("### 📑 Rekapitulasi Matriks Tindak Lanjut Hasil Audit")
 if not df_base.empty:
     summary_rows = []
@@ -277,7 +277,21 @@ if not df_base.empty:
     p_eval = f"{(tot_eval/tot_r)*100:.2f}" if tot_r > 0 else "0.00"
     p_bd = f"{(tot_bd/tot_r)*100:.2f}" if tot_r > 0 else "0.00"
 
-    html_table = """
+    rows_html = ""
+    for row in summary_rows:
+        rows_html += f"""
+        <tr style="border-bottom: 1px solid #30363d;">
+            <td style="padding: 16px; text-align: left; font-size: 20px; border-right: 1px solid #30363d;">{row['Objek Audit']}</td>
+            <td style="padding: 16px; text-align: center; font-size: 20px; border-right: 1px solid #30363d;">{row['Jumlah Temuan']}</td>
+            <td style="padding: 16px; text-align: center; font-size: 20px; border-right: 1px solid #30363d;">{row['Jumlah Rekomendasi']}</td>
+            <td style="padding: 16px; text-align: center; font-size: 20px; border-right: 1px solid #30363d;">{row['Selesai (SLS)']}</td>
+            <td style="padding: 16px; text-align: center; font-size: 20px; border-right: 1px solid #30363d;">{row['Belum Sesuai (BS)']}</td>
+            <td style="padding: 16px; text-align: center; font-size: 20px; border-right: 1px solid #30363d;">{row['Belum Ditindaklanjuti (BD)']}</td>
+            <td style="padding: 16px; text-align: center; font-size: 20px;">{row['TPTD']}</td>
+        </tr>
+        """
+
+    html_table = f"""
     <div style="width: 100%; overflow-x: auto; margin-bottom: 20px;">
         <table style="width: 100%; border-collapse: collapse; background-color: #161b22; color: #ffffff; font-family: sans-serif; border: 1px solid #30363d;">
             <thead>
@@ -292,22 +306,7 @@ if not df_base.empty:
                 </tr>
             </thead>
             <tbody>
-    """
-    
-    for row in summary_rows:
-        html_table += f"""
-                <tr style="border-bottom: 1px solid #30363d;">
-                    <td style="padding: 16px; text-align: left; font-size: 20px; border-right: 1px solid #30363d;">{row['Objek Audit']}</td>
-                    <td style="padding: 16px; text-align: center; font-size: 20px; border-right: 1px solid #30363d;">{row['Jumlah Temuan']}</td>
-                    <td style="padding: 16px; text-align: center; font-size: 20px; border-right: 1px solid #30363d;">{row['Jumlah Rekomendasi']}</td>
-                    <td style="padding: 16px; text-align: center; font-size: 20px; border-right: 1px solid #30363d;">{row['Selesai (SLS)']}</td>
-                    <td style="padding: 16px; text-align: center; font-size: 20px; border-right: 1px solid #30363d;">{row['Belum Sesuai (BS)']}</td>
-                    <td style="padding: 16px; text-align: center; font-size: 20px; border-right: 1px solid #30363d;">{row['Belum Ditindaklanjuti (BD)']}</td>
-                    <td style="padding: 16px; text-align: center; font-size: 20px;">{row['TPTD']}</td>
-                </tr>
-        """
-        
-    html_table += f"""
+                {rows_html}
                 <tr style="background-color: #1e3a8a; border-bottom: 1px solid #30363d; font-weight: bold;">
                     <td style="padding: 18px; text-align: left; font-size: 22px; border-right: 1px solid #30363d;">JUMLAH</td>
                     <td style="padding: 18px; text-align: center; font-size: 22px; border-right: 1px solid #30363d;">{tot_t}</td>
@@ -317,9 +316,6 @@ if not df_base.empty:
                     <td style="padding: 18px; text-align: center; font-size: 22px; border-right: 1px solid #30363d;">{tot_bd}</td>
                     <td style="padding: 18px; text-align: center; font-size: 22px;">0</td>
                 </tr>
-    """
-    
-    html_table += f"""
                 <tr style="background-color: #0f766e; font-weight: bold;">
                     <td style="padding: 18px; text-align: left; font-size: 22px; border-right: 1px solid #30363d;">PROGRES (%)</td>
                     <td style="padding: 18px; text-align: center; font-size: 22px; border-right: 1px solid #30363d;">-</td>
