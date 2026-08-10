@@ -7,8 +7,8 @@ from datetime import datetime
 import os
 
 st.set_page_config(
-    page_title="Executive Audit Dashboard - PT Pelindo Solusi Maritim",
-    page_icon="📊",
+    page_title="Executive Audit Dashboard | PT Pelindo Solusi Maritim",
+    page_icon="🛡️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
