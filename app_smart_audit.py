@@ -270,7 +270,7 @@ if selected_periode == "2026":
 tab_dash, tab_prog_kk, tab_lha = st.tabs([
     "📊 Dashboard Monitoring Eksekutif", 
     "📋 Modul KKA & AP", 
-    "📝 Modul LHA (Integrated Table Position)"
+    "📝 Modul LHA (Live Integrated Editor)"
 ])
 
 # ================= TAB 1: DASHBOARD MONITORING =================
@@ -431,7 +431,7 @@ with tab_prog_kk:
 # ================= TAB 3: GENERATOR LHA MULTI-AUDITOR =================
 with tab_lha:
     st.markdown("### Modul Generator Lembar Hasil Audit (LHA) Multi-Auditor")
-    st.info("💡 **Tata Letak Otomatis:** Gambar tabel yang diunggah akan otomatis diletakkan tepat di bawah kalimat berakhiran titik dua (:) pada lembar observasi.")
+    st.info("💡 **Live Integrated Editor:** Saat mode terbuka, gambar tabel akan langsung tampil persis di bawah kotak teks observasi agar posisinya langsung terlihat menyatu.")
     
     if access_role == "Admin SPI":
         id_lha_list = df_master["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_master.columns else []
@@ -472,7 +472,6 @@ with tab_lha:
                             st.markdown(f"🔒 **[{lha_doc['lha_doc_id']}] Lembar LHA — Disusun oleh: {lha_doc['auditor_name']} (Terkunci)**")
                             st.markdown("---")
                             
-                            # POSISI TEPAT: Teks Observasi -> Langsung diikuti Tabel di bawahnya
                             st.markdown(f"**1. Observasi / Kondisi:**")
                             st.markdown(f"{lha_doc['observasi']}", unsafe_allow_html=True)
                             
@@ -511,19 +510,6 @@ with tab_lha:
                                     st.session_state.unlocked_lhas.remove(lha_key_id)
                                     st.rerun()
 
-                            # Preview Tabel Tepat di Bawah Teks Saat Edit
-                            curr_att = lha_doc.get("attachment_name", "-")
-                            if curr_att != "-" and curr_att.lower().endswith(('.png', '.jpg', '.jpeg')):
-                                check_path = os.path.join(UPLOAD_DIR, curr_att)
-                                if os.path.exists(check_path):
-                                    st.markdown(f"📊 **Preview Posisi Tabel (Tepat di Bawah Titik Dua):**")
-                                    st.image(check_path, width=700)
-                                    if st.button("🗑️ Hapus Gambar Tabel Ini", key=f"del_img_{lha_key_id}_{idx}"):
-                                        lha_doc["attachment_name"] = "-"
-                                        save_lha_to_excel()
-                                        st.success("Gambar berhasil dihapus!")
-                                        st.rerun()
-
                             with st.form(key=f"form_multi_lha_{lha_key_id}_{idx}"):
                                 auditor_lha_input = st.text_input("Nama / Inisial Auditor LHA:", value=lha_doc["auditor_name"])
                                 new_lha_pin_input = st.text_input("Ubah / Atur PIN Keamanan LHA ini:", value=str(lha_doc.get("lha_pin", "1234")), type="password")
@@ -533,13 +519,22 @@ with tab_lha:
                                 rek_txt = lha_doc["rekomendasi"].to_string(index=False) if isinstance(lha_doc["rekomendasi"], pd.DataFrame) else str(lha_doc["rekomendasi"])
                                 imp_txt = lha_doc["implikasi"].to_string(index=False) if isinstance(lha_doc["implikasi"], pd.DataFrame) else str(lha_doc["implikasi"])
 
-                                obs_input = st.text_area("1. Observasi / Kondisi (Akhiri kalimat dengan tanda titik dua ':'):", value=obs_txt, height=120)
+                                obs_input = st.text_area("1. Observasi / Kondisi (Akhiri dengan tanda titik dua ':'):", value=obs_txt, height=120)
                                 
+                                # POSISI TEPAT: Uploader diletakkan LANGSUNG di bawah kotak teks Observasi
                                 uploaded_lha_file = st.file_uploader(
-                                    "📷 Upload / Ganti Gambar Tabel (Format PNG, JPG) — *(Akan otomatis diposisikan tepat di bawah titik dua)*:", 
+                                    "📷 Upload / Ganti Gambar Tabel (Format PNG, JPG):", 
                                     type=["png", "jpg", "jpeg"], 
                                     key=f"up_lha_file_{lha_key_id}_{idx}"
                                 )
+
+                                # Tampilkan Preview langsung di dalam form tepat di bawah uploader
+                                curr_att = lha_doc.get("attachment_name", "-")
+                                if curr_att != "-" and curr_att.lower().endswith(('.png', '.jpg', '.jpeg')):
+                                    check_path = os.path.join(UPLOAD_DIR, curr_att)
+                                    if os.path.exists(check_path):
+                                        st.markdown(f"📊 **Preview Tabel Terpasang Saat Ini:**")
+                                        st.image(check_path, width=700)
 
                                 root_input = st.text_area("2. Akar Masalah (Root Cause):", value=root_txt, height=120)
                                 rek_input = st.text_area("3. Rekomendasi:", value=rek_txt, height=120)
@@ -608,7 +603,7 @@ if access_role == "Admin SPI" and st.session_state.admin_logged_in:
             elif "SLS" in str(current_status) or "Selesai" in str(current_status):
                 default_idx = 2
 
-            with st.key("form_verifikasi") if hasattr(st, 'key') else st.form(key="form_verifikasi"):
+            with st.form(key="form_verifikasi"):
                 col_v1, col_v2 = st.columns(2)
                 with col_v1:
                     new_status_choice = st.selectbox("Ubah Status Temuan:", opt_status, index=default_idx)
@@ -646,7 +641,7 @@ if access_role == "Admin SPI" and st.session_state.admin_logged_in:
     with col_exp2:
         def generate_summary_text_report():
             report = f"=== LAPORAN EKSEKUTIF PENGAWASAN SPI ===\n"
-            report += f"Footer / Info: PT Pelindo Solusi Maritim\n"
+            report += f"Periode: {selected_periode}\n"
             return report.encode('utf-8')
 
         st.download_button(
