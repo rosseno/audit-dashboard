@@ -13,7 +13,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS Ultimate untuk Card KPI Proporsional, Neon Glow, & Kotak Teks Fleksibel
+# Custom CSS Ultimate untuk Card KPI Proporsional, Neon Glow, & Tampilan Rapi
 st.markdown("""
 <style>
     .main { background-color: #0e1117; }
@@ -28,9 +28,8 @@ st.markdown("""
     .header-title { color: #ffffff; font-size: 22px; font-weight: 700; }
     .header-subtitle { color: #94a3b8; font-size: 13px; margin-top: 5px; }
 
-    /* Memperluas tinggi kotak teks (Text Area) agar sangat leluasa untuk mengetik */
     .stTextArea textarea {
-        min-height: 200px !important;
+        min-height: 180px !important;
     }
 
     /* Animasi Kedip (Blink) untuk Kotak Peringatan Darurat */
@@ -52,7 +51,6 @@ st.markdown("""
         animation: blink-animation 1.5s infinite ease-in-out;
     }
 
-    /* Container Card KPI agar rapat berjejer rapi & proporsional */
     .kpi-row {
         display: flex;
         gap: 14px;
@@ -60,7 +58,6 @@ st.markdown("""
         margin-bottom: 20px;
     }
 
-    /* Desain Card 3D Hidup dengan Proporsi Ukuran Pas & Estetik */
     .kpi-card {
         flex: 1;
         background: linear-gradient(145deg, #161b22 0%, #0d1117 100%);
@@ -74,7 +71,6 @@ st.markdown("""
         transform: translateY(-3px);
     }
 
-    /* Siluet Garis Warna Neon Spesifik per Card */
     .card-blue { border: 2px solid #3b82f6; box-shadow: 0 0 12px rgba(59, 130, 246, 0.35); }
     .card-purple { border: 2px solid #8b5cf6; box-shadow: 0 0 12px rgba(139, 92, 246, 0.35); }
     .card-green { border: 2px solid #10b981; box-shadow: 0 0 12px rgba(16, 185, 129, 0.35); }
@@ -274,8 +270,8 @@ if selected_periode == "2026":
 # --- NAVIGASI UTAMA BERBENTUK TAB ---
 tab_dash, tab_prog_kk, tab_lha = st.tabs([
     "📊 Dashboard Monitoring Eksekutif", 
-    "📋 Modul KKA & AP (Format Fleksibel + Upload File)", 
-    "📝 Modul LHA (Format Fleksibel + Upload File)"
+    "📋 Modul KKA & AP (Embed Gambar Tabel Langsung)", 
+    "📝 Modul LHA (Embed Gambar Tabel Langsung)"
 ])
 
 # ================= TAB 1: DASHBOARD MONITORING =================
@@ -414,10 +410,10 @@ with tab_dash:
     st.dataframe(df_table_display, use_container_width=True, hide_index=True)
 
 
-# ================= TAB 2: PROGRAM AUDIT & KERTAS KERJA MULTI-AUDITOR (FORMAT FLEKSIBEL) =================
+# ================= TAB 2: PROGRAM AUDIT & KERTAS KERJA MULTI-AUDITOR (EMBED GAMBAR) =================
 with tab_prog_kk:
-    st.markdown("### Modul Program Audit & Kertas Kerja Multi-Auditor (Format Fleksibel + Upload File)")
-    st.info("💡 Tanpa batasan tabel kaku! Anda bebas mengetik catatan, ringkasan, atau langsung mengunggah file Word/Excel lengkap Anda.")
+    st.markdown("### Modul Program Audit & Kertas Kerja Multi-Auditor (Embed Gambar Tabel Langsung)")
+    st.info("💡 Gambar tabel yang diunggah akan langsung tampil di bawah teks dokumen Anda secara utuh.")
     
     if access_role == "Admin SPI":
         id_pk_list = df_master["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_master.columns else []
@@ -478,6 +474,15 @@ with tab_prog_kk:
                                     st.session_state.unlocked_docs.remove(doc_key_id)
                                     st.rerun()
 
+                            # Tampilkan Preview Gambar/Tabel di Layar jika sudah ada file gambar terlampir
+                            att_name = doc.get("attachment_name", "-")
+                            if att_name != "-" and att_name.lower().endswith(('.png', '.jpg', '.jpeg')):
+                                att_path = os.path.join(UPLOAD_DIR, att_name)
+                                if os.path.exists(att_path):
+                                    st.markdown("📷 **Preview Tabel / Gambar yang Tersemat di Dokumen:**")
+                                    st.image(att_path, use_container_width=True)
+                                    st.markdown("---")
+
                             with st.form(key=f"form_multi_doc_{doc_key_id}_{idx}"):
                                 auditor_input = st.text_input("Nama / Inisial Auditor:", value=doc["auditor_name"])
                                 new_pin_input = st.text_input("Ubah / Atur PIN Keamanan Dokumen ini:", value=str(doc.get("doc_pin", "1234")), type="password")
@@ -485,12 +490,12 @@ with tab_prog_kk:
                                 prog_text = doc["audit_program"].to_string(index=False) if isinstance(doc["audit_program"], pd.DataFrame) else str(doc["audit_program"])
                                 kk_text = doc["kertas_kerja"].to_string(index=False) if isinstance(doc["kertas_kerja"], pd.DataFrame) else str(doc["kertas_kerja"])
 
-                                prog_input = st.text_area("1. Uraian Langkah-langkah Program Audit (AP):", value=prog_text, height=180)
-                                kk_input = st.text_area("2. Catatan Ringkas / Pengujian Kertas Kerja Audit (KKA):", value=kk_text, height=220)
+                                prog_input = st.text_area("1. Uraian Teks Program Audit (AP):", value=prog_text, height=150)
+                                kk_input = st.text_area("2. Catatan Ringkas Kertas Kerja Audit (KKA):", value=kk_text, height=180)
                                 
                                 st.markdown("---")
-                                st.markdown(f"📁 **File Lampiran Saat Ini:** `{doc.get('attachment_name', '-')}`")
-                                uploaded_file = st.file_uploader("Unggah File KKA / AP Lengkap (Word, Excel, PDF, Gambar):", type=["docx", "xlsx", "xls", "pdf", "png", "jpg", "jpeg", "txt"], key=f"up_file_{doc_key_id}_{idx}")
+                                st.markdown(f"📁 **File Gambar / Tabel Saat Ini:** `{att_name}`")
+                                uploaded_file = st.file_uploader("Insert / Sisipkan Gambar Tabel (PNG, JPG):", type=["png", "jpg", "jpeg"], key=f"up_file_{doc_key_id}_{idx}")
                                 
                                 col_f1, col_f2 = st.columns(2)
                                 with col_f1:
@@ -511,7 +516,7 @@ with tab_prog_kk:
                                         with open(file_path, "wb") as f:
                                             f.write(file_bytes)
                                         doc["attachment_name"] = safe_file_name
-                                        st.toast(f"File {uploaded_file.name} berhasil diunggah!")
+                                        st.toast(f"Gambar {uploaded_file.name} berhasil disisipkan!")
 
                                     save_docs_to_excel()
                                     if doc_key_id in st.session_state.unlocked_docs:
@@ -526,19 +531,6 @@ with tab_prog_kk:
                                     save_docs_to_excel()
                                     st.success(f"Dokumen {doc['doc_id']} berhasil dihapus!")
                                     st.rerun()
-                            
-                            att_name = doc.get("attachment_name", "-")
-                            if att_name != "-":
-                                att_path = os.path.join(UPLOAD_DIR, att_name)
-                                if os.path.exists(att_path):
-                                    with open(att_path, "rb") as f:
-                                        file_data = f.read()
-                                    st.download_button(
-                                        label=f"📥 Download File Lampiran Utuh: {att_name}",
-                                        data=file_data,
-                                        file_name=att_name,
-                                        key=f"dl_att_{doc_key_id}_{idx}"
-                                    )
 
                             doc_text_export = f"""==================================================
 PROGRAM AUDIT & KERTAS KERJA AUDIT (KKA)
@@ -547,7 +539,7 @@ PT PELINDO SOLUSI MARITIM
 ID Penugasan : {doc['target_temuan']}
 Nomor Dokumen: {doc['doc_id']}
 Auditor      : {doc['auditor_name']}
-File Lampiran: {doc.get('attachment_name', '-')}
+File Tabel   : {doc.get('attachment_name', '-')}
 Update Terakhir: {datetime.now().strftime('%d-%m-%Y %H:%M')}
 --------------------------------------------------
 1. PROGRAM AUDIT (AP):
@@ -568,10 +560,10 @@ Update Terakhir: {datetime.now().strftime('%d-%m-%Y %H:%M')}
         st.warning("⚠️ Menu penyusunan Program Audit & Kertas Kerja dikhususkan untuk peran Admin SPI (Auditor).")
 
 
-# ================= TAB 3: GENERATOR LHA MULTI-AUDITOR (FORMAT FLEKSIBEL) =================
+# ================= TAB 3: GENERATOR LHA MULTI-AUDITOR (EMBED GAMBAR) =================
 with tab_lha:
-    st.markdown("### Modul Generator Lembar Hasil Audit (LHA) Multi-Auditor (Format Fleksibel + Upload File)")
-    st.info("💡 Tanpa batasan tabel kaku! Anda bebas mengisi poin observasi, akar masalah, rekomendasi, atau mengunggah file LHA Word/Excel Anda.")
+    st.markdown("### Modul Generator Lembar Hasil Audit (LHA) Multi-Auditor (Embed Gambar Tabel Langsung)")
+    st.info("💡 Gambar tabel observasi/rekomendasi yang diunggah akan langsung tampil di dalam lembar LHA Anda.")
     
     if access_role == "Admin SPI":
         id_lha_list = df_master["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_master.columns else []
@@ -634,6 +626,15 @@ with tab_lha:
                                     st.session_state.unlocked_lhas.remove(lha_key_id)
                                     st.rerun()
 
+                            # Tampilkan Preview Gambar LHA di Layar jika ada
+                            lha_att_name = lha_doc.get("attachment_name", "-")
+                            if lha_att_name != "-" and lha_att_name.lower().endswith(('.png', '.jpg', '.jpeg')):
+                                lha_att_path = os.path.join(UPLOAD_DIR, lha_att_name)
+                                if os.path.exists(lha_att_path):
+                                    st.markdown("📷 **Preview Tabel / Gambar LHA yang Tersemat di Dokumen:**")
+                                    st.image(lha_att_path, use_container_width=True)
+                                    st.markdown("---")
+
                             with st.form(key=f"form_multi_lha_{lha_key_id}_{idx}"):
                                 auditor_lha_input = st.text_input("Nama / Inisial Auditor LHA:", value=lha_doc["auditor_name"])
                                 new_lha_pin_input = st.text_input("Ubah / Atur PIN Keamanan LHA ini:", value=str(lha_doc.get("lha_pin", "1234")), type="password")
@@ -643,14 +644,14 @@ with tab_lha:
                                 rek_txt = lha_doc["rekomendasi"].to_string(index=False) if isinstance(lha_doc["rekomendasi"], pd.DataFrame) else str(lha_doc["rekomendasi"])
                                 imp_txt = lha_doc["implikasi"].to_string(index=False) if isinstance(lha_doc["implikasi"], pd.DataFrame) else str(lha_doc["implikasi"])
 
-                                obs_input = st.text_area("1. Observasi / Kondisi:", value=obs_txt, height=150)
-                                root_input = st.text_area("2. Akar Masalah (Root Cause):", value=root_txt, height=150)
-                                rek_input = st.text_area("3. Rekomendasi:", value=rek_txt, height=150)
-                                imp_input = st.text_area("4. Implikasi / Risiko:", value=imp_txt, height=150)
+                                obs_input = st.text_area("1. Observasi / Kondisi:", value=obs_txt, height=130)
+                                root_input = st.text_area("2. Akar Masalah (Root Cause):", value=root_txt, height=130)
+                                rek_input = st.text_area("3. Rekomendasi:", value=rek_txt, height=130)
+                                imp_input = st.text_area("4. Implikasi / Risiko:", value=imp_txt, height=130)
                                 
                                 st.markdown("---")
-                                st.markdown(f"📁 **File Lampiran Saat Ini:** `{lha_doc.get('attachment_name', '-')}`")
-                                uploaded_lha_file = st.file_uploader("Unggah File LHA Lengkap (Word, Excel, PDF, Gambar):", type=["docx", "xlsx", "xls", "pdf", "png", "jpg", "jpeg", "txt"], key=f"up_lha_file_{lha_key_id}_{idx}")
+                                st.markdown(f"📁 **File Gambar / Tabel Saat Ini:** `{lha_att_name}`")
+                                uploaded_lha_file = st.file_uploader("Insert / Sisipkan Gambar Tabel LHA (PNG, JPG):", type=["png", "jpg", "jpeg"], key=f"up_lha_file_{lha_key_id}_{idx}")
                                 
                                 col_lha_f1, col_lha_f2 = st.columns(2)
                                 with col_lha_f1:
@@ -673,7 +674,7 @@ with tab_lha:
                                         with open(file_path, "wb") as f:
                                             f.write(file_bytes)
                                         lha_doc["attachment_name"] = safe_lha_name
-                                        st.toast(f"File {uploaded_lha_file.name} berhasil diunggah!")
+                                        st.toast(f"Gambar {uploaded_lha_file.name} berhasil disisipkan!")
 
                                     save_lha_to_excel()
                                     if lha_key_id in st.session_state.unlocked_lhas:
@@ -688,19 +689,6 @@ with tab_lha:
                                     save_lha_to_excel()
                                     st.success(f"Dokumen LHA {lha_doc['lha_doc_id']} berhasil dihapus!")
                                     st.rerun()
-                            
-                            lha_att_name = lha_doc.get("attachment_name", "-")
-                            if lha_att_name != "-":
-                                lha_att_path = os.path.join(UPLOAD_DIR, lha_att_name)
-                                if os.path.exists(lha_att_path):
-                                    with open(lha_att_path, "rb") as f:
-                                        lha_file_data = f.read()
-                                    st.download_button(
-                                        label=f"📥 Download File Lampiran Utuh: {lha_att_name}",
-                                        data=lha_file_data,
-                                        file_name=lha_att_name,
-                                        key=f"dl_lha_att_{lha_key_id}_{idx}"
-                                    )
 
                             lha_text_export = f"""==================================================
 LEMBAR HASIL AUDIT (LHA) — INTERNAL AUDIT UNIT
@@ -709,7 +697,7 @@ PT PELINDO SOLUSI MARITIM
 ID Penugasan : {lha_doc['target_temuan']}
 Nomor Dokumen: {lha_doc['lha_doc_id']}
 Auditor      : {lha_doc['auditor_name']}
-File Lampiran: {lha_doc.get('attachment_name', '-')}
+File Tabel   : {lha_doc.get('attachment_name', '-')}
 Update Terakhir: {datetime.now().strftime('%d-%m-%Y %H:%M')}
 --------------------------------------------------
 1. OBSERVASI / KONDISI:
