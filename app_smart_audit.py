@@ -104,6 +104,10 @@ st.markdown("""
 EXCEL_FILE = "Master_Database_Temuan_Audit_2024_2025_PSM_Ringkas.xlsx"
 EXCEL_DOCS_FILE = "Database_Multi_Auditor_PA_KKA.xlsx"
 EXCEL_LHA_FILE = "Database_Multi_Auditor_LHA.xlsx"
+UPLOAD_DIR = "uploaded_attachments"
+
+if not os.path.exists(UPLOAD_DIR):
+    os.makedirs(UPLOAD_DIR)
 
 @st.cache_data
 def load_data():
@@ -123,6 +127,8 @@ if 'multi_audit_docs' not in st.session_state:
             df_docs = pd.read_excel(EXCEL_DOCS_FILE)
             if 'doc_pin' not in df_docs.columns:
                 df_docs['doc_pin'] = "1234"
+            if 'attachment_name' not in df_docs.columns:
+                df_docs['attachment_name'] = "-"
             st.session_state.multi_audit_docs = df_docs.to_dict('records')
         except:
             st.session_state.multi_audit_docs = []
@@ -136,13 +142,14 @@ if 'multi_lha_docs' not in st.session_state:
             df_lha = pd.read_excel(EXCEL_LHA_FILE)
             if 'lha_pin' not in df_lha.columns:
                 df_lha['lha_pin'] = "1234"
+            if 'attachment_name' not in df_lha.columns:
+                df_lha['attachment_name'] = "-"
             st.session_state.multi_lha_docs = df_lha.to_dict('records')
         except:
             st.session_state.multi_lha_docs = []
     else:
         st.session_state.multi_lha_docs = []
 
-# Status sesi login dokumen terbuka
 if 'unlocked_docs' not in st.session_state:
     st.session_state.unlocked_docs = []
 
@@ -153,13 +160,13 @@ def save_docs_to_excel():
     if st.session_state.multi_audit_docs:
         pd.DataFrame(st.session_state.multi_audit_docs).to_excel(EXCEL_DOCS_FILE, index=False)
     else:
-        pd.DataFrame(columns=["doc_id", "target_temuan", "auditor_name", "audit_program", "kertas_kerja", "doc_pin"]).to_excel(EXCEL_DOCS_FILE, index=False)
+        pd.DataFrame(columns=["doc_id", "target_temuan", "auditor_name", "audit_program", "kertas_kerja", "doc_pin", "attachment_name"]).to_excel(EXCEL_DOCS_FILE, index=False)
 
 def save_lha_to_excel():
     if st.session_state.multi_lha_docs:
         pd.DataFrame(st.session_state.multi_lha_docs).to_excel(EXCEL_LHA_FILE, index=False)
     else:
-        pd.DataFrame(columns=["lha_doc_id", "target_temuan", "auditor_name", "observasi", "root_cause", "rekomendasi", "implikasi", "lha_pin"]).to_excel(EXCEL_LHA_FILE, index=False)
+        pd.DataFrame(columns=["lha_doc_id", "target_temuan", "auditor_name", "observasi", "root_cause", "rekomendasi", "implikasi", "lha_pin", "attachment_name"]).to_excel(EXCEL_LHA_FILE, index=False)
 
 df_master = st.session_state.df_master
 PIN_ADMIN = "1234"  # <-- PIN Admin SPI
@@ -262,8 +269,8 @@ if selected_periode == "2026":
 # --- NAVIGASI UTAMA BERBENTUK TAB ---
 tab_dash, tab_prog_kk, tab_lha = st.tabs([
     "📊 Dashboard Monitoring Eksekutif", 
-    "📋 Modul Program Audit & Kertas Kerja Multi-Auditor (PIN: 1234)", 
-    "📝 Modul Generator Lembar Hasil Audit (LHA) Multi-Auditor (PIN: 1234)"
+    "📋 Modul KKA & AP (Dilengkapi Upload File & PIN 1234)", 
+    "📝 Modul LHA (Dilengkapi Upload File & PIN 1234)"
 ])
 
 # ================= TAB 1: DASHBOARD MONITORING =================
@@ -404,10 +411,10 @@ with tab_dash:
     st.dataframe(df_table_display, use_container_width=True, hide_index=True)
 
 
-# ================= TAB 2: PROGRAM AUDIT & KERTAS KERJA MULTI-AUDITOR (DENGAN KUNCI PIN 1234) =================
+# ================= TAB 2: PROGRAM AUDIT & KERTAS KERJA MULTI-AUDITOR (DENGAN UPLOAD FILE) =================
 with tab_prog_kk:
-    st.markdown("### Modul Program Audit & Kertas Kerja Multi-Auditor (Proteksi PIN 1234)")
-    st.info("💡 Dokumen KKA diproteksi PIN (default awal: **1234**). Masukkan PIN untuk membuka dan menyunting.")
+    st.markdown("### Modul Program Audit & Kertas Kerja Multi-Auditor (Upload File & Proteksi PIN 1234)")
+    st.info("💡 Selain teks ringkas, Anda dapat mengunggah file lampiran lengkap (Word, Excel, Gambar, dll) ke dalam lembar KKA.")
     
     if access_role == "Admin SPI":
         id_pk_list = df_master["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_master.columns else []
@@ -424,7 +431,8 @@ with tab_prog_kk:
                         "auditor_name": f"Auditor {len(st.session_state.multi_audit_docs) + 1}",
                         "audit_program": "-",
                         "kertas_kerja": "-",
-                        "doc_pin": "1234"  # PIN default 1234
+                        "doc_pin": "1234",
+                        "attachment_name": "-"
                     })
                     save_docs_to_excel()
                     st.rerun()
@@ -473,6 +481,10 @@ with tab_prog_kk:
                                 prog_input = st.text_area("Langkah-langkah Program Audit (AP):", value=doc["audit_program"], height=120)
                                 kk_input = st.text_area("Rincian Pengujian Kertas Kerja Audit (KKA):", value=doc["kertas_kerja"], height=140)
                                 
+                                st.markdown("---")
+                                st.markdown(f"📁 **Lampiran File Saat Ini:** `{doc.get('attachment_name', '-')}`")
+                                uploaded_file = st.file_uploader("Unggah / Ganti File Pendukung (Word, Excel, PDF, Gambar):", type=["docx", "xlsx", "xls", "pdf", "png", "jpg", "jpeg", "txt"], key=f"up_file_{doc_key_id}_{idx}")
+                                
                                 col_f1, col_f2 = st.columns(2)
                                 with col_f1:
                                     save_sub_btn = st.form_submit_button("Simpan & Kunci Kembali")
@@ -484,6 +496,16 @@ with tab_prog_kk:
                                     doc["audit_program"] = prog_input
                                     doc["kertas_kerja"] = kk_input
                                     doc["doc_pin"] = new_pin_input
+                                    
+                                    if uploaded_file is not None:
+                                        file_bytes = uploaded_file.read()
+                                        safe_file_name = f"{doc_key_id}_{uploaded_file.name}"
+                                        file_path = os.path.join(UPLOAD_DIR, safe_file_name)
+                                        with open(file_path, "wb") as f:
+                                            f.write(file_bytes)
+                                        doc["attachment_name"] = safe_file_name
+                                        st.toast(f"File {uploaded_file.name} berhasil diunggah!")
+
                                     save_docs_to_excel()
                                     if doc_key_id in st.session_state.unlocked_docs:
                                         st.session_state.unlocked_docs.remove(doc_key_id)
@@ -497,7 +519,21 @@ with tab_prog_kk:
                                     save_docs_to_excel()
                                     st.success(f"Dokumen {doc['doc_id']} berhasil dihapus!")
                                     st.rerun()
-                                    
+                            
+                            # Tombol Download Lampiran jika ada
+                            att_name = doc.get("attachment_name", "-")
+                            if att_name != "-":
+                                att_path = os.path.join(UPLOAD_DIR, att_name)
+                                if os.path.exists(att_path):
+                                    with open(att_path, "rb") as f:
+                                        file_data = f.read()
+                                    st.download_button(
+                                        label=f"📥 Download Lampiran File: {att_name}",
+                                        data=file_data,
+                                        file_name=att_name,
+                                        key=f"dl_att_{doc_key_id}_{idx}"
+                                    )
+
                             doc_text_export = f"""==================================================
 PROGRAM AUDIT & KERTAS KERJA AUDIT (KKA)
 PT PELINDO SOLUSI MARITIM
@@ -505,6 +541,7 @@ PT PELINDO SOLUSI MARITIM
 ID Penugasan : {doc['target_temuan']}
 Nomor Dokumen: {doc['doc_id']}
 Auditor      : {doc['auditor_name']}
+File Lampiran: {doc.get('attachment_name', '-')}
 Update Terakhir: {datetime.now().strftime('%d-%m-%Y %H:%M')}
 --------------------------------------------------
 1. PROGRAM AUDIT (AP):
@@ -514,7 +551,7 @@ Update Terakhir: {datetime.now().strftime('%d-%m-%Y %H:%M')}
 {doc['kertas_kerja']}
 =================================================="""
                             st.download_button(
-                                label=f"📥 Download / Perbarui File KKA {doc['doc_id']} (Format Notepad .txt)",
+                                label=f"📥 Download Ringkasan KKA {doc['doc_id']} (Format Notepad .txt)",
                                 data=doc_text_export.encode('utf-8'),
                                 file_name=f"KKA_{doc['target_temuan']}_{doc['doc_id']}.txt",
                                 mime="text/plain",
@@ -525,10 +562,10 @@ Update Terakhir: {datetime.now().strftime('%d-%m-%Y %H:%M')}
         st.warning("⚠️ Menu penyusunan Program Audit & Kertas Kerja dikhususkan untuk peran Admin SPI (Auditor).")
 
 
-# ================= TAB 3: GENERATOR LHA MULTI-AUDITOR (DENGAN KUNCI PIN 1234) =================
+# ================= TAB 3: GENERATOR LHA MULTI-AUDITOR (DENGAN UPLOAD FILE) =================
 with tab_lha:
-    st.markdown("### Modul Generator Lembar Hasil Audit (LHA) Multi-Auditor (Proteksi PIN 1234)")
-    st.info("💡 Dokumen LHA diproteksi PIN (default awal: **1234**). Masukkan PIN untuk membuka dan menyunting.")
+    st.markdown("### Modul Generator Lembar Hasil Audit (LHA) Multi-Auditor (Upload File & Proteksi PIN 1234)")
+    st.info("💡 Anda dapat mengunggah file bukti pendukung LHA secara aman dan privat.")
     
     if access_role == "Admin SPI":
         id_lha_list = df_master["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_master.columns else []
@@ -547,7 +584,8 @@ with tab_lha:
                         "root_cause": "-",
                         "rekomendasi": "-",
                         "implikasi": "-",
-                        "lha_pin": "1234"  # PIN default 1234
+                        "lha_pin": "1234",
+                        "attachment_name": "-"
                     })
                     save_lha_to_excel()
                     st.rerun()
@@ -598,6 +636,10 @@ with tab_lha:
                                 rek_input = st.text_area("3. Rekomendasi:", value=lha_doc["rekomendasi"], height=100)
                                 imp_input = st.text_area("4. Implikasi / Risiko:", value=lha_doc["implikasi"], height=100)
                                 
+                                st.markdown("---")
+                                st.markdown(f"📁 **Lampiran File Saat Ini:** `{lha_doc.get('attachment_name', '-')}`")
+                                uploaded_lha_file = st.file_uploader("Unggah / Ganti File Lampiran LHA (Word, Excel, PDF, Gambar):", type=["docx", "xlsx", "xls", "pdf", "png", "jpg", "jpeg", "txt"], key=f"up_lha_file_{lha_key_id}_{idx}")
+                                
                                 col_lha_f1, col_lha_f2 = st.columns(2)
                                 with col_lha_f1:
                                     save_lha_sub_btn = st.form_submit_button("Simpan & Kunci Kembali LHA")
@@ -611,6 +653,16 @@ with tab_lha:
                                     lha_doc["rekomendasi"] = rek_input
                                     lha_doc["implikasi"] = imp_input
                                     lha_doc["lha_pin"] = new_lha_pin_input
+                                    
+                                    if uploaded_lha_file is not None:
+                                        file_bytes = uploaded_lha_file.read()
+                                        safe_lha_name = f"{lha_key_id}_{uploaded_lha_file.name}"
+                                        file_path = os.path.join(UPLOAD_DIR, safe_lha_name)
+                                        with open(file_path, "wb") as f:
+                                            f.write(file_bytes)
+                                        lha_doc["attachment_name"] = safe_lha_name
+                                        st.toast(f"File {uploaded_lha_file.name} berhasil diunggah!")
+
                                     save_lha_to_excel()
                                     if lha_key_id in st.session_state.unlocked_lhas:
                                         st.session_state.unlocked_lhas.remove(lha_key_id)
@@ -624,7 +676,21 @@ with tab_lha:
                                     save_lha_to_excel()
                                     st.success(f"Dokumen LHA {lha_doc['lha_doc_id']} berhasil dihapus!")
                                     st.rerun()
-                                    
+                            
+                            # Tombol Download Lampiran LHA jika ada
+                            lha_att_name = lha_doc.get("attachment_name", "-")
+                            if lha_att_name != "-":
+                                lha_att_path = os.path.join(UPLOAD_DIR, lha_att_name)
+                                if os.path.exists(lha_att_path):
+                                    with open(lha_att_path, "rb") as f:
+                                        lha_file_data = f.read()
+                                    st.download_button(
+                                        label=f"📥 Download Lampiran File LHA: {lha_att_name}",
+                                        data=lha_file_data,
+                                        file_name=lha_att_name,
+                                        key=f"dl_lha_att_{lha_key_id}_{idx}"
+                                    )
+
                             lha_text_export = f"""==================================================
 LEMBAR HASIL AUDIT (LHA) — INTERNAL AUDIT UNIT
 PT PELINDO SOLUSI MARITIM
@@ -632,6 +698,7 @@ PT PELINDO SOLUSI MARITIM
 ID Penugasan : {lha_doc['target_temuan']}
 Nomor Dokumen: {lha_doc['lha_doc_id']}
 Auditor      : {lha_doc['auditor_name']}
+File Lampiran: {lha_doc.get('attachment_name', '-')}
 Update Terakhir: {datetime.now().strftime('%d-%m-%Y %H:%M')}
 --------------------------------------------------
 1. OBSERVASI / KONDISI:
@@ -647,7 +714,7 @@ Update Terakhir: {datetime.now().strftime('%d-%m-%Y %H:%M')}
 {lha_doc['implikasi']}
 =================================================="""
                             st.download_button(
-                                label=f"📥 Download / Perbarui File LHA {lha_doc['lha_doc_id']} (Format Notepad .txt)",
+                                label=f"📥 Download Ringkasan LHA {lha_doc['lha_doc_id']} (Format Notepad .txt)",
                                 data=lha_text_export.encode('utf-8'),
                                 file_name=f"LHA_{lha_doc['target_temuan']}_{lha_doc['lha_doc_id']}.txt",
                                 mime="text/plain",
