@@ -270,7 +270,7 @@ if selected_periode == "2026":
 tab_dash, tab_prog_kk, tab_lha = st.tabs([
     "📊 Dashboard Monitoring Eksekutif", 
     "📋 Modul KKA & AP", 
-    "📝 Modul LHA (Smart Table Insert)"
+    "📝 Modul LHA (Direct Paste Ctrl+V)"
 ])
 
 # ================= TAB 1: DASHBOARD MONITORING =================
@@ -431,7 +431,7 @@ with tab_prog_kk:
 # ================= TAB 3: GENERATOR LHA MULTI-AUDITOR =================
 with tab_lha:
     st.markdown("### Modul Generator Lembar Hasil Audit (LHA) Multi-Auditor")
-    st.info("💡 **Cara Super Praktis Sisip Tabel:** Cukup *drag & drop* atau klik tombol upload di bawah untuk menyematkan gambar tabel hasil *snipping* Anda agar langsung tampil di tengah laporan!")
+    st.info("💡 **Fitur Baru (Direct Paste dari Clipboard Komputer):** Cukup klik tombol **📋 Ambil Tabel dari Clipboard Komputer** di bawah setiap kali selesai *Snip* (`Windows + Shift + S`) di Word, maka tabel akan langsung masuk tanpa perlu save file!")
     
     if access_role == "Admin SPI":
         id_lha_list = df_master["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_master.columns else []
@@ -508,17 +508,36 @@ with tab_lha:
                                     st.session_state.unlocked_lhas.remove(lha_key_id)
                                     st.rerun()
 
-                            # Tampilkan Preview Gambar Tabel yang aktif saat ini secara langsung di atas form
+                            # TOMBOL UTAMA: Ambil langsung dari memori clipboard komputer secara instan
+                            st.markdown("##### 📋 Kotak Tempel Instan (Tanpa Save File)")
+                            if st.button("📥 Ambil Tabel dari Clipboard Komputer (Paste Instan)", key=f"btn_direct_clip_{lha_key_id}_{idx}", type="primary"):
+                                try:
+                                    from PIL import ImageGrab
+                                    img_clipboard = ImageGrab.grabclipboard()
+                                    if img_clipboard is not None:
+                                        safe_c_name = f"{lha_key_id}_direct_paste.png"
+                                        c_path = os.path.join(UPLOAD_DIR, safe_c_name)
+                                        img_clipboard.save(c_path, "PNG")
+                                        lha_doc["attachment_name"] = safe_c_name
+                                        save_lha_to_excel()
+                                        st.success("🎉 Berhasil! Tabel berhasil ditarik dari hasil *Snip/Copy* komputer Anda dan dipasang di laporan.")
+                                        st.rerun()
+                                    else:
+                                        st.warning("⚠️ Clipboard kosong. Pastikan Bapak sudah melakukan *Snip* (`Windows + Shift + S`) atau *Copy* tabel di Word terlebih dahulu, lalu klik tombol ini.")
+                                except Exception as err:
+                                    st.error(f"Gagal mengambil clipboard: {err}")
+
+                            # Tampilkan Preview Gambar jika ada
                             curr_att = lha_doc.get("attachment_name", "-")
                             if curr_att != "-" and curr_att.lower().endswith(('.png', '.jpg', '.jpeg')):
                                 check_path = os.path.join(UPLOAD_DIR, curr_att)
                                 if os.path.exists(check_path):
-                                    st.markdown(f"📊 **Preview Tabel Terpasang Saat Ini di Tengah Laporan:**")
+                                    st.markdown(f"📊 **Preview Tabel Terpasang di Tengah Laporan:**")
                                     st.image(check_path, width=700)
-                                    if st.button("🗑️ Hapus Gambar Tabel Ini", key=f"del_img_{lha_key_id}_{idx}"):
+                                    if st.button("🗑️ Hapus Tabel Ini", key=f"del_img_{lha_key_id}_{idx}"):
                                         lha_doc["attachment_name"] = "-"
                                         save_lha_to_excel()
-                                        st.success("Gambar berhasil dihapus!")
+                                        st.success("Tabel berhasil dihapus!")
                                         st.rerun()
 
                             with st.form(key=f"form_multi_lha_{lha_key_id}_{idx}"):
@@ -531,17 +550,15 @@ with tab_lha:
                                 imp_txt = lha_doc["implikasi"].to_string(index=False) if isinstance(lha_doc["implikasi"], pd.DataFrame) else str(lha_doc["implikasi"])
 
                                 obs_input = st.text_area("1. Observasi / Kondisi:", value=obs_txt, height=120)
-                                
-                                # Kotak Uploader Gambar Tabel Super Cepat
-                                uploaded_lha_file = st.file_uploader(
-                                    "📷 Upload / Ganti Gambar Tabel (Format PNG, JPG) — *(Bisa langsung drag & drop file gambar ke sini)*:", 
-                                    type=["png", "jpg", "jpeg"], 
-                                    key=f"up_lha_file_{lha_key_id}_{idx}"
-                                )
-
                                 root_input = st.text_area("2. Akar Masalah (Root Cause):", value=root_txt, height=120)
                                 rek_input = st.text_area("3. Rekomendasi:", value=rek_txt, height=120)
                                 imp_input = st.text_area("4. Implikasi / Risiko:", value=imp_txt, height=120)
+                                
+                                uploaded_lha_file = st.file_uploader(
+                                    "Atau Upload File Gambar (Opsional):", 
+                                    type=["png", "jpg", "jpeg"], 
+                                    key=f"up_lha_file_{lha_key_id}_{idx}"
+                                )
                                 
                                 col_lha_f1, col_lha_f2 = st.columns(2)
                                 with col_lha_f1:
