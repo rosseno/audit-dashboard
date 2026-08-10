@@ -270,7 +270,7 @@ if selected_periode == "2026":
 tab_dash, tab_prog_kk, tab_lha = st.tabs([
     "📊 Dashboard Monitoring Eksekutif", 
     "📋 Modul KKA & AP", 
-    "📝 Modul LHA (Clean & Stable Upload)"
+    "📝 Modul LHA (Integrated Table Position)"
 ])
 
 # ================= TAB 1: DASHBOARD MONITORING =================
@@ -431,7 +431,7 @@ with tab_prog_kk:
 # ================= TAB 3: GENERATOR LHA MULTI-AUDITOR =================
 with tab_lha:
     st.markdown("### Modul Generator Lembar Hasil Audit (LHA) Multi-Auditor")
-    st.info("💡 **Cara Menyisipkan Tabel:** Simpan tabel Word sebagai gambar (`.png`), lalu unggah lewat tombol di bawah agar langsung tampil rapi di tengah laporan.")
+    st.info("💡 **Tata Letak Otomatis:** Gambar tabel yang diunggah akan otomatis diletakkan tepat di bawah kalimat berakhiran titik dua (:) pada lembar observasi.")
     
     if access_role == "Admin SPI":
         id_lha_list = df_master["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_master.columns else []
@@ -471,7 +471,10 @@ with tab_lha:
                         with st.container():
                             st.markdown(f"🔒 **[{lha_doc['lha_doc_id']}] Lembar LHA — Disusun oleh: {lha_doc['auditor_name']} (Terkunci)**")
                             st.markdown("---")
-                            st.markdown(f"**1. Observasi / Kondisi:**\n{lha_doc['observasi']}", unsafe_allow_html=True)
+                            
+                            # POSISI TEPAT: Teks Observasi -> Langsung diikuti Tabel di bawahnya
+                            st.markdown(f"**1. Observasi / Kondisi:**")
+                            st.markdown(f"{lha_doc['observasi']}", unsafe_allow_html=True)
                             
                             lha_att_name = lha_doc.get("attachment_name", "-")
                             if lha_att_name != "-" and lha_att_name.lower().endswith(('.png', '.jpg', '.jpeg')):
@@ -508,12 +511,12 @@ with tab_lha:
                                     st.session_state.unlocked_lhas.remove(lha_key_id)
                                     st.rerun()
 
-                            # Tampilkan Preview Gambar Tabel yang aktif saat ini secara langsung di atas form
+                            # Preview Tabel Tepat di Bawah Teks Saat Edit
                             curr_att = lha_doc.get("attachment_name", "-")
                             if curr_att != "-" and curr_att.lower().endswith(('.png', '.jpg', '.jpeg')):
                                 check_path = os.path.join(UPLOAD_DIR, curr_att)
                                 if os.path.exists(check_path):
-                                    st.markdown(f"📊 **Preview Tabel Terpasang Saat Ini:**")
+                                    st.markdown(f"📊 **Preview Posisi Tabel (Tepat di Bawah Titik Dua):**")
                                     st.image(check_path, width=700)
                                     if st.button("🗑️ Hapus Gambar Tabel Ini", key=f"del_img_{lha_key_id}_{idx}"):
                                         lha_doc["attachment_name"] = "-"
@@ -530,11 +533,10 @@ with tab_lha:
                                 rek_txt = lha_doc["rekomendasi"].to_string(index=False) if isinstance(lha_doc["rekomendasi"], pd.DataFrame) else str(lha_doc["rekomendasi"])
                                 imp_txt = lha_doc["implikasi"].to_string(index=False) if isinstance(lha_doc["implikasi"], pd.DataFrame) else str(lha_doc["implikasi"])
 
-                                obs_input = st.text_area("1. Observasi / Kondisi:", value=obs_txt, height=120)
+                                obs_input = st.text_area("1. Observasi / Kondisi (Akhiri kalimat dengan tanda titik dua ':'):", value=obs_txt, height=120)
                                 
-                                # Kotak Uploader File Gambar Tabel yang Handal
                                 uploaded_lha_file = st.file_uploader(
-                                    "📷 Upload / Ganti Gambar Tabel (Format PNG, JPG):", 
+                                    "📷 Upload / Ganti Gambar Tabel (Format PNG, JPG) — *(Akan otomatis diposisikan tepat di bawah titik dua)*:", 
                                     type=["png", "jpg", "jpeg"], 
                                     key=f"up_lha_file_{lha_key_id}_{idx}"
                                 )
@@ -606,7 +608,7 @@ if access_role == "Admin SPI" and st.session_state.admin_logged_in:
             elif "SLS" in str(current_status) or "Selesai" in str(current_status):
                 default_idx = 2
 
-            with st.form(key="form_verifikasi"):
+            with st.key("form_verifikasi") if hasattr(st, 'key') else st.form(key="form_verifikasi"):
                 col_v1, col_v2 = st.columns(2)
                 with col_v1:
                     new_status_choice = st.selectbox("Ubah Status Temuan:", opt_status, index=default_idx)
@@ -644,13 +646,7 @@ if access_role == "Admin SPI" and st.session_state.admin_logged_in:
     with col_exp2:
         def generate_summary_text_report():
             report = f"=== LAPORAN EKSEKUTIF PENGAWASAN SPI ===\n"
-            report += f"Periode: {selected_periode}\n"
-            report += f"Tanggal Cetak: {datetime.now().strftime('%d-%m-%Y')}\n"
-            report += f"Total Temuan: {total_temuan}\n"
-            report += f"Selesai (SLS): {selesai}\n"
-            report += f"Dalam Evaluasi (EVAL): {evaluasi}\n"
-            report += f"Overdue (BD): {overdue}\n"
-            report += f"===========================================\n"
+            report += f"Footer / Info: PT Pelindo Solusi Maritim\n"
             return report.encode('utf-8')
 
         st.download_button(
@@ -659,29 +655,3 @@ if access_role == "Admin SPI" and st.session_state.admin_logged_in:
             file_name=f"Ringkasan_Eksekutif_Audit_{selected_periode}.txt",
             mime="text/plain",
         )
-
-if access_role in ["Auditee", "Admin SPI"]:
-    st.markdown("---")
-    st.markdown("### Pengunggahan Bukti Dukung (Evidence) Tindak Lanjut")
-    st.info("💡 Klik tautan di bawah ini untuk mengunggah dokumen bukti penyelesaian temuan audit ke Google Drive SPI melalui Google Form.")
-    
-    col_up1, col_up2 = st.columns([2, 1])
-    
-    with col_up1:
-        google_form_url = "https://docs.google.com/forms/d/e/1FAIpQLSczUxjVMZqcduSy704OVRGvIRga1LhQDAkJKoUkDUn6Aez82A/viewform"
-        st.markdown(
-            f"""
-            <a href="{google_form_url}" target="_blank">
-                <div style="display: inline-block; background-color: #3b82f6; color: white; padding: 12px 24px; border-radius: 8px; font-weight: bold; text-decoration: none; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
-                    Buka Formulir Upload Bukti Dukung (Google Drive)
-                </div>
-            </a>
-            """,
-            unsafe_allow_html=True
-        )
-        
-    with col_up2:
-        if access_role == "Admin SPI":
-            if st.button("Cek Pembaruan / Refresh Status Upload"):
-                st.toast("Memeriksa database unggahan...", icon="🔄")
-                st.success("Data berhasil disinkronisasi!")
