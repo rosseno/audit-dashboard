@@ -141,10 +141,14 @@ if 'multi_lha_docs' not in st.session_state:
 def save_docs_to_excel():
     if st.session_state.multi_audit_docs:
         pd.DataFrame(st.session_state.multi_audit_docs).to_excel(EXCEL_DOCS_FILE, index=False)
+    else:
+        pd.DataFrame(columns=["doc_id", "target_temuan", "auditor_name", "audit_program", "kertas_kerja"]).to_excel(EXCEL_DOCS_FILE, index=False)
 
 def save_lha_to_excel():
     if st.session_state.multi_lha_docs:
         pd.DataFrame(st.session_state.multi_lha_docs).to_excel(EXCEL_LHA_FILE, index=False)
+    else:
+        pd.DataFrame(columns=["lha_doc_id", "target_temuan", "auditor_name", "observasi", "root_cause", "rekomendasi", "implikasi"]).to_excel(EXCEL_LHA_FILE, index=False)
 
 df_master = st.session_state.df_master
 PIN_ADMIN = "1234"  # <-- PIN Admin SPI
@@ -392,7 +396,7 @@ with tab_dash:
 # ================= TAB 2: PROGRAM AUDIT & KERTAS KERJA MULTI-AUDITOR =================
 with tab_prog_kk:
     st.markdown("### Modul Program Audit & Kertas Kerja Multi-Auditor (Penyimpanan Permanen)")
-    st.info("💡 Setiap auditor dapat membuat bagian Program Audit (PA) dan Kertas Kerja Audit (KKA) secara mandiri.")
+    st.info("💡 Setiap auditor dapat membuat bagian Program Audit (PA) dan Kertas Kerja Audit (KKA) secara mandiri. File download menggunakan nama yang konsisten agar menimpa file lama tanpa duplikat.")
     
     if access_role == "Admin SPI":
         id_pk_list = df_master["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_master.columns else []
@@ -454,7 +458,7 @@ PT PELINDO SOLUSI MARITIM
 ID Penugasan : {doc['target_temuan']}
 Nomor Dokumen: {doc['doc_id']}
 Auditor      : {doc['auditor_name']}
-Tanggal Cetak: {datetime.now().strftime('%d-%m-%Y')}
+Update Terakhir: {datetime.now().strftime('%d-%m-%Y %H:%M')}
 --------------------------------------------------
 1. PROGRAM AUDIT (AP):
 {doc['audit_program']}
@@ -463,7 +467,7 @@ Tanggal Cetak: {datetime.now().strftime('%d-%m-%Y')}
 {doc['kertas_kerja']}
 =================================================="""
                         st.download_button(
-                            label=f"📥 Download Dokumen {doc['doc_id']} (Format Word/TXT)",
+                            label=f"📥 Download / Perbarui File KKA {doc['doc_id']} (Format Notepad .txt)",
                             data=doc_text_export.encode('utf-8'),
                             file_name=f"KKA_{doc['target_temuan']}_{doc['doc_id']}.txt",
                             mime="text/plain",
@@ -473,10 +477,10 @@ Tanggal Cetak: {datetime.now().strftime('%d-%m-%Y')}
         st.warning("⚠️ Menu penyusunan Program Audit & Kertas Kerja dikhususkan untuk peran Admin SPI (Auditor).")
 
 
-# ================= TAB 3: GENERATOR LHA MULTI-AUDITOR (DENGAN TOMBOL TAMBAH + & PENYIMPANAN PERMANEN) =================
+# ================= TAB 3: GENERATOR LHA MULTI-AUDITOR =================
 with tab_lha:
     st.markdown("### Modul Generator Lembar Hasil Audit (LHA) Multi-Auditor")
-    st.info("💡 Setiap auditor dapat membuat dan mengenerate LHA mandiri (Observasi, Root Cause, Rekomendasi, Implikasi) menggunakan tombol tambah (+) di bawah.")
+    st.info("💡 Setiap auditor dapat membuat dan mengenerate LHA mandiri. File download menggunakan format Notepad (.txt) dengan nama konsisten.")
     
     if access_role == "Admin SPI":
         id_lha_list = df_master["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_master.columns else []
@@ -544,7 +548,7 @@ PT PELINDO SOLUSI MARITIM
 ID Penugasan : {lha_doc['target_temuan']}
 Nomor Dokumen: {lha_doc['lha_doc_id']}
 Auditor      : {lha_doc['auditor_name']}
-Tanggal Cetak: {datetime.now().strftime('%d-%m-%Y')}
+Update Terakhir: {datetime.now().strftime('%d-%m-%Y %H:%M')}
 --------------------------------------------------
 1. OBSERVASI / KONDISI:
 {lha_doc['observasi']}
@@ -559,7 +563,7 @@ Tanggal Cetak: {datetime.now().strftime('%d-%m-%Y')}
 {lha_doc['implikasi']}
 =================================================="""
                         st.download_button(
-                            label=f"📥 Download Dokumen LHA {lha_doc['lha_doc_id']} (Format Word/TXT)",
+                            label=f"📥 Download / Perbarui File LHA {lha_doc['lha_doc_id']} (Format Notepad .txt)",
                             data=lha_text_export.encode('utf-8'),
                             file_name=f"LHA_{lha_doc['target_temuan']}_{lha_doc['lha_doc_id']}.txt",
                             mime="text/plain",
