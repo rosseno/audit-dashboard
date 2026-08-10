@@ -122,7 +122,7 @@ if 'multi_audit_docs' not in st.session_state:
         try:
             df_docs = pd.read_excel(EXCEL_DOCS_FILE)
             if 'doc_pin' not in df_docs.columns:
-                df_docs['doc_pin'] = "123"  # Default PIN jika belum ada
+                df_docs['doc_pin'] = "1234"
             st.session_state.multi_audit_docs = df_docs.to_dict('records')
         except:
             st.session_state.multi_audit_docs = []
@@ -135,7 +135,7 @@ if 'multi_lha_docs' not in st.session_state:
         try:
             df_lha = pd.read_excel(EXCEL_LHA_FILE)
             if 'lha_pin' not in df_lha.columns:
-                df_lha['lha_pin'] = "123"  # Default PIN jika belum ada
+                df_lha['lha_pin'] = "1234"
             st.session_state.multi_lha_docs = df_lha.to_dict('records')
         except:
             st.session_state.multi_lha_docs = []
@@ -262,8 +262,8 @@ if selected_periode == "2026":
 # --- NAVIGASI UTAMA BERBENTUK TAB ---
 tab_dash, tab_prog_kk, tab_lha = st.tabs([
     "📊 Dashboard Monitoring Eksekutif", 
-    "📋 Modul Program Audit & Kertas Kerja Multi-Auditor (Ber-PIN)", 
-    "📝 Modul Generator Lembar Hasil Audit (LHA) Multi-Auditor (Ber-PIN)"
+    "📋 Modul Program Audit & Kertas Kerja Multi-Auditor (PIN: 1234)", 
+    "📝 Modul Generator Lembar Hasil Audit (LHA) Multi-Auditor (PIN: 1234)"
 ])
 
 # ================= TAB 1: DASHBOARD MONITORING =================
@@ -404,10 +404,10 @@ with tab_dash:
     st.dataframe(df_table_display, use_container_width=True, hide_index=True)
 
 
-# ================= TAB 2: PROGRAM AUDIT & KERTAS KERJA MULTI-AUDITOR (DENGAN KUNCI PIN) =================
+# ================= TAB 2: PROGRAM AUDIT & KERTAS KERJA MULTI-AUDITOR (DENGAN KUNCI PIN 1234) =================
 with tab_prog_kk:
-    st.markdown("### Modul Program Audit & Kertas Kerja Multi-Auditor (Proteksi PIN)")
-    st.info("💡 Setiap dokumen KKA diproteksi dengan PIN masing-masing auditor agar aman dan privat.")
+    st.markdown("### Modul Program Audit & Kertas Kerja Multi-Auditor (Proteksi PIN 1234)")
+    st.info("💡 Dokumen KKA diproteksi PIN (default awal: **1234**). Masukkan PIN untuk membuka dan menyunting.")
     
     if access_role == "Admin SPI":
         id_pk_list = df_master["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_master.columns else []
@@ -424,7 +424,7 @@ with tab_prog_kk:
                         "auditor_name": f"Auditor {len(st.session_state.multi_audit_docs) + 1}",
                         "audit_program": "-",
                         "kertas_kerja": "-",
-                        "doc_pin": "123"  # PIN default awal
+                        "doc_pin": "1234"  # PIN default 1234
                     })
                     save_docs_to_excel()
                     st.rerun()
@@ -441,7 +441,6 @@ with tab_prog_kk:
                     is_unlocked = doc_key_id in st.session_state.unlocked_docs
                     
                     if not is_unlocked:
-                        # Tampilan terkunci (meminta PIN)
                         with st.container():
                             st.markdown(f"🔒 **[{doc['doc_id']}] Lembar KKA — Disusun oleh: {doc['auditor_name']} (Terkunci)**")
                             col_p1, col_p2 = st.columns([2, 1])
@@ -450,7 +449,7 @@ with tab_prog_kk:
                             with col_p2:
                                 st.markdown("<br>", unsafe_allow_html=True)
                                 if st.button("🔑 Buka Dokumen", key=f"btn_unlock_{doc_key_id}_{idx}"):
-                                    stored_pin = str(doc.get("doc_pin", "123"))
+                                    stored_pin = str(doc.get("doc_pin", "1234"))
                                     if entered_doc_pin == stored_pin:
                                         st.session_state.unlocked_docs.append(doc_key_id)
                                         st.success("Berhasil dibuka!")
@@ -459,7 +458,6 @@ with tab_prog_kk:
                                         st.error("PIN Salah!")
                             st.markdown("---")
                     else:
-                        # Tampilan terbuka (bisa edit dan ada tombol tutup)
                         with st.container():
                             col_u1, col_u2 = st.columns([4, 1])
                             with col_u1:
@@ -471,7 +469,7 @@ with tab_prog_kk:
 
                             with st.form(key=f"form_multi_doc_{doc_key_id}_{idx}"):
                                 auditor_input = st.text_input("Nama / Inisial Auditor:", value=doc["auditor_name"])
-                                new_pin_input = st.text_input("Ubah / Atur PIN Keamanan Dokumen ini:", value=str(doc.get("doc_pin", "123")), type="password")
+                                new_pin_input = st.text_input("Ubah / Atur PIN Keamanan Dokumen ini:", value=str(doc.get("doc_pin", "1234")), type="password")
                                 prog_input = st.text_area("Langkah-langkah Program Audit (AP):", value=doc["audit_program"], height=120)
                                 kk_input = st.text_area("Rincian Pengujian Kertas Kerja Audit (KKA):", value=doc["kertas_kerja"], height=140)
                                 
@@ -527,10 +525,10 @@ Update Terakhir: {datetime.now().strftime('%d-%m-%Y %H:%M')}
         st.warning("⚠️ Menu penyusunan Program Audit & Kertas Kerja dikhususkan untuk peran Admin SPI (Auditor).")
 
 
-# ================= TAB 3: GENERATOR LHA MULTI-AUDITOR (DENGAN KUNCI PIN) =================
+# ================= TAB 3: GENERATOR LHA MULTI-AUDITOR (DENGAN KUNCI PIN 1234) =================
 with tab_lha:
-    st.markdown("### Modul Generator Lembar Hasil Audit (LHA) Multi-Auditor (Proteksi PIN)")
-    st.info("💡 Setiap dokumen LHA diproteksi dengan PIN masing-masing auditor agar privasi dan keamanan dokumen terjaga.")
+    st.markdown("### Modul Generator Lembar Hasil Audit (LHA) Multi-Auditor (Proteksi PIN 1234)")
+    st.info("💡 Dokumen LHA diproteksi PIN (default awal: **1234**). Masukkan PIN untuk membuka dan menyunting.")
     
     if access_role == "Admin SPI":
         id_lha_list = df_master["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_master.columns else []
@@ -549,7 +547,7 @@ with tab_lha:
                         "root_cause": "-",
                         "rekomendasi": "-",
                         "implikasi": "-",
-                        "lha_pin": "123"  # PIN default awal
+                        "lha_pin": "1234"  # PIN default 1234
                     })
                     save_lha_to_excel()
                     st.rerun()
@@ -566,7 +564,6 @@ with tab_lha:
                     is_lha_unlocked = lha_key_id in st.session_state.unlocked_lhas
                     
                     if not is_lha_unlocked:
-                        # Tampilan terkunci (meminta PIN)
                         with st.container():
                             st.markdown(f"🔒 **[{lha_doc['lha_doc_id']}] Lembar LHA — Disusun oleh: {lha_doc['auditor_name']} (Terkunci)**")
                             col_lp1, col_lp2 = st.columns([2, 1])
@@ -575,7 +572,7 @@ with tab_lha:
                             with col_lp2:
                                 st.markdown("<br>", unsafe_allow_html=True)
                                 if st.button("🔑 Buka LHA", key=f"btn_unlock_lha_{lha_key_id}_{idx}"):
-                                    stored_lha_pin = str(lha_doc.get("lha_pin", "123"))
+                                    stored_lha_pin = str(lha_doc.get("lha_pin", "1234"))
                                     if entered_lha_pin == stored_lha_pin:
                                         st.session_state.unlocked_lhas.append(lha_key_id)
                                         st.success("LHA berhasil dibuka!")
@@ -584,7 +581,6 @@ with tab_lha:
                                         st.error("PIN Salah!")
                             st.markdown("---")
                     else:
-                        # Tampilan terbuka (bisa edit dan ada tombol tutup)
                         with st.container():
                             col_lu1, col_lu2 = st.columns([4, 1])
                             with col_lu1:
@@ -596,7 +592,7 @@ with tab_lha:
 
                             with st.form(key=f"form_multi_lha_{lha_key_id}_{idx}"):
                                 auditor_lha_input = st.text_input("Nama / Inisial Auditor LHA:", value=lha_doc["auditor_name"])
-                                new_lha_pin_input = st.text_input("Ubah / Atur PIN Keamanan LHA ini:", value=str(lha_doc.get("lha_pin", "123")), type="password")
+                                new_lha_pin_input = st.text_input("Ubah / Atur PIN Keamanan LHA ini:", value=str(lha_doc.get("lha_pin", "1234")), type="password")
                                 obs_input = st.text_area("1. Observasi / Kondisi:", value=lha_doc["observasi"], height=100)
                                 root_input = st.text_area("2. Akar Masalah (Root Cause):", value=lha_doc["root_cause"], height=100)
                                 rek_input = st.text_area("3. Rekomendasi:", value=lha_doc["rekomendasi"], height=100)
