@@ -13,7 +13,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS Ultimate untuk Card KPI Proporsional, Neon Glow, & Kotak Teks Luas Maksimal
+# Custom CSS Ultimate untuk Card KPI Proporsional, Neon Glow, & Tampilan Rapi
 st.markdown("""
 <style>
     .main { background-color: #0e1117; }
@@ -27,11 +27,6 @@ st.markdown("""
     }
     .header-title { color: #ffffff; font-size: 22px; font-weight: 700; }
     .header-subtitle { color: #94a3b8; font-size: 13px; margin-top: 5px; }
-
-    /* Memperluas tinggi kotak teks (Text Area) agar sangat leluasa untuk mengetik / paste */
-    .stTextArea textarea {
-        min-height: 250px !important;
-    }
 
     /* Animasi Kedip (Blink) untuk Kotak Peringatan Darurat */
     @keyframes blink-animation {
@@ -125,7 +120,7 @@ def load_data():
 if 'df_master' not in st.session_state:
     st.session_state.df_master = load_data()
 
-# Memuat data multi-auditor PA & KKA secara permanen
+# Memuat data multi-auditor PA & KKA
 if 'multi_audit_docs' not in st.session_state:
     if os.path.exists(EXCEL_DOCS_FILE):
         try:
@@ -140,7 +135,7 @@ if 'multi_audit_docs' not in st.session_state:
     else:
         st.session_state.multi_audit_docs = []
 
-# Memuat data multi-auditor LHA secara permanen
+# Memuat data multi-auditor LHA
 if 'multi_lha_docs' not in st.session_state:
     if os.path.exists(EXCEL_LHA_FILE):
         try:
@@ -174,7 +169,7 @@ def save_lha_to_excel():
         pd.DataFrame(columns=["lha_doc_id", "target_temuan", "auditor_name", "observasi", "root_cause", "rekomendasi", "implikasi", "lha_pin", "attachment_name"]).to_excel(EXCEL_LHA_FILE, index=False)
 
 df_master = st.session_state.df_master
-PIN_ADMIN = "1234"  # <-- PIN Admin SPI
+PIN_ADMIN = "1234"
 
 col_bidang = "Bidang" if "Bidang" in df_master.columns else df_master.columns[5]
 col_periode = "Tahun Audit" if "Tahun Audit" in df_master.columns else df_master.columns[3]
@@ -250,7 +245,7 @@ elif access_role == "Auditee":
     chosen_unit = st.sidebar.selectbox("Pilih Bidang:", current_available_bidang if current_available_bidang else ["Tidak ada data"])
     df_base = df_filtered_periode[df_filtered_periode[col_bidang].astype(str) == str(chosen_unit)]
 
-else:  # Admin SPI
+else:
     if st.session_state.admin_logged_in:
         chosen_admin_filter = st.sidebar.selectbox("Filter Bidang:", ["Semua Bidang"] + current_available_bidang)
         if chosen_admin_filter == "Semua Bidang":
@@ -274,8 +269,8 @@ if selected_periode == "2026":
 # --- NAVIGASI UTAMA BERBENTUK TAB ---
 tab_dash, tab_prog_kk, tab_lha = st.tabs([
     "📊 Dashboard Monitoring Eksekutif", 
-    "📋 Modul KKA & AP (Upload File & Kotak Luas)", 
-    "📝 Modul LHA (Upload File & Kotak Luas)"
+    "📋 Modul KKA & AP (Format Tabel Interaktif & Upload)", 
+    "📝 Modul LHA (Format Tabel Interaktif & Upload)"
 ])
 
 # ================= TAB 1: DASHBOARD MONITORING =================
@@ -354,7 +349,6 @@ with tab_dash:
         df_filtered = df_base[df_base[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)]
 
     st.markdown("---")
-
     st.markdown("### Rekapitulasi Matriks Tindak Lanjut Hasil Audit")
     if not df_base.empty:
         summary_rows = []
@@ -407,7 +401,6 @@ with tab_dash:
         st.info("Belum ada data temuan untuk periode ini.")
 
     st.markdown("---")
-    
     columns_to_drop = ["No", "Poin", "Tahun Audit", "Nama Entitas", "Tingkat Risiko", "Prioritas", "Tag Kata Kunci (#Preventif)", "Ringkasan Kondisi & Akar Masalah (Root Cause)", "Verifikasi_Auditor"]
     df_table_display = df_filtered.drop(columns=[col for col in columns_to_drop if col in df_filtered.columns])
     df_table_display.insert(0, "No", range(1, len(df_table_display) + 1))
@@ -416,10 +409,10 @@ with tab_dash:
     st.dataframe(df_table_display, use_container_width=True, hide_index=True)
 
 
-# ================= TAB 2: PROGRAM AUDIT & KERTAS KERJA MULTI-AUDITOR =================
+# ================= TAB 2: PROGRAM AUDIT & KERTAS KERJA MULTI-AUDITOR (DENGAN TABEL INTERAKTIF) =================
 with tab_prog_kk:
-    st.markdown("### Modul Program Audit & Kertas Kerja Multi-Auditor (Kotak Luas & Upload File)")
-    st.info("💡 Kotak teks kini dibuat jauh lebih luas/tinggi. Untuk tabel lengkap, silakan gunakan fitur Upload File Word/Excel di bawah.")
+    st.markdown("### Modul Program Audit & Kertas Kerja Multi-Auditor (Format Tabel Interaktif & Upload)")
+    st.info("💡 Anda dapat mengetik, menambah baris, atau meng-copy paste langsung tabel dari Excel ke dalam tabel interaktif di bawah ini agar rapi bergaris.")
     
     if access_role == "Admin SPI":
         id_pk_list = df_master["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_master.columns else []
@@ -434,8 +427,8 @@ with tab_prog_kk:
                         "doc_id": new_id_doc,
                         "target_temuan": selected_pk_id,
                         "auditor_name": f"Auditor {len(st.session_state.multi_audit_docs) + 1}",
-                        "audit_program": "-",
-                        "kertas_kerja": "-",
+                        "audit_program": pd.DataFrame([{"No": 1, "Langkah Kerja / Prosedur AP": "-", "Status / Hasil": "-"}]),
+                        "kertas_kerja": pd.DataFrame([{"No": 1, "No & Nama": "-", "Jabatan": "-", "Kelas": "-", "Keterangan": "-"}]),
                         "doc_pin": "1234",
                         "attachment_name": "-"
                     })
@@ -453,6 +446,12 @@ with tab_prog_kk:
                     doc_key_id = doc['doc_id']
                     is_unlocked = doc_key_id in st.session_state.unlocked_docs
                     
+                    # Konversi data lama jika berupa string text biasa ke format DataFrame tabel
+                    if not isinstance(doc.get("audit_program"), pd.DataFrame):
+                        doc["audit_program"] = pd.DataFrame([{"No": 1, "Langkah Kerja / Prosedur AP": str(doc.get("audit_program", "-")), "Status / Hasil": "-"}])
+                    if not isinstance(doc.get("kertas_kerja"), pd.DataFrame):
+                        doc["kertas_kerja"] = pd.DataFrame([{"No": 1, "No & Nama": str(doc.get("kertas_kerja", "-")), "Jabatan": "-", "Kelas": "-", "Keterangan": "-"}])
+
                     if not is_unlocked:
                         with st.container():
                             st.markdown(f"🔒 **[{doc['doc_id']}] Lembar KKA — Disusun oleh: {doc['auditor_name']} (Terkunci)**")
@@ -483,8 +482,12 @@ with tab_prog_kk:
                             with st.form(key=f"form_multi_doc_{doc_key_id}_{idx}"):
                                 auditor_input = st.text_input("Nama / Inisial Auditor:", value=doc["auditor_name"])
                                 new_pin_input = st.text_input("Ubah / Atur PIN Keamanan Dokumen ini:", value=str(doc.get("doc_pin", "1234")), type="password")
-                                prog_input = st.text_area("Langkah-langkah Program Audit (AP):", value=doc["audit_program"], height=250)
-                                kk_input = st.text_area("Rincian Pengujian Kertas Kerja Audit (KKA):", value=doc["kertas_kerja"], height=250)
+                                
+                                st.markdown("##### 1. Tabel Program Audit (AP):")
+                                edited_ap = st.data_editor(doc["audit_program"], num_rows="dynamic", use_container_width=True, key=f"editor_ap_{doc_key_id}_{idx}")
+                                
+                                st.markdown("##### 2. Tabel Rincian Pengujian Kertas Kerja Audit (KKA):")
+                                edited_kk = st.data_editor(doc["kertas_kerja"], num_rows="dynamic", use_container_width=True, key=f"editor_kk_{doc_key_id}_{idx}")
                                 
                                 st.markdown("---")
                                 st.markdown(f"📁 **Lampiran File Saat Ini:** `{doc.get('attachment_name', '-')}`")
@@ -498,8 +501,8 @@ with tab_prog_kk:
                                     
                                 if save_sub_btn:
                                     doc["auditor_name"] = auditor_input
-                                    doc["audit_program"] = prog_input
-                                    doc["kertas_kerja"] = kk_input
+                                    doc["audit_program"] = edited_ap
+                                    doc["kertas_kerja"] = edited_kk
                                     doc["doc_pin"] = new_pin_input
                                     
                                     if uploaded_file is not None:
@@ -549,10 +552,10 @@ File Lampiran: {doc.get('attachment_name', '-')}
 Update Terakhir: {datetime.now().strftime('%d-%m-%Y %H:%M')}
 --------------------------------------------------
 1. PROGRAM AUDIT (AP):
-{doc['audit_program']}
+{doc['audit_program'].to_string(index=False)}
 
 2. KERTAS KERJA AUDIT (KKA):
-{doc['kertas_kerja']}
+{doc['kertas_kerja'].to_string(index=False)}
 =================================================="""
                             st.download_button(
                                 label=f"📥 Download Ringkasan KKA {doc['doc_id']} (Format Notepad .txt)",
@@ -566,10 +569,10 @@ Update Terakhir: {datetime.now().strftime('%d-%m-%Y %H:%M')}
         st.warning("⚠️ Menu penyusunan Program Audit & Kertas Kerja dikhususkan untuk peran Admin SPI (Auditor).")
 
 
-# ================= TAB 3: GENERATOR LHA MULTI-AUDITOR =================
+# ================= TAB 3: GENERATOR LHA MULTI-AUDITOR (DENGAN TABEL INTERAKTIF) =================
 with tab_lha:
-    st.markdown("### Modul Generator Lembar Hasil Audit (LHA) Multi-Auditor (Kotak Luas & Upload File)")
-    st.info("💡 Kotak teks LHA kini jauh lebih luas. Anda juga dapat mengunggah file lampiran lengkap ke dalam sistem.")
+    st.markdown("### Modul Generator Lembar Hasil Audit (LHA) Multi-Auditor (Format Tabel Interaktif & Upload)")
+    st.info("💡 Anda dapat mengetik atau meng-copy paste tabel observasi & rekomendasi langsung ke dalam tabel interaktif di bawah ini.")
     
     if access_role == "Admin SPI":
         id_lha_list = df_master["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_master.columns else []
@@ -584,10 +587,10 @@ with tab_lha:
                         "lha_doc_id": new_lha_id,
                         "target_temuan": selected_lha_id,
                         "auditor_name": f"Auditor LHA {len(st.session_state.multi_lha_docs) + 1}",
-                        "observasi": "-",
-                        "root_cause": "-",
-                        "rekomendasi": "-",
-                        "implikasi": "-",
+                        "observasi": pd.DataFrame([{"No": 1, "Uraian Observasi / Kondisi": "-"}]),
+                        "root_cause": pd.DataFrame([{"No": 1, "Analisis Akar Masalah (Root Cause)": "-"}]),
+                        "rekomendasi": pd.DataFrame([{"No": 1, "Butir Rekomendasi Auditor": "-"}]),
+                        "implikasi": pd.DataFrame([{"No": 1, "Implikasi / Risiko": "-"}]),
                         "lha_pin": "1234",
                         "attachment_name": "-"
                     })
@@ -605,6 +608,11 @@ with tab_lha:
                     lha_key_id = lha_doc['lha_doc_id']
                     is_lha_unlocked = lha_key_id in st.session_state.unlocked_lhas
                     
+                    # Konversi data lama string ke tabel DataFrame jika belum
+                    for key_field, col_name in [("observasi", "Uraian Observasi / Kondisi"), ("root_cause", "Analisis Akar Masalah (Root Cause)"), ("rekomendasi", "Butir Rekomendasi Auditor"), ("implikasi", "Implikasi / Risiko")]:
+                        if not isinstance(lha_doc.get(key_field), pd.DataFrame):
+                            lha_doc[key_field] = pd.DataFrame([{"No": 1, col_name: str(lha_doc.get(key_field, "-"))}])
+
                     if not is_lha_unlocked:
                         with st.container():
                             st.markdown(f"🔒 **[{lha_doc['lha_doc_id']}] Lembar LHA — Disusun oleh: {lha_doc['auditor_name']} (Terkunci)**")
@@ -635,10 +643,18 @@ with tab_lha:
                             with st.form(key=f"form_multi_lha_{lha_key_id}_{idx}"):
                                 auditor_lha_input = st.text_input("Nama / Inisial Auditor LHA:", value=lha_doc["auditor_name"])
                                 new_lha_pin_input = st.text_input("Ubah / Atur PIN Keamanan LHA ini:", value=str(lha_doc.get("lha_pin", "1234")), type="password")
-                                obs_input = st.text_area("1. Observasi / Kondisi:", value=lha_doc["observasi"], height=200)
-                                root_input = st.text_area("2. Akar Masalah (Root Cause):", value=lha_doc["root_cause"], height=200)
-                                rek_input = st.text_area("3. Rekomendasi:", value=lha_doc["rekomendasi"], height=200)
-                                imp_input = st.text_area("4. Implikasi / Risiko:", value=lha_doc["implikasi"], height=200)
+                                
+                                st.markdown("##### 1. Tabel Observasi / Kondisi:")
+                                edited_obs = st.data_editor(lha_doc["observasi"], num_rows="dynamic", use_container_width=True, key=f"editor_obs_{lha_key_id}_{idx}")
+                                
+                                st.markdown("##### 2. Tabel Akar Masalah (Root Cause):")
+                                edited_root = st.data_editor(lha_doc["root_cause"], num_rows="dynamic", use_container_width=True, key=f"editor_root_{lha_key_id}_{idx}")
+                                
+                                st.markdown("##### 3. Tabel Rekomendasi:")
+                                edited_rek = st.data_editor(lha_doc["rekomendasi"], num_rows="dynamic", use_container_width=True, key=f"editor_rek_{lha_key_id}_{idx}")
+                                
+                                st.markdown("##### 4. Tabel Implikasi / Risiko:")
+                                edited_imp = st.data_editor(lha_doc["implikasi"], num_rows="dynamic", use_container_width=True, key=f"editor_imp_{lha_key_id}_{idx}")
                                 
                                 st.markdown("---")
                                 st.markdown(f"📁 **Lampiran File Saat Ini:** `{lha_doc.get('attachment_name', '-')}`")
@@ -652,10 +668,10 @@ with tab_lha:
                                     
                                 if save_lha_sub_btn:
                                     lha_doc["auditor_name"] = auditor_lha_input
-                                    lha_doc["observasi"] = obs_input
-                                    lha_doc["root_cause"] = root_input
-                                    lha_doc["rekomendasi"] = rek_input
-                                    lha_doc["implikasi"] = imp_input
+                                    lha_doc["observasi"] = edited_obs
+                                    lha_doc["root_cause"] = edited_root
+                                    lha_doc["rekomendasi"] = edited_rek
+                                    lha_doc["implikasi"] = edited_imp
                                     lha_doc["lha_pin"] = new_lha_pin_input
                                     
                                     if uploaded_lha_file is not None:
@@ -705,16 +721,16 @@ File Lampiran: {lha_doc.get('attachment_name', '-')}
 Update Terakhir: {datetime.now().strftime('%d-%m-%Y %H:%M')}
 --------------------------------------------------
 1. OBSERVASI / KONDISI:
-{lha_doc['observasi']}
+{lha_doc['observasi'].to_string(index=False)}
 
 2. AKAR MASALAH (ROOT CAUSE):
-{lha_doc['root_cause']}
+{lha_doc['root_cause'].to_string(index=False)}
 
 3. REKOMENDASI:
-{lha_doc['rekomendasi']}
+{lha_doc['rekomendasi'].to_string(index=False)}
 
 4. IMPLIKASI / RISIKO:
-{lha_doc['implikasi']}
+{lha_doc['implikasi'].to_string(index=False)}
 =================================================="""
                             st.download_button(
                                 label=f"📥 Download Ringkasan LHA {lha_doc['lha_doc_id']} (Format Notepad .txt)",
