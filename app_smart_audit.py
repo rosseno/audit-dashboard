@@ -121,6 +121,8 @@ if 'multi_audit_docs' not in st.session_state:
     if os.path.exists(EXCEL_DOCS_FILE):
         try:
             df_docs = pd.read_excel(EXCEL_DOCS_FILE)
+            if 'doc_pin' not in df_docs.columns:
+                df_docs['doc_pin'] = "123"  # Default PIN jika belum ada
             st.session_state.multi_audit_docs = df_docs.to_dict('records')
         except:
             st.session_state.multi_audit_docs = []
@@ -132,23 +134,32 @@ if 'multi_lha_docs' not in st.session_state:
     if os.path.exists(EXCEL_LHA_FILE):
         try:
             df_lha = pd.read_excel(EXCEL_LHA_FILE)
+            if 'lha_pin' not in df_lha.columns:
+                df_lha['lha_pin'] = "123"  # Default PIN jika belum ada
             st.session_state.multi_lha_docs = df_lha.to_dict('records')
         except:
             st.session_state.multi_lha_docs = []
     else:
         st.session_state.multi_lha_docs = []
 
+# Status sesi login dokumen terbuka
+if 'unlocked_docs' not in st.session_state:
+    st.session_state.unlocked_docs = []
+
+if 'unlocked_lhas' not in st.session_state:
+    st.session_state.unlocked_lhas = []
+
 def save_docs_to_excel():
     if st.session_state.multi_audit_docs:
         pd.DataFrame(st.session_state.multi_audit_docs).to_excel(EXCEL_DOCS_FILE, index=False)
     else:
-        pd.DataFrame(columns=["doc_id", "target_temuan", "auditor_name", "audit_program", "kertas_kerja"]).to_excel(EXCEL_DOCS_FILE, index=False)
+        pd.DataFrame(columns=["doc_id", "target_temuan", "auditor_name", "audit_program", "kertas_kerja", "doc_pin"]).to_excel(EXCEL_DOCS_FILE, index=False)
 
 def save_lha_to_excel():
     if st.session_state.multi_lha_docs:
         pd.DataFrame(st.session_state.multi_lha_docs).to_excel(EXCEL_LHA_FILE, index=False)
     else:
-        pd.DataFrame(columns=["lha_doc_id", "target_temuan", "auditor_name", "observasi", "root_cause", "rekomendasi", "implikasi"]).to_excel(EXCEL_LHA_FILE, index=False)
+        pd.DataFrame(columns=["lha_doc_id", "target_temuan", "auditor_name", "observasi", "root_cause", "rekomendasi", "implikasi", "lha_pin"]).to_excel(EXCEL_LHA_FILE, index=False)
 
 df_master = st.session_state.df_master
 PIN_ADMIN = "1234"  # <-- PIN Admin SPI
@@ -251,8 +262,8 @@ if selected_periode == "2026":
 # --- NAVIGASI UTAMA BERBENTUK TAB ---
 tab_dash, tab_prog_kk, tab_lha = st.tabs([
     "📊 Dashboard Monitoring Eksekutif", 
-    "📋 Modul Program Audit & Kertas Kerja Multi-Auditor", 
-    "📝 Modul Generator Lembar Hasil Audit (LHA) Multi-Auditor"
+    "📋 Modul Program Audit & Kertas Kerja Multi-Auditor (Ber-PIN)", 
+    "📝 Modul Generator Lembar Hasil Audit (LHA) Multi-Auditor (Ber-PIN)"
 ])
 
 # ================= TAB 1: DASHBOARD MONITORING =================
@@ -393,10 +404,10 @@ with tab_dash:
     st.dataframe(df_table_display, use_container_width=True, hide_index=True)
 
 
-# ================= TAB 2: PROGRAM AUDIT & KERTAS KERJA MULTI-AUDITOR (DENGAN CLOSE / COLLAPSE) =================
+# ================= TAB 2: PROGRAM AUDIT & KERTAS KERJA MULTI-AUDITOR (DENGAN KUNCI PIN) =================
 with tab_prog_kk:
-    st.markdown("### Modul Program Audit & Kertas Kerja Multi-Auditor")
-    st.info("💡 Dokumen KKA yang disimpan akan tertutup otomatis (kolaps) agar aman dari risiko tidak sengaja teredit oleh auditor lain.")
+    st.markdown("### Modul Program Audit & Kertas Kerja Multi-Auditor (Proteksi PIN)")
+    st.info("💡 Setiap dokumen KKA diproteksi dengan PIN masing-masing auditor agar aman dan privat.")
     
     if access_role == "Admin SPI":
         id_pk_list = df_master["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_master.columns else []
@@ -412,7 +423,8 @@ with tab_prog_kk:
                         "target_temuan": selected_pk_id,
                         "auditor_name": f"Auditor {len(st.session_state.multi_audit_docs) + 1}",
                         "audit_program": "-",
-                        "kertas_kerja": "-"
+                        "kertas_kerja": "-",
+                        "doc_pin": "123"  # PIN default awal
                     })
                     save_docs_to_excel()
                     st.rerun()
@@ -425,34 +437,70 @@ with tab_prog_kk:
                 st.info("Belum ada dokumen Program Audit & KKA yang dibuat untuk penugasan ini. Klik tombol ➕ di atas untuk membuat lembar kerja baru.")
             else:
                 for idx, doc in enumerate(filtered_docs):
-                    # Set expanded=False agar saat pertama dimuat atau setelah disave, foldernya tertutup (tersimpan rapat)
-                    with st.expander(f"📁 [{doc['doc_id']}] Lembar KKA — Disusun oleh: {doc['auditor_name']} (Terkunci / Tertutup Aman)", expanded=False):
-                        with st.form(key=f"form_multi_doc_{doc['doc_id']}_{idx}"):
-                            auditor_input = st.text_input("Nama / Inisial Auditor:", value=doc["auditor_name"])
-                            prog_input = st.text_area("Langkah-langkah Program Audit (AP):", value=doc["audit_program"], height=120)
-                            kk_input = st.text_area("Rincian Pengujian Kertas Kerja Audit (KKA):", value=doc["kertas_kerja"], height=140)
-                            
-                            col_f1, col_f2 = st.columns(2)
-                            with col_f1:
-                                save_sub_btn = st.form_submit_button("Simpan & Tutup Dokumen")
-                            with col_f2:
-                                del_sub_btn = st.form_submit_button("🗑️ Hapus Dokumen Ini")
+                    doc_key_id = doc['doc_id']
+                    is_unlocked = doc_key_id in st.session_state.unlocked_docs
+                    
+                    if not is_unlocked:
+                        # Tampilan terkunci (meminta PIN)
+                        with st.container():
+                            st.markdown(f"🔒 **[{doc['doc_id']}] Lembar KKA — Disusun oleh: {doc['auditor_name']} (Terkunci)**")
+                            col_p1, col_p2 = st.columns([2, 1])
+                            with col_p1:
+                                entered_doc_pin = st.text_input(f"Masukkan PIN untuk membuka {doc['doc_id']}:", type="password", key=f"input_pin_{doc_key_id}_{idx}")
+                            with col_p2:
+                                st.markdown("<br>", unsafe_allow_html=True)
+                                if st.button("🔑 Buka Dokumen", key=f"btn_unlock_{doc_key_id}_{idx}"):
+                                    stored_pin = str(doc.get("doc_pin", "123"))
+                                    if entered_doc_pin == stored_pin:
+                                        st.session_state.unlocked_docs.append(doc_key_id)
+                                        st.success("Berhasil dibuka!")
+                                        st.rerun()
+                                    else:
+                                        st.error("PIN Salah!")
+                            st.markdown("---")
+                    else:
+                        # Tampilan terbuka (bisa edit dan ada tombol tutup)
+                        with st.container():
+                            col_u1, col_u2 = st.columns([4, 1])
+                            with col_u1:
+                                st.markdown(f"🔓 **[{doc['doc_id']}] Lembar KKA — Disusun oleh: {doc['auditor_name']} (Sedang Terbuka)**")
+                            with col_u2:
+                                if st.button("🔒 Kunci / Tutup", key=f"btn_lock_{doc_key_id}_{idx}"):
+                                    st.session_state.unlocked_docs.remove(doc_key_id)
+                                    st.rerun()
+
+                            with st.form(key=f"form_multi_doc_{doc_key_id}_{idx}"):
+                                auditor_input = st.text_input("Nama / Inisial Auditor:", value=doc["auditor_name"])
+                                new_pin_input = st.text_input("Ubah / Atur PIN Keamanan Dokumen ini:", value=str(doc.get("doc_pin", "123")), type="password")
+                                prog_input = st.text_area("Langkah-langkah Program Audit (AP):", value=doc["audit_program"], height=120)
+                                kk_input = st.text_area("Rincian Pengujian Kertas Kerja Audit (KKA):", value=doc["kertas_kerja"], height=140)
                                 
-                            if save_sub_btn:
-                                doc["auditor_name"] = auditor_input
-                                doc["audit_program"] = prog_input
-                                doc["kertas_kerja"] = kk_input
-                                save_docs_to_excel()
-                                st.success(f"Dokumen {doc['doc_id']} berhasil disimpan dan ditutup rapat!")
-                                st.rerun()
-                                
-                            if del_sub_btn:
-                                st.session_state.multi_audit_docs.remove(doc)
-                                save_docs_to_excel()
-                                st.success(f"Dokumen {doc['doc_id']} berhasil dihapus!")
-                                st.rerun()
-                                
-                        doc_text_export = f"""==================================================
+                                col_f1, col_f2 = st.columns(2)
+                                with col_f1:
+                                    save_sub_btn = st.form_submit_button("Simpan & Kunci Kembali")
+                                with col_f2:
+                                    del_sub_btn = st.form_submit_button("🗑️ Hapus Dokumen Ini")
+                                    
+                                if save_sub_btn:
+                                    doc["auditor_name"] = auditor_input
+                                    doc["audit_program"] = prog_input
+                                    doc["kertas_kerja"] = kk_input
+                                    doc["doc_pin"] = new_pin_input
+                                    save_docs_to_excel()
+                                    if doc_key_id in st.session_state.unlocked_docs:
+                                        st.session_state.unlocked_docs.remove(doc_key_id)
+                                    st.success(f"Dokumen {doc['doc_id']} berhasil disimpan dan dikunci rapat!")
+                                    st.rerun()
+                                    
+                                if del_sub_btn:
+                                    st.session_state.multi_audit_docs.remove(doc)
+                                    if doc_key_id in st.session_state.unlocked_docs:
+                                        st.session_state.unlocked_docs.remove(doc_key_id)
+                                    save_docs_to_excel()
+                                    st.success(f"Dokumen {doc['doc_id']} berhasil dihapus!")
+                                    st.rerun()
+                                    
+                            doc_text_export = f"""==================================================
 PROGRAM AUDIT & KERTAS KERJA AUDIT (KKA)
 PT PELINDO SOLUSI MARITIM
 ==================================================
@@ -467,21 +515,22 @@ Update Terakhir: {datetime.now().strftime('%d-%m-%Y %H:%M')}
 2. KERTAS KERJA AUDIT (KKA):
 {doc['kertas_kerja']}
 =================================================="""
-                        st.download_button(
-                            label=f"📥 Download / Perbarui File KKA {doc['doc_id']} (Format Notepad .txt)",
-                            data=doc_text_export.encode('utf-8'),
-                            file_name=f"KKA_{doc['target_temuan']}_{doc['doc_id']}.txt",
-                            mime="text/plain",
-                            key=f"dl_btn_{doc['doc_id']}_{idx}"
-                        )
+                            st.download_button(
+                                label=f"📥 Download / Perbarui File KKA {doc['doc_id']} (Format Notepad .txt)",
+                                data=doc_text_export.encode('utf-8'),
+                                file_name=f"KKA_{doc['target_temuan']}_{doc['doc_id']}.txt",
+                                mime="text/plain",
+                                key=f"dl_btn_{doc['doc_id']}_{idx}"
+                            )
+                            st.markdown("---")
     else:
         st.warning("⚠️ Menu penyusunan Program Audit & Kertas Kerja dikhususkan untuk peran Admin SPI (Auditor).")
 
 
-# ================= TAB 3: GENERATOR LHA MULTI-AUDITOR (DENGAN CLOSE / COLLAPSE) =================
+# ================= TAB 3: GENERATOR LHA MULTI-AUDITOR (DENGAN KUNCI PIN) =================
 with tab_lha:
-    st.markdown("### Modul Generator Lembar Hasil Audit (LHA) Multi-Auditor")
-    st.info("💡 Dokumen LHA yang disimpan akan tertutup otomatis (kolaps) untuk menjaga kerahasiaan dan keamanan dari suntingan pihak lain.")
+    st.markdown("### Modul Generator Lembar Hasil Audit (LHA) Multi-Auditor (Proteksi PIN)")
+    st.info("💡 Setiap dokumen LHA diproteksi dengan PIN masing-masing auditor agar privasi dan keamanan dokumen terjaga.")
     
     if access_role == "Admin SPI":
         id_lha_list = df_master["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_master.columns else []
@@ -499,7 +548,8 @@ with tab_lha:
                         "observasi": "-",
                         "root_cause": "-",
                         "rekomendasi": "-",
-                        "implikasi": "-"
+                        "implikasi": "-",
+                        "lha_pin": "123"  # PIN default awal
                     })
                     save_lha_to_excel()
                     st.rerun()
@@ -512,38 +562,74 @@ with tab_lha:
                 st.info("Belum ada dokumen LHA yang dibuat untuk penugasan ini. Klik tombol ➕ di atas untuk membuat lembar LHA baru.")
             else:
                 for idx, lha_doc in enumerate(filtered_lhas):
-                    # Set expanded=False agar aman tertutup rapat setelah disimpan
-                    with st.expander(f"📁 [{lha_doc['lha_doc_id']}] Lembar LHA — Disusun oleh: {lha_doc['auditor_name']} (Terkunci / Tertutup Aman)", expanded=False):
-                        with st.form(key=f"form_multi_lha_{lha_doc['lha_doc_id']}_{idx}"):
-                            auditor_lha_input = st.text_input("Nama / Inisial Auditor LHA:", value=lha_doc["auditor_name"])
-                            obs_input = st.text_area("1. Observasi / Kondisi:", value=lha_doc["observasi"], height=100)
-                            root_input = st.text_area("2. Akar Masalah (Root Cause):", value=lha_doc["root_cause"], height=100)
-                            rek_input = st.text_area("3. Rekomendasi:", value=lha_doc["rekomendasi"], height=100)
-                            imp_input = st.text_area("4. Implikasi / Risiko:", value=lha_doc["implikasi"], height=100)
-                            
-                            col_lha_f1, col_lha_f2 = st.columns(2)
-                            with col_lha_f1:
-                                save_lha_sub_btn = st.form_submit_button("Simpan & Tutup LHA")
-                            with col_lha_f2:
-                                del_lha_sub_btn = st.form_submit_button("🗑️ Hapus LHA Ini")
+                    lha_key_id = lha_doc['lha_doc_id']
+                    is_lha_unlocked = lha_key_id in st.session_state.unlocked_lhas
+                    
+                    if not is_lha_unlocked:
+                        # Tampilan terkunci (meminta PIN)
+                        with st.container():
+                            st.markdown(f"🔒 **[{lha_doc['lha_doc_id']}] Lembar LHA — Disusun oleh: {lha_doc['auditor_name']} (Terkunci)**")
+                            col_lp1, col_lp2 = st.columns([2, 1])
+                            with col_lp1:
+                                entered_lha_pin = st.text_input(f"Masukkan PIN untuk membuka {lha_doc['lha_doc_id']}:", type="password", key=f"input_lha_pin_{lha_key_id}_{idx}")
+                            with col_lp2:
+                                st.markdown("<br>", unsafe_allow_html=True)
+                                if st.button("🔑 Buka LHA", key=f"btn_unlock_lha_{lha_key_id}_{idx}"):
+                                    stored_lha_pin = str(lha_doc.get("lha_pin", "123"))
+                                    if entered_lha_pin == stored_lha_pin:
+                                        st.session_state.unlocked_lhas.append(lha_key_id)
+                                        st.success("LHA berhasil dibuka!")
+                                        st.rerun()
+                                    else:
+                                        st.error("PIN Salah!")
+                            st.markdown("---")
+                    else:
+                        # Tampilan terbuka (bisa edit dan ada tombol tutup)
+                        with st.container():
+                            col_lu1, col_lu2 = st.columns([4, 1])
+                            with col_lu1:
+                                st.markdown(f"🔓 **[{lha_doc['lha_doc_id']}] Lembar LHA — Disusun oleh: {lha_doc['auditor_name']} (Sedang Terbuka)**")
+                            with col_lu2:
+                                if st.button("🔒 Kunci / Tutup", key=f"btn_lock_lha_{lha_key_id}_{idx}"):
+                                    st.session_state.unlocked_lhas.remove(lha_key_id)
+                                    st.rerun()
+
+                            with st.form(key=f"form_multi_lha_{lha_key_id}_{idx}"):
+                                auditor_lha_input = st.text_input("Nama / Inisial Auditor LHA:", value=lha_doc["auditor_name"])
+                                new_lha_pin_input = st.text_input("Ubah / Atur PIN Keamanan LHA ini:", value=str(lha_doc.get("lha_pin", "123")), type="password")
+                                obs_input = st.text_area("1. Observasi / Kondisi:", value=lha_doc["observasi"], height=100)
+                                root_input = st.text_area("2. Akar Masalah (Root Cause):", value=lha_doc["root_cause"], height=100)
+                                rek_input = st.text_area("3. Rekomendasi:", value=lha_doc["rekomendasi"], height=100)
+                                imp_input = st.text_area("4. Implikasi / Risiko:", value=lha_doc["implikasi"], height=100)
                                 
-                            if save_lha_sub_btn:
-                                lha_doc["auditor_name"] = auditor_lha_input
-                                lha_doc["observasi"] = obs_input
-                                lha_doc["root_cause"] = root_input
-                                lha_doc["rekomendasi"] = rek_input
-                                lha_doc["implikasi"] = imp_input
-                                save_lha_to_excel()
-                                st.success(f"Dokumen LHA {lha_doc['lha_doc_id']} berhasil disimpan dan ditutup rapat!")
-                                st.rerun()
-                                
-                            if del_lha_sub_btn:
-                                st.session_state.multi_lha_docs.remove(lha_doc)
-                                save_lha_to_excel()
-                                st.success(f"Dokumen LHA {lha_doc['lha_doc_id']} berhasil dihapus!")
-                                st.rerun()
-                                
-                        lha_text_export = f"""==================================================
+                                col_lha_f1, col_lha_f2 = st.columns(2)
+                                with col_lha_f1:
+                                    save_lha_sub_btn = st.form_submit_button("Simpan & Kunci Kembali LHA")
+                                with col_lha_f2:
+                                    del_lha_sub_btn = st.form_submit_button("🗑️ Hapus LHA Ini")
+                                    
+                                if save_lha_sub_btn:
+                                    lha_doc["auditor_name"] = auditor_lha_input
+                                    lha_doc["observasi"] = obs_input
+                                    lha_doc["root_cause"] = root_input
+                                    lha_doc["rekomendasi"] = rek_input
+                                    lha_doc["implikasi"] = imp_input
+                                    lha_doc["lha_pin"] = new_lha_pin_input
+                                    save_lha_to_excel()
+                                    if lha_key_id in st.session_state.unlocked_lhas:
+                                        st.session_state.unlocked_lhas.remove(lha_key_id)
+                                    st.success(f"Dokumen LHA {lha_doc['lha_doc_id']} berhasil disimpan dan dikunci rapat!")
+                                    st.rerun()
+                                    
+                                if del_lha_sub_btn:
+                                    st.session_state.multi_lha_docs.remove(lha_doc)
+                                    if lha_key_id in st.session_state.unlocked_lhas:
+                                        st.session_state.unlocked_lhas.remove(lha_key_id)
+                                    save_lha_to_excel()
+                                    st.success(f"Dokumen LHA {lha_doc['lha_doc_id']} berhasil dihapus!")
+                                    st.rerun()
+                                    
+                            lha_text_export = f"""==================================================
 LEMBAR HASIL AUDIT (LHA) — INTERNAL AUDIT UNIT
 PT PELINDO SOLUSI MARITIM
 ==================================================
@@ -564,13 +650,14 @@ Update Terakhir: {datetime.now().strftime('%d-%m-%Y %H:%M')}
 4. IMPLIKASI / RISIKO:
 {lha_doc['implikasi']}
 =================================================="""
-                        st.download_button(
-                            label=f"📥 Download / Perbarui File LHA {lha_doc['lha_doc_id']} (Format Notepad .txt)",
-                            data=lha_text_export.encode('utf-8'),
-                            file_name=f"LHA_{lha_doc['target_temuan']}_{lha_doc['lha_doc_id']}.txt",
-                            mime="text/plain",
-                            key=f"dl_lha_btn_{lha_doc['lha_doc_id']}_{idx}"
-                        )
+                            st.download_button(
+                                label=f"📥 Download / Perbarui File LHA {lha_doc['lha_doc_id']} (Format Notepad .txt)",
+                                data=lha_text_export.encode('utf-8'),
+                                file_name=f"LHA_{lha_doc['target_temuan']}_{lha_doc['lha_doc_id']}.txt",
+                                mime="text/plain",
+                                key=f"dl_lha_btn_{lha_doc['lha_doc_id']}_{idx}"
+                            )
+                            st.markdown("---")
     else:
         st.warning("⚠️ Menu penyusunan LHA dikhususkan untuk peran Admin SPI (Auditor).")
 
