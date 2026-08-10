@@ -270,7 +270,7 @@ if selected_periode == "2026":
 tab_dash, tab_prog_kk, tab_lha = st.tabs([
     "📊 Dashboard Monitoring Eksekutif", 
     "📋 Modul KKA & AP", 
-    "📝 Modul LHA (Instant Clipboard Paste)"
+    "📝 Modul LHA (Smart Table Insert)"
 ])
 
 # ================= TAB 1: DASHBOARD MONITORING =================
@@ -431,7 +431,7 @@ with tab_prog_kk:
 # ================= TAB 3: GENERATOR LHA MULTI-AUDITOR =================
 with tab_lha:
     st.markdown("### Modul Generator Lembar Hasil Audit (LHA) Multi-Auditor")
-    st.info("💡 **Fitur Instan Clipboard:** Cukup *Copy* (`Ctrl+C`) tabel di Word, lalu klik tombol **📋 Ambil Tabel dari Clipboard** di bawah untuk menyisipkannya secara instan.")
+    st.info("💡 **Cara Super Praktis Sisip Tabel:** Cukup *drag & drop* atau klik tombol upload di bawah untuk menyematkan gambar tabel hasil *snipping* Anda agar langsung tampil di tengah laporan!")
     
     if access_role == "Admin SPI":
         id_lha_list = df_master["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_master.columns else []
@@ -472,15 +472,16 @@ with tab_lha:
                             st.markdown(f"🔒 **[{lha_doc['lha_doc_id']}] Lembar LHA — Disusun oleh: {lha_doc['auditor_name']} (Terkunci)**")
                             st.markdown("---")
                             st.markdown(f"**1. Observasi / Kondisi:**\n{lha_doc['observasi']}", unsafe_allow_html=True)
-                            st.markdown(f"**2. Akar Masalah (Root Cause):**\n{lha_doc['root_cause']}", unsafe_allow_html=True)
-                            st.markdown(f"**3. Rekomendasi:**\n{lha_doc['rekomendasi']}", unsafe_allow_html=True)
-                            st.markdown(f"**4. Implikasi / Risiko:**\n{lha_doc['implikasi']}", unsafe_allow_html=True)
-
+                            
                             lha_att_name = lha_doc.get("attachment_name", "-")
                             if lha_att_name != "-" and lha_att_name.lower().endswith(('.png', '.jpg', '.jpeg')):
                                 lha_att_path = os.path.join(UPLOAD_DIR, lha_att_name)
                                 if os.path.exists(lha_att_path):
                                     st.image(lha_att_path, width=700)
+
+                            st.markdown(f"**2. Akar Masalah (Root Cause):**\n{lha_doc['root_cause']}", unsafe_allow_html=True)
+                            st.markdown(f"**3. Rekomendasi:**\n{lha_doc['rekomendasi']}", unsafe_allow_html=True)
+                            st.markdown(f"**4. Implikasi / Risiko:**\n{lha_doc['implikasi']}", unsafe_allow_html=True)
 
                             st.markdown("---")
                             col_lp1, col_lp2 = st.columns([2, 1])
@@ -507,23 +508,18 @@ with tab_lha:
                                     st.session_state.unlocked_lhas.remove(lha_key_id)
                                     st.rerun()
 
-                            # Tombol Instan Ambil dari Clipboard menggunakan Pillow ImageGrab
-                            if st.button("📋 Ambil Tabel dari Clipboard (Paste Instan)", key=f"btn_paste_cb_{lha_key_id}_{idx}"):
-                                try:
-                                    from PIL import ImageGrab
-                                    clipboard_img = ImageGrab.grabclipboard()
-                                    if clipboard_img is not None:
-                                        safe_cb_name = f"{lha_key_id}_clipboard_table.png"
-                                        cb_path = os.path.join(UPLOAD_DIR, safe_cb_name)
-                                        clipboard_img.save(cb_path, "PNG")
-                                        lha_doc["attachment_name"] = safe_cb_name
+                            # Tampilkan Preview Gambar Tabel yang aktif saat ini secara langsung di atas form
+                            curr_att = lha_doc.get("attachment_name", "-")
+                            if curr_att != "-" and curr_att.lower().endswith(('.png', '.jpg', '.jpeg')):
+                                check_path = os.path.join(UPLOAD_DIR, curr_att)
+                                if os.path.exists(check_path):
+                                    st.markdown(f"📊 **Preview Tabel Terpasang Saat Ini di Tengah Laporan:**")
+                                    st.image(check_path, width=700)
+                                    if st.button("🗑️ Hapus Gambar Tabel Ini", key=f"del_img_{lha_key_id}_{idx}"):
+                                        lha_doc["attachment_name"] = "-"
                                         save_lha_to_excel()
-                                        st.success("Tabel berhasil diambil dari clipboard dan disisipkan ke laporan!")
+                                        st.success("Gambar berhasil dihapus!")
                                         st.rerun()
-                                    else:
-                                        st.warning("Clipboard kosong atau tidak berisi gambar tabel. Pastikan Anda sudah melakukan Copy (Ctrl+C) tabel di Word.")
-                                except Exception as e:
-                                    st.error(f"Gagal mengambil clipboard: {e}")
 
                             with st.form(key=f"form_multi_lha_{lha_key_id}_{idx}"):
                                 auditor_lha_input = st.text_input("Nama / Inisial Auditor LHA:", value=lha_doc["auditor_name"])
@@ -535,18 +531,17 @@ with tab_lha:
                                 imp_txt = lha_doc["implikasi"].to_string(index=False) if isinstance(lha_doc["implikasi"], pd.DataFrame) else str(lha_doc["implikasi"])
 
                                 obs_input = st.text_area("1. Observasi / Kondisi:", value=obs_txt, height=120)
-                                root_input = st.text_area("2. Akar Masalah (Root Cause):", value=root_txt, height=120)
-                                rek_input = st.text_area("3. Rekomendasi:", value=rek_txt, height=120)
-                                imp_input = st.text_area("4. Implikasi / Risiko:", value=imp_txt, height=120)
                                 
-                                lha_att_name = lha_doc.get("attachment_name", "-")
-                                st.markdown(f"📁 **Status Tabel Saat Ini:** `{lha_att_name}`")
-                                
+                                # Kotak Uploader Gambar Tabel Super Cepat
                                 uploaded_lha_file = st.file_uploader(
-                                    "Atau Upload File Gambar Tabel (Opsional):", 
+                                    "📷 Upload / Ganti Gambar Tabel (Format PNG, JPG) — *(Bisa langsung drag & drop file gambar ke sini)*:", 
                                     type=["png", "jpg", "jpeg"], 
                                     key=f"up_lha_file_{lha_key_id}_{idx}"
                                 )
+
+                                root_input = st.text_area("2. Akar Masalah (Root Cause):", value=root_txt, height=120)
+                                rek_input = st.text_area("3. Rekomendasi:", value=rek_txt, height=120)
+                                imp_input = st.text_area("4. Implikasi / Risiko:", value=imp_txt, height=120)
                                 
                                 col_lha_f1, col_lha_f2 = st.columns(2)
                                 with col_lha_f1:
@@ -596,7 +591,7 @@ if access_role == "Admin SPI" and st.session_state.admin_logged_in:
     st.markdown("### Panel Update Status & Catatan Auditor")
     st.info("💡 Pilih ID Temuan di bawah ini untuk memperbarui status tindak lanjut dan memberikan catatan kepada Auditee.")
     
-    id_list = df_base["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_base.columns else []
+    id_list = df_base["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_master.columns else []
     if id_list:
         selected_id = st.selectbox("Pilih ID Temuan:", id_list, key="panel_status_select")
         row_idx = df_master[df_master["ID Temuan"].astype(str) == str(selected_id)].index
