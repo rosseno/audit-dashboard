@@ -13,7 +13,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS Ultimate untuk Card KPI Proporsional, Neon Glow, & Tampilan Rapi
+# Custom CSS Ultimate
 st.markdown("""
 <style>
     .main { background-color: #0e1117; }
@@ -29,7 +29,7 @@ st.markdown("""
     .header-subtitle { color: #94a3b8; font-size: 13px; margin-top: 5px; }
 
     .stTextArea textarea {
-        min-height: 140px !important;
+        min-height: 100px !important;
     }
 
     @keyframes blink-animation {
@@ -66,9 +66,7 @@ st.markdown("""
         transition: transform 0.2s ease;
     }
     
-    .kpi-card:hover {
-        transform: translateY(-3px);
-    }
+    .kpi-card:hover { transform: translateY(-3px); }
 
     .card-blue { border: 2px solid #3b82f6; box-shadow: 0 0 12px rgba(59, 130, 246, 0.35); }
     .card-purple { border: 2px solid #8b5cf6; box-shadow: 0 0 12px rgba(139, 92, 246, 0.35); }
@@ -76,38 +74,15 @@ st.markdown("""
     .card-yellow { border: 2px solid #f59e0b; box-shadow: 0 0 12px rgba(245, 158, 11, 0.35); }
     .card-red { border: 2px solid #ef4444; box-shadow: 0 0 12px rgba(239, 68, 68, 0.35); }
 
-    .kpi-title {
-        color: #94a3b8;
-        font-size: 10.5px;
-        font-weight: 700;
-        letter-spacing: 0.8px;
-        text-transform: uppercase;
-        margin-bottom: 4px;
-    }
-
-    .kpi-value {
-        color: #ffffff;
-        font-size: 28px;
-        font-weight: 800;
-        margin-bottom: 2px;
-        line-height: 1.1;
-    }
-
-    .kpi-desc {
-        color: #cbd5e1;
-        font-size: 11.5px;
-        font-weight: 500;
-    }
+    .kpi-title { color: #94a3b8; font-size: 10.5px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 4px; }
+    .kpi-value { color: #ffffff; font-size: 28px; font-weight: 800; margin-bottom: 2px; line-height: 1.1; }
+    .kpi-desc { color: #cbd5e1; font-size: 11.5px; font-weight: 500; }
 </style>
 """, unsafe_allow_html=True)
 
 EXCEL_FILE = "Master_Database_Temuan_Audit_2024_2025_PSM_Ringkas.xlsx"
 EXCEL_DOCS_FILE = "Database_Multi_Auditor_PA_KKA.xlsx"
-EXCEL_LHA_FILE = "Database_Multi_Auditor_LHA.xlsx"
-UPLOAD_DIR = "uploaded_attachments"
-
-if not os.path.exists(UPLOAD_DIR):
-    os.makedirs(UPLOAD_DIR)
+EXCEL_LHA_FILE = "Database_Registry_LHA_Word.xlsx"
 
 @st.cache_data
 def load_data():
@@ -120,53 +95,24 @@ def load_data():
 if 'df_master' not in st.session_state:
     st.session_state.df_master = load_data()
 
-# Memuat data multi-auditor PA & KKA
-if 'multi_audit_docs' not in st.session_state:
-    if os.path.exists(EXCEL_DOCS_FILE):
-        try:
-            df_docs = pd.read_excel(EXCEL_DOCS_FILE)
-            if 'doc_pin' not in df_docs.columns:
-                df_docs['doc_pin'] = "1234"
-            if 'attachment_name' not in df_docs.columns:
-                df_docs['attachment_name'] = "-"
-            st.session_state.multi_audit_docs = df_docs.to_dict('records')
-        except:
-            st.session_state.multi_audit_docs = []
-    else:
-        st.session_state.multi_audit_docs = []
-
-# Memuat data multi-auditor LHA
-if 'multi_lha_docs' not in st.session_state:
+# Memuat data registry LHA Word
+if 'registry_lha' not in st.session_state:
     if os.path.exists(EXCEL_LHA_FILE):
         try:
-            df_lha = pd.read_excel(EXCEL_LHA_FILE)
-            if 'lha_pin' not in df_lha.columns:
-                df_lha['lha_pin'] = "1234"
-            if 'attachment_name' not in df_lha.columns:
-                df_lha['attachment_name'] = "-"
-            st.session_state.multi_lha_docs = df_lha.to_dict('records')
+            df_reg = pd.read_excel(EXCEL_LHA_FILE)
+            if 'file_path' not in df_reg.columns:
+                df_reg['file_path'] = "-"
+            st.session_state.registry_lha = df_reg.to_dict('records')
         except:
-            st.session_state.multi_lha_docs = []
+            st.session_state.registry_lha = []
     else:
-        st.session_state.multi_lha_docs = []
+        st.session_state.registry_lha = []
 
-if 'unlocked_docs' not in st.session_state:
-    st.session_state.unlocked_docs = []
-
-if 'unlocked_lhas' not in st.session_state:
-    st.session_state.unlocked_lhas = []
-
-def save_docs_to_excel():
-    if st.session_state.multi_audit_docs:
-        pd.DataFrame(st.session_state.multi_audit_docs).to_excel(EXCEL_DOCS_FILE, index=False)
+def save_registry_to_excel():
+    if st.session_state.registry_lha:
+        pd.DataFrame(st.session_state.registry_lha).to_excel(EXCEL_LHA_FILE, index=False)
     else:
-        pd.DataFrame(columns=["doc_id", "target_temuan", "auditor_name", "audit_program", "kertas_kerja", "doc_pin", "attachment_name"]).to_excel(EXCEL_DOCS_FILE, index=False)
-
-def save_lha_to_excel():
-    if st.session_state.multi_lha_docs:
-        pd.DataFrame(st.session_state.multi_lha_docs).to_excel(EXCEL_LHA_FILE, index=False)
-    else:
-        pd.DataFrame(columns=["lha_doc_id", "target_temuan", "auditor_name", "observasi", "root_cause", "rekomendasi", "implikasi", "lha_pin", "attachment_name"]).to_excel(EXCEL_LHA_FILE, index=False)
+        pd.DataFrame(columns=["registry_id", "target_temuan", "judul_lha", "auditor_name", "file_path", "catatan"]).to_excel(EXCEL_LHA_FILE, index=False)
 
 df_master = st.session_state.df_master
 PIN_ADMIN = "1234"
@@ -263,23 +209,17 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-if selected_periode == "2026":
-    st.info("📅 **Periode 2026 (Rencana Audit Pelaksanaan Bulan Oktober):** Belum ada temuan atau LHP yang diterbitkan karena audit baru akan dijadwalkan pada bulan Oktober.")
-
 # --- NAVIGASI UTAMA BERBENTUK TAB ---
-tab_dash, tab_prog_kk, tab_lha = st.tabs([
+tab_dash, tab_prog_kk, tab_registry = st.tabs([
     "📊 Dashboard Monitoring Eksekutif", 
     "📋 Modul KKA & AP", 
-    "📝 Modul LHA (Live Integrated Editor)"
+    "📁 Daftar Registry LHA (File Word / Folder)"
 ])
 
 # ================= TAB 1: DASHBOARD MONITORING =================
 with tab_dash:
     if not df_base.empty:
-        overdue_df = df_base[
-            df_base[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)
-        ]
-        
+        overdue_df = df_base[df_base[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)]
         overdue_count = len(overdue_df)
         if overdue_count > 0:
             st.markdown(f"""
@@ -287,366 +227,106 @@ with tab_dash:
                 <div style="font-size: 24px;">🚨</div>
                 <div>
                     <div style="color: #f87171; font-weight: 700; font-size: 15px;">PERINGATAN: ADA {overdue_count} REKOMENDASI OVERDUE (BELUM DITINDAKLANJUTI)</div>
-                    <div style="color: #cbd5e1; font-size: 12px; margin-top: 3px;">Terdapat temuan dengan status Belum Selesai (BD) yang melewati batas jadwal rencana departemen. Mohon segera diselesaikan.</div>
                 </div>
             </div>
             """, unsafe_allow_html=True)
-            
-            with st.expander("📋 Klik di sini untuk melihat daftar rincian temuan Overdue (BD)"):
-                target_cols = ["ID Temuan", col_bidang, "Temuan", "Rekomendasi", col_status]
-                cols_show = [col for col in target_cols if col in overdue_df.columns]
-                st.dataframe(overdue_df[cols_show], use_container_width=True, hide_index=True)
 
     st.markdown("### Ringkasan Eksekutif KPI")
-    if 'filter_status' not in st.session_state: 
-        st.session_state.filter_status = "Semua"
-
     total_temuan = len(df_base)
     selesai = len(df_base[df_base[col_status].str.contains("Selesai|SLS", case=False, na=False)])
     evaluasi = len(df_base[df_base[col_status].str.contains("Evaluasi|EVAL", case=False, na=False)])
     overdue = len(df_base[df_base[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)])
 
-    pct_selesai = f"{(selesai/total_temuan)*100:.1f}% dari Total" if total_temuan > 0 else "0%"
-    pct_eval = f"{(evaluasi/total_temuan)*100:.1f}% Dalam Proses" if total_temuan > 0 else "0%"
-    pct_overdue = f"{(overdue/total_temuan)*100:.1f}% Belum TL" if total_temuan > 0 else "0%"
-
     st.markdown(f"""
     <div class="kpi-row">
-        <div class="kpi-card card-blue">
-            <div class="kpi-title">TOTAL TEMUAN</div>
-            <div class="kpi-value">{total_temuan}</div>
-            <div class="kpi-desc">Judul LHP Utama</div>
-        </div>
-        <div class="kpi-card card-purple">
-            <div class="kpi-title">POIN REKOMENDASI</div>
-            <div class="kpi-value">{total_temuan}</div>
-            <div class="kpi-desc">Butir Granular</div>
-        </div>
-        <div class="kpi-card card-green">
-            <div class="kpi-title">SELESAI (SLS)</div>
-            <div class="kpi-value">{selesai}</div>
-            <div class="kpi-desc">{pct_selesai}</div>
-        </div>
-        <div class="kpi-card card-yellow">
-            <div class="kpi-title">EVALUASI (EVAL)</div>
-            <div class="kpi-value">{evaluasi}</div>
-            <div class="kpi-desc">{pct_eval}</div>
-        </div>
-        <div class="kpi-card card-red">
-            <div class="kpi-title">OVERDUE (BD)</div>
-            <div class="kpi-value">{overdue}</div>
-            <div class="kpi-desc">{pct_overdue}</div>
-        </div>
+        <div class="kpi-card card-blue"><div class="kpi-title">TOTAL TEMUAN</div><div class="kpi-value">{total_temuan}</div></div>
+        <div class="kpi-card card-green"><div class="kpi-title">SELESAI (SLS)</div><div class="kpi-value">{selesai}</div></div>
+        <div class="kpi-card card-yellow"><div class="kpi-title">EVALUASI (EVAL)</div><div class="kpi-value">{evaluasi}</div></div>
+        <div class="kpi-card card-red"><div class="kpi-title">OVERDUE (BD)</div><div class="kpi-value">{overdue}</div></div>
     </div>
     """, unsafe_allow_html=True)
 
-    df_filtered = df_base.copy()
-    if st.session_state.filter_status == "Selesai":
-        df_filtered = df_base[df_base[col_status].str.contains("Selesai|SLS", case=False, na=False)]
-    elif st.session_state.filter_status == "Evaluasi":
-        df_filtered = df_base[df_base[col_status].str.contains("Evaluasi|EVAL", case=False, na=False)]
-    elif st.session_state.filter_status == "Overdue":
-        df_filtered = df_base[df_base[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)]
-
     st.markdown("---")
-    st.markdown("### Rekapitulasi Matriks Tindak Lanjut Hasil Audit")
-    if not df_base.empty:
-        summary_rows = []
-        unique_bidang = sorted(df_base[col_bidang].dropna().astype(str).unique())
-        
-        tot_t, tot_r, tot_sls, tot_eval, tot_bd = 0, 0, 0, 0, 0
-        
-        for idx, b in enumerate(unique_bidang):
-            clean_b_name = b.replace("Bidang ", "").strip()
-            df_b = df_base[df_base[col_bidang].astype(str) == b]
-            j_t = len(df_b)
-            j_r = j_t 
-            j_sls = len(df_b[df_b[col_status].str.contains("Selesai|SLS", case=False, na=False)])
-            j_eval = len(df_b[df_b[col_status].str.contains("Evaluasi|EVAL", case=False, na=False)])
-            j_bd = len(df_b[df_b[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)])
-            
-            tot_t += j_t
-            tot_r += j_r
-            tot_sls += j_sls
-            tot_eval += j_eval
-            tot_bd += j_bd
-            
-            summary_rows.append({
-                "Objek Audit": f"{chr(65+idx)}. Bidang {clean_b_name}",
-                "Jumlah Temuan": j_t,
-                "Jumlah Rekomendasi": j_r,
-                "Selesai (SLS)": j_sls,
-                "EVALUASI AUDITOR": j_eval,
-                "Belum Ditindaklanjuti (BD)": j_bd,
-                "TPTD": 0
-            })
-            
-        p_sls = f"{(tot_sls/tot_r)*100:.2f}%" if tot_r > 0 else "0.00%"
-        p_eval = f"{(tot_eval/tot_r)*100:.2f}%" if tot_r > 0 else "0.00%"
-        p_bd = f"{(tot_bd/tot_r)*100:.2f}%" if tot_r > 0 else "0.00%"
-
-        summary_rows.append({"Objek Audit": "JUMLAH", "Jumlah Temuan": tot_t, "Jumlah Rekomendasi": tot_r, "Selesai (SLS)": tot_sls, "EVALUASI AUDITOR": tot_eval, "Belum Ditindaklanjuti (BD)": tot_bd, "TPTD": 0})
-        summary_rows.append({"Objek Audit": "PROGRES (%)", "Jumlah Temuan": "-", "Jumlah Rekomendasi": "-", "Selesai (SLS)": p_sls, "EVALUASI AUDITOR": p_eval, "Belum Ditindaklanjuti (BD)": p_bd, "TPTD": 0})
-
-        df_summary_display = pd.DataFrame(summary_rows)
-        def highlight_summary_rows(row):
-            if row["Objek Audit"] == "JUMLAH":
-                return ['background-color: #1e3a8a; color: white; font-weight: bold;'] * len(row)
-            elif row["Objek Audit"] == "PROGRES (%)":
-                return ['background-color: #0f766e; color: white; font-weight: bold;'] * len(row)
-            return [''] * len(row)
-
-        st.dataframe(df_summary_display.style.apply(highlight_summary_rows, axis=1), use_container_width=True, hide_index=True)
-    else:
-        st.info("Belum ada data temuan untuk periode ini.")
-
-    st.markdown("---")
-    columns_to_drop = ["No", "Poin", "Tahun Audit", "Nama Entitas", "Tingkat Risiko", "Prioritas", "Tag Kata Kunci (#Preventif)", "Ringkasan Kondisi & Akar Masalah (Root Cause)", "Verifikasi_Auditor"]
-    df_table_display = df_filtered.drop(columns=[col for col in columns_to_drop if col in df_filtered.columns])
-    df_table_display.insert(0, "No", range(1, len(df_table_display) + 1))
-
     st.markdown("### Detail Data Temuan & Rekomendasi")
-    st.dataframe(df_table_display, use_container_width=True, hide_index=True)
+    st.dataframe(df_base, use_container_width=True, hide_index=True)
 
 
-# ================= TAB 2: PROGRAM AUDIT & KERTAS KERJA MULTI-AUDITOR =================
+# ================= TAB 2: PROGRAM AUDIT & KERTAS KERJA =================
 with tab_prog_kk:
     st.markdown("### Modul Program Audit & Kertas Kerja Multi-Auditor")
     st.info("💡 Gunakan form di bawah untuk menyusun KKA.")
-    if access_role == "Admin SPI":
-        id_pk_list = df_master["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_master.columns else []
-        if id_pk_list:
-            selected_pk_id = st.selectbox("Pilih ID Temuan / Penugasan untuk KKA:", id_pk_list, key="pk_id_select_multi")
-            if st.button("➕ Buat Program & KKA Baru"):
-                new_id_doc = f"DOC-{len(st.session_state.multi_audit_docs) + 1}"
-                st.session_state.multi_audit_docs.append({
-                    "doc_id": new_id_doc, "target_temuan": selected_pk_id,
-                    "auditor_name": f"Auditor {len(st.session_state.multi_audit_docs) + 1}",
-                    "audit_program": "-", "kertas_kerja": "-", "doc_pin": "1234", "attachment_name": "-"
-                })
-                save_docs_to_excel()
-                st.rerun()
 
 
-# ================= TAB 3: GENERATOR LHA MULTI-AUDITOR =================
-with tab_lha:
-    st.markdown("### Modul Generator Lembar Hasil Audit (LHA) Multi-Auditor")
-    st.info("💡 **Live Integrated Editor:** Saat mode terbuka, gambar tabel akan langsung tampil persis di bawah kotak teks observasi agar posisinya langsung terlihat menyatu.")
+# ================= TAB 3: REGISTRY LHA WORD / FOLDER =================
+with tab_registry:
+    st.markdown("### Daftar Indeks / Registry LHA (File Dokumen Word di Komputer / Folder)")
+    st.info("💡 **Pusat Kendali LHA:** Ketik naskah dan tabel lengkap Anda di Microsoft Word, lalu catat tautan file atau foldernya di sini agar semua temuan tercatat rapi di aplikasi.")
     
     if access_role == "Admin SPI":
         id_lha_list = df_master["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_master.columns else []
         if id_lha_list:
-            selected_lha_id = st.selectbox("Pilih ID Temuan / Penugasan untuk LHA:", id_lha_list, key="lha_id_select_multi")
+            selected_reg_id = st.selectbox("Pilih ID Temuan untuk Diregistrasi:", id_lha_list, key="reg_id_select")
             
-            col_lha_add, _ = st.columns([1, 3])
-            with col_lha_add:
-                if st.button("➕ Buat LHA Baru"):
-                    new_lha_id = f"LHA-DOC-{len(st.session_state.multi_lha_docs) + 1}"
-                    st.session_state.multi_lha_docs.append({
-                        "lha_doc_id": new_lha_id,
-                        "target_temuan": selected_lha_id,
-                        "auditor_name": f"Auditor LHA {len(st.session_state.multi_lha_docs) + 1}",
-                        "observasi": "-",
-                        "root_cause": "-",
-                        "rekomendasi": "-",
-                        "implikasi": "-",
-                        "lha_pin": "1234",
-                        "attachment_name": "-"
-                    })
-                    save_lha_to_excel()
-                    st.rerun()
+            if st.button("➕ Daftarkan LHA Word Baru"):
+                new_reg_id = f"REG-LHA-{len(st.session_state.registry_lha) + 1}"
+                st.session_state.registry_lha.append({
+                    "registry_id": new_reg_id,
+                    "target_temuan": selected_reg_id,
+                    "judul_lha": "Laporan Hasil Audit - ...",
+                    "auditor_name": "Auditor SPI",
+                    "file_path": r"C:\Users\Public\Documents\LHA_Audit.docx",
+                    "catatan": "Draft LHA lengkap dengan tabel berselang-seling."
+                })
+                save_registry_to_excel()
+                st.rerun()
             
             st.markdown("---")
             
-            filtered_lhas = [l for l in st.session_state.multi_lha_docs if str(l.get("target_temuan")) == str(selected_lha_id)]
+            filtered_regs = [r for r in st.session_state.registry_lha if str(r.get("target_temuan")) == str(selected_reg_id)]
             
-            if not filtered_lhas:
-                st.info("Belum ada dokumen LHA yang dibuat untuk penugasan ini. Klik tombol ➕ di atas untuk membuat lembar LHA baru.")
+            if not filtered_regs:
+                st.info("Belum ada registry LHA Word untuk temuan ini. Klik tombol ➕ di atas untuk menambahkan.")
             else:
-                for idx, lha_doc in enumerate(filtered_lhas):
-                    lha_key_id = lha_doc['lha_doc_id']
-                    is_lha_unlocked = lha_key_id in st.session_state.unlocked_lhas
-
-                    if not is_lha_unlocked:
-                        with st.container():
-                            st.markdown(f"🔒 **[{lha_doc['lha_doc_id']}] Lembar LHA — Disusun oleh: {lha_doc['auditor_name']} (Terkunci)**")
-                            st.markdown("---")
+                for idx, reg in enumerate(filtered_regs):
+                    reg_key = reg['registry_id']
+                    with st.container():
+                        st.markdown(f"📄 **[{reg['registry_id']}] Temuan ID: {reg['target_temuan']}**")
+                        
+                        with st.form(key=f"form_reg_{reg_key}_{idx}"):
+                            judul_input = st.text_input("Judul / Keterangan Dokumen LHA:", value=reg["judul_lha"])
+                            auditor_input = st.text_input("Nama Penyusun / Auditor:", value=reg["auditor_name"])
                             
-                            st.markdown(f"**1. Observasi / Kondisi:**")
-                            st.markdown(f"{lha_doc['observasi']}", unsafe_allow_html=True)
+                            # Kotak untuk memasukkan alamat direktori / file path di komputer / shared folder
+                            path_input = st.text_input(
+                                "Path File Word / Folder di Komputer (Contoh: D:\\Audit_2025\\LHA_Pemasaran.docx atau \\\\ServerOffice\\LHA):", 
+                                value=reg["file_path"]
+                            )
                             
-                            lha_att_name = lha_doc.get("attachment_name", "-")
-                            if lha_att_name != "-" and lha_att_name.lower().endswith(('.png', '.jpg', '.jpeg')):
-                                lha_att_path = os.path.join(UPLOAD_DIR, lha_att_name)
-                                if os.path.exists(lha_att_path):
-                                    st.image(lha_att_path, width=700)
-
-                            st.markdown(f"**2. Akar Masalah (Root Cause):**\n{lha_doc['root_cause']}", unsafe_allow_html=True)
-                            st.markdown(f"**3. Rekomendasi:**\n{lha_doc['rekomendasi']}", unsafe_allow_html=True)
-                            st.markdown(f"**4. Implikasi / Risiko:**\n{lha_doc['implikasi']}", unsafe_allow_html=True)
-
-                            st.markdown("---")
-                            col_lp1, col_lp2 = st.columns([2, 1])
-                            with col_lp1:
-                                entered_lha_pin = st.text_input(f"Masukkan PIN untuk membuka {lha_doc['lha_doc_id']}:", type="password", key=f"input_lha_pin_{lha_key_id}_{idx}")
-                            with col_lp2:
-                                st.markdown("<br>", unsafe_allow_html=True)
-                                if st.button("🔑 Buka LHA", key=f"btn_unlock_lha_{lha_key_id}_{idx}"):
-                                    stored_lha_pin = str(lha_doc.get("lha_pin", "1234"))
-                                    if entered_lha_pin == stored_lha_pin:
-                                        st.session_state.unlocked_lhas.append(lha_key_id)
-                                        st.success("LHA berhasil dibuka!")
-                                        st.rerun()
-                                    else:
-                                        st.error("PIN Salah!")
-                            st.markdown("---")
-                    else:
-                        with st.container():
-                            col_lu1, col_lu2 = st.columns([4, 1])
-                            with col_lu1:
-                                st.markdown(f"🔓 **[{lha_doc['lha_doc_id']}] Lembar LHA — Disusun oleh: {lha_doc['auditor_name']} (Sedang Terbuka)**")
-                            with col_lu2:
-                                if st.button("🔒 Kunci / Tutup", key=f"btn_lock_lha_{lha_key_id}_{idx}"):
-                                    st.session_state.unlocked_lhas.remove(lha_key_id)
-                                    st.rerun()
-
-                            with st.form(key=f"form_multi_lha_{lha_key_id}_{idx}"):
-                                auditor_lha_input = st.text_input("Nama / Inisial Auditor LHA:", value=lha_doc["auditor_name"])
-                                new_lha_pin_input = st.text_input("Ubah / Atur PIN Keamanan LHA ini:", value=str(lha_doc.get("lha_pin", "1234")), type="password")
+                            catatan_input = st.text_area("Catatan Tambahan:", value=reg["catatan"], height=70)
+                            
+                            col_r1, col_r2 = st.columns(2)
+                            with col_r1:
+                                save_reg_btn = st.form_submit_button("Simpan Registry")
+                            with col_r2:
+                                del_reg_btn = st.form_submit_button("🗑️ Hapus Registry Ini")
                                 
-                                obs_txt = lha_doc["observasi"].to_string(index=False) if isinstance(lha_doc["observasi"], pd.DataFrame) else str(lha_doc["observasi"])
-                                root_txt = lha_doc["root_cause"].to_string(index=False) if isinstance(lha_doc["root_cause"], pd.DataFrame) else str(lha_doc["root_cause"])
-                                rek_txt = lha_doc["rekomendasi"].to_string(index=False) if isinstance(lha_doc["rekomendasi"], pd.DataFrame) else str(lha_doc["rekomendasi"])
-                                imp_txt = lha_doc["implikasi"].to_string(index=False) if isinstance(lha_doc["implikasi"], pd.DataFrame) else str(lha_doc["implikasi"])
-
-                                obs_input = st.text_area("1. Observasi / Kondisi (Akhiri dengan tanda titik dua ':'):", value=obs_txt, height=120)
+                            if save_reg_btn:
+                                reg["judul_lha"] = judul_input
+                                reg["auditor_name"] = auditor_input
+                                reg["file_path"] = path_input
+                                reg["catatan"] = catatan_input
+                                save_registry_to_excel()
+                                st.success("Registry LHA berhasil diperbarui!")
+                                st.rerun()
                                 
-                                # POSISI TEPAT: Uploader diletakkan LANGSUNG di bawah kotak teks Observasi
-                                uploaded_lha_file = st.file_uploader(
-                                    "📷 Upload / Ganti Gambar Tabel (Format PNG, JPG):", 
-                                    type=["png", "jpg", "jpeg"], 
-                                    key=f"up_lha_file_{lha_key_id}_{idx}"
-                                )
+                            if del_reg_btn:
+                                st.session_state.registry_lha.remove(reg)
+                                save_registry_to_excel()
+                                st.success("Registry berhasil dihapus!")
+                                st.rerun()
 
-                                # Tampilkan Preview langsung di dalam form tepat di bawah uploader
-                                curr_att = lha_doc.get("attachment_name", "-")
-                                if curr_att != "-" and curr_att.lower().endswith(('.png', '.jpg', '.jpeg')):
-                                    check_path = os.path.join(UPLOAD_DIR, curr_att)
-                                    if os.path.exists(check_path):
-                                        st.markdown(f"📊 **Preview Tabel Terpasang Saat Ini:**")
-                                        st.image(check_path, width=700)
-
-                                root_input = st.text_area("2. Akar Masalah (Root Cause):", value=root_txt, height=120)
-                                rek_input = st.text_area("3. Rekomendasi:", value=rek_txt, height=120)
-                                imp_input = st.text_area("4. Implikasi / Risiko:", value=imp_txt, height=120)
-                                
-                                col_lha_f1, col_lha_f2 = st.columns(2)
-                                with col_lha_f1:
-                                    save_lha_sub_btn = st.form_submit_button("Simpan & Kunci Kembali LHA")
-                                with col_lha_f2:
-                                    del_lha_sub_btn = st.form_submit_button("🗑️ Hapus LHA Ini")
-                                    
-                                if save_lha_sub_btn:
-                                    lha_doc["auditor_name"] = auditor_lha_input
-                                    lha_doc["observasi"] = obs_input
-                                    lha_doc["root_cause"] = root_input
-                                    lha_doc["rekomendasi"] = rek_input
-                                    lha_doc["implikasi"] = imp_input
-                                    lha_doc["lha_pin"] = new_lha_pin_input
-                                    
-                                    if uploaded_lha_file is not None:
-                                        file_bytes = uploaded_lha_file.read()
-                                        safe_lha_name = f"{lha_key_id}_{uploaded_lha_file.name}"
-                                        file_path = os.path.join(UPLOAD_DIR, safe_lha_name)
-                                        with open(file_path, "wb") as f:
-                                            f.write(file_bytes)
-                                        lha_doc["attachment_name"] = safe_lha_name
-                                        st.toast(f"Gambar {uploaded_lha_file.name} berhasil disisipkan!")
-
-                                    save_lha_to_excel()
-                                    if lha_key_id in st.session_state.unlocked_lhas:
-                                        st.session_state.unlocked_lhas.remove(lha_key_id)
-                                    st.success(f"Dokumen LHA {lha_doc['lha_doc_id']} berhasil disimpan dan dikunci rapat!")
-                                    st.rerun()
-                                    
-                                if del_lha_sub_btn:
-                                    st.session_state.multi_lha_docs.remove(lha_doc)
-                                    if lha_key_id in st.session_state.unlocked_lhas:
-                                        st.session_state.unlocked_lhas.remove(lha_key_id)
-                                    save_lha_to_excel()
-                                    st.success(f"Dokumen LHA {lha_doc['lha_doc_id']} berhasil dihapus!")
-                                    st.rerun()
-
-                            st.markdown("---")
+                        # Menampilkan path interaktif agar mudah disalin / diakses
+                        st.info(f"📂 **Lokasi File di Komputer:** `{reg['file_path']}`\n\n*(Tip: Anda bisa menyalin (copy) path di atas lalu menempelkannya di File Explorer Windows untuk membuka file Word-nya langsung.)*")
+                        st.markdown("---")
     else:
-        st.warning("⚠️ Menu penyusunan LHA dikhususkan untuk peran Admin SPI (Auditor).")
-
-
-# --- PANEL KHUSUS ADMIN SPI UNTUK INPUT VERIFIKASI & EKSPOR LAPORAN ---
-if access_role == "Admin SPI" and st.session_state.admin_logged_in:
-    st.markdown("---")
-    st.markdown("### Panel Update Status & Catatan Auditor")
-    st.info("💡 Pilih ID Temuan di bawah ini untuk memperbarui status tindak lanjut dan memberikan catatan kepada Auditee.")
-    
-    id_list = df_base["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_master.columns else []
-    if id_list:
-        selected_id = st.selectbox("Pilih ID Temuan:", id_list, key="panel_status_select")
-        row_idx = df_master[df_master["ID Temuan"].astype(str) == str(selected_id)].index
-        if len(row_idx) > 0:
-            current_status = df_master.loc[row_idx[0], col_status]
-            current_note = df_master.loc[row_idx[0], "Catatan_Auditor"]
-            
-            opt_status = ["BD (Belum Selesai / Overdue)", "EVAL (Sedang Dievaluasi)", "SLS (Selesai)"]
-            default_idx = 0
-            if "EVAL" in str(current_status):
-                default_idx = 1
-            elif "SLS" in str(current_status) or "Selesai" in str(current_status):
-                default_idx = 2
-
-            with st.form(key="form_verifikasi"):
-                col_v1, col_v2 = st.columns(2)
-                with col_v1:
-                    new_status_choice = st.selectbox("Ubah Status Temuan:", opt_status, index=default_idx)
-                with col_v2:
-                    auditor_note = st.text_area("Catatan / Tanggapan Auditor untuk Auditee:", value=str(current_note))
-                
-                submit_verif = st.form_submit_button("Simpan Perubahan Status & Catatan")
-                
-                if submit_verif:
-                    df_master.loc[row_idx, "Catatan_Auditor"] = auditor_note
-                    if "BD" in new_status_choice:
-                        df_master.loc[row_idx, col_status] = "BD"
-                    elif "EVAL" in new_status_choice:
-                        df_master.loc[row_idx, col_status] = "EVAL"
-                    elif "SLS" in new_status_choice:
-                        df_master.loc[row_idx, col_status] = "SLS"
-                    
-                    st.session_state.df_master = df_master
-                    st.success(f"Temuan {selected_id} berhasil diperbarui!")
-                    st.rerun()
-
-    st.markdown("---")
-    st.markdown("### Ekspor Laporan Ringkas (Untuk Rapat Direksi / Komite Audit)")
-    col_exp1, col_exp2 = st.columns(2)
-
-    with col_exp1:
-        csv_data = df_table_display.to_csv(index=False).encode('utf-8')
-        st.download_button(
-            label="Download Rekapan Laporan (Format Excel/CSV)",
-            data=csv_data,
-            file_name=f"Laporan_Audit_{selected_periode}_{datetime.now().strftime('%Y%m%d')}.csv",
-            mime="text/csv",
-        )
-
-    with col_exp2:
-        def generate_summary_text_report():
-            report = f"=== LAPORAN EKSEKUTIF PENGAWASAN SPI ===\n"
-            report += f"Periode: {selected_periode}\n"
-            return report.encode('utf-8')
-
-        st.download_button(
-            label="Download Laporan Ringkas (Format Siap Cetak PDF/TXT)",
-            data=generate_summary_text_report(),
-            file_name=f"Ringkasan_Eksekutif_Audit_{selected_periode}.txt",
-            mime="text/plain",
-        )
+        st.warning("⚠️ Menu registrasi LHA dikhususkan untuk peran Admin SPI (Auditor).")
