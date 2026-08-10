@@ -269,8 +269,8 @@ if selected_periode == "2026":
 # --- NAVIGASI UTAMA BERBENTUK TAB ---
 tab_dash, tab_prog_kk, tab_lha = st.tabs([
     "📊 Dashboard Monitoring Eksekutif", 
-    "📋 Modul KKA & AP (Direct Paste Gambar)", 
-    "📝 Modul LHA (Direct Paste Gambar)"
+    "📋 Modul KKA & AP", 
+    "📝 Modul LHA (Instant Clipboard Paste)"
 ])
 
 # ================= TAB 1: DASHBOARD MONITORING =================
@@ -412,143 +412,26 @@ with tab_dash:
 # ================= TAB 2: PROGRAM AUDIT & KERTAS KERJA MULTI-AUDITOR =================
 with tab_prog_kk:
     st.markdown("### Modul Program Audit & Kertas Kerja Multi-Auditor")
-    st.info("💡 **Fitur Baru (Direct Paste):** Setelah menyorot gambar/tabel dengan `Windows + Shift + S`, Anda bisa langsung menempelkannya menggunakan fitur **Paste Gambar (Clipboard Uploader)** di bawah.")
-    
+    st.info("💡 Gunakan form di bawah untuk menyusun KKA.")
     if access_role == "Admin SPI":
         id_pk_list = df_master["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_master.columns else []
         if id_pk_list:
             selected_pk_id = st.selectbox("Pilih ID Temuan / Penugasan untuk KKA:", id_pk_list, key="pk_id_select_multi")
-            
-            col_btn_add, _ = st.columns([1, 3])
-            with col_btn_add:
-                if st.button("➕ Buat Program & KKA Baru"):
-                    new_id_doc = f"DOC-{len(st.session_state.multi_audit_docs) + 1}"
-                    st.session_state.multi_audit_docs.append({
-                        "doc_id": new_id_doc,
-                        "target_temuan": selected_pk_id,
-                        "auditor_name": f"Auditor {len(st.session_state.multi_audit_docs) + 1}",
-                        "audit_program": "-",
-                        "kertas_kerja": "-",
-                        "doc_pin": "1234",
-                        "attachment_name": "-"
-                    })
-                    save_docs_to_excel()
-                    st.rerun()
-            
-            st.markdown("---")
-            
-            filtered_docs = [d for d in st.session_state.multi_audit_docs if str(d.get("target_temuan")) == str(selected_pk_id)]
-            
-            if not filtered_docs:
-                st.info("Belum ada dokumen Program Audit & KKA yang dibuat untuk penugasan ini. Klik tombol ➕ di atas untuk membuat lembar kerja baru.")
-            else:
-                for idx, doc in enumerate(filtered_docs):
-                    doc_key_id = doc['doc_id']
-                    is_unlocked = doc_key_id in st.session_state.unlocked_docs
-
-                    if not is_unlocked:
-                        with st.container():
-                            st.markdown(f"🔒 **[{doc['doc_id']}] Lembar KKA — Disusun oleh: {doc['auditor_name']} (Terkunci)**")
-                            st.markdown("---")
-                            st.markdown(f"**1. Program Audit (AP):**\n{doc['audit_program']}")
-                            st.markdown(f"**2. Kertas Kerja (KKA):**\n{doc['kertas_kerja']}")
-                            
-                            att_name = doc.get("attachment_name", "-")
-                            if att_name != "-" and att_name.lower().endswith(('.png', '.jpg', '.jpeg')):
-                                att_path = os.path.join(UPLOAD_DIR, att_name)
-                                if os.path.exists(att_path):
-                                    st.image(att_path, width=700)
-
-                            st.markdown("---")
-                            col_p1, col_p2 = st.columns([2, 1])
-                            with col_p1:
-                                entered_doc_pin = st.text_input(f"Masukkan PIN untuk membuka {doc['doc_id']}:", type="password", key=f"input_pin_{doc_key_id}_{idx}")
-                            with col_p2:
-                                st.markdown("<br>", unsafe_allow_html=True)
-                                if st.button("🔑 Buka Dokumen", key=f"btn_unlock_{doc_key_id}_{idx}"):
-                                    stored_pin = str(doc.get("doc_pin", "1234"))
-                                    if entered_doc_pin == stored_pin:
-                                        st.session_state.unlocked_docs.append(doc_key_id)
-                                        st.success("Berhasil dibuka!")
-                                        st.rerun()
-                                    else:
-                                        st.error("PIN Salah!")
-                            st.markdown("---")
-                    else:
-                        with st.container():
-                            col_u1, col_u2 = st.columns([4, 1])
-                            with col_u1:
-                                st.markdown(f"🔓 **[{doc['doc_id']}] Lembar KKA — Disusun oleh: {doc['auditor_name']} (Sedang Terbuka)**")
-                            with col_u2:
-                                if st.button("🔒 Kunci / Tutup", key=f"btn_lock_{doc_key_id}_{idx}"):
-                                    st.session_state.unlocked_docs.remove(doc_key_id)
-                                    st.rerun()
-
-                            with st.form(key=f"form_multi_doc_{doc_key_id}_{idx}"):
-                                auditor_input = st.text_input("Nama / Inisial Auditor:", value=doc["auditor_name"])
-                                new_pin_input = st.text_input("Ubah / Atur PIN Keamanan Dokumen ini:", value=str(doc.get("doc_pin", "1234")), type="password")
-                                
-                                prog_text = doc["audit_program"].to_string(index=False) if isinstance(doc["audit_program"], pd.DataFrame) else str(doc["audit_program"])
-                                kk_text = doc["kertas_kerja"].to_string(index=False) if isinstance(doc["kertas_kerja"], pd.DataFrame) else str(doc["kertas_kerja"])
-
-                                prog_input = st.text_area("1. Uraian Teks Program Audit (AP):", value=prog_text, height=140)
-                                kk_input = st.text_area("2. Catatan Ringkas Kertas Kerja Audit (KKA):", value=kk_text, height=160)
-                                
-                                att_name = doc.get("attachment_name", "-")
-                                st.markdown("---")
-                                st.markdown(f"📁 **File Gambar/Tabel Saat Ini:** `{att_name}`")
-                                
-                                # Dukungan langsung paste via clipboard uploader atau file picker
-                                uploaded_file = st.file_uploader(
-                                    "📷 Sisipkan Tabel (Format PNG, JPG) — *(Tip: Setelah Windows+Shift+S, Anda bisa langsung drag-and-drop atau pilih file hasil snipping)*:", 
-                                    type=["png", "jpg", "jpeg"], 
-                                    key=f"up_file_{doc_key_id}_{idx}"
-                                )
-                                
-                                col_f1, col_f2 = st.columns(2)
-                                with col_f1:
-                                    save_sub_btn = st.form_submit_button("Simpan & Kunci Kembali")
-                                with col_f2:
-                                    del_sub_btn = st.form_submit_button("🗑️ Hapus Dokumen Ini")
-                                    
-                                if save_sub_btn:
-                                    doc["auditor_name"] = auditor_input
-                                    doc["audit_program"] = prog_input
-                                    doc["kertas_kerja"] = kk_input
-                                    doc["doc_pin"] = new_pin_input
-                                    
-                                    if uploaded_file is not None:
-                                        file_bytes = uploaded_file.read()
-                                        safe_file_name = f"{doc_key_id}_{uploaded_file.name}"
-                                        file_path = os.path.join(UPLOAD_DIR, safe_file_name)
-                                        with open(file_path, "wb") as f:
-                                            f.write(file_bytes)
-                                        doc["attachment_name"] = safe_file_name
-                                        st.toast(f"Gambar {uploaded_file.name} berhasil disisipkan!")
-
-                                    save_docs_to_excel()
-                                    if doc_key_id in st.session_state.unlocked_docs:
-                                        st.session_state.unlocked_docs.remove(doc_key_id)
-                                    st.success(f"Dokumen {doc['doc_id']} berhasil disimpan dan dikunci rapat!")
-                                    st.rerun()
-                                    
-                                if del_sub_btn:
-                                    st.session_state.multi_audit_docs.remove(doc)
-                                    if doc_key_id in st.session_state.unlocked_docs:
-                                        st.session_state.unlocked_docs.remove(doc_key_id)
-                                    save_docs_to_excel()
-                                    st.success(f"Dokumen {doc['doc_id']} berhasil dihapus!")
-                                    st.rerun()
-
-                            st.markdown("---")
-    else:
-        st.warning("⚠️ Menu penyusunan Program Audit & Kertas Kerja dikhususkan untuk peran Admin SPI (Auditor).")
+            if st.button("➕ Buat Program & KKA Baru"):
+                new_id_doc = f"DOC-{len(st.session_state.multi_audit_docs) + 1}"
+                st.session_state.multi_audit_docs.append({
+                    "doc_id": new_id_doc, "target_temuan": selected_pk_id,
+                    "auditor_name": f"Auditor {len(st.session_state.multi_audit_docs) + 1}",
+                    "audit_program": "-", "kertas_kerja": "-", "doc_pin": "1234", "attachment_name": "-"
+                })
+                save_docs_to_excel()
+                st.rerun()
 
 
 # ================= TAB 3: GENERATOR LHA MULTI-AUDITOR =================
 with tab_lha:
     st.markdown("### Modul Generator Lembar Hasil Audit (LHA) Multi-Auditor")
-    st.info("💡 **Fitur Baru (Direct Paste):** Setelah menyorot gambar/tabel dengan `Windows + Shift+ S`, Anda langsung dapat mengunggahnya ke form di bawah.")
+    st.info("💡 **Fitur Instan Clipboard:** Cukup *Copy* (`Ctrl+C`) tabel di Word, lalu klik tombol **📋 Ambil Tabel dari Clipboard** di bawah untuk menyisipkannya secara instan.")
     
     if access_role == "Admin SPI":
         id_lha_list = df_master["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_master.columns else []
@@ -624,6 +507,24 @@ with tab_lha:
                                     st.session_state.unlocked_lhas.remove(lha_key_id)
                                     st.rerun()
 
+                            # Tombol Instan Ambil dari Clipboard menggunakan Pillow ImageGrab
+                            if st.button("📋 Ambil Tabel dari Clipboard (Paste Instan)", key=f"btn_paste_cb_{lha_key_id}_{idx}"):
+                                try:
+                                    from PIL import ImageGrab
+                                    clipboard_img = ImageGrab.grabclipboard()
+                                    if clipboard_img is not None:
+                                        safe_cb_name = f"{lha_key_id}_clipboard_table.png"
+                                        cb_path = os.path.join(UPLOAD_DIR, safe_cb_name)
+                                        clipboard_img.save(cb_path, "PNG")
+                                        lha_doc["attachment_name"] = safe_cb_name
+                                        save_lha_to_excel()
+                                        st.success("Tabel berhasil diambil dari clipboard dan disisipkan ke laporan!")
+                                        st.rerun()
+                                    else:
+                                        st.warning("Clipboard kosong atau tidak berisi gambar tabel. Pastikan Anda sudah melakukan Copy (Ctrl+C) tabel di Word.")
+                                except Exception as e:
+                                    st.error(f"Gagal mengambil clipboard: {e}")
+
                             with st.form(key=f"form_multi_lha_{lha_key_id}_{idx}"):
                                 auditor_lha_input = st.text_input("Nama / Inisial Auditor LHA:", value=lha_doc["auditor_name"])
                                 new_lha_pin_input = st.text_input("Ubah / Atur PIN Keamanan LHA ini:", value=str(lha_doc.get("lha_pin", "1234")), type="password")
@@ -639,11 +540,10 @@ with tab_lha:
                                 imp_input = st.text_area("4. Implikasi / Risiko:", value=imp_txt, height=120)
                                 
                                 lha_att_name = lha_doc.get("attachment_name", "-")
-                                st.markdown("---")
-                                st.markdown(f"📁 **File Gambar Saat Ini:** `{lha_att_name}`")
+                                st.markdown(f"📁 **Status Tabel Saat Ini:** `{lha_att_name}`")
                                 
                                 uploaded_lha_file = st.file_uploader(
-                                    "📷 Sisipkan Tabel LHA (Format PNG, JPG) — *(Tip: Hasil sorotan Windows+Shift+S dapat langsung di-drag atau dipilih di sini)*:", 
+                                    "Atau Upload File Gambar Tabel (Opsional):", 
                                     type=["png", "jpg", "jpeg"], 
                                     key=f"up_lha_file_{lha_key_id}_{idx}"
                                 )
