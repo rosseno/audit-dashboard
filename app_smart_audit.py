@@ -13,7 +13,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS Ultimate untuk Card KPI Proporsional, Neon Glow, & Animasi Kedip Peringatan
+# Custom CSS Ultimate untuk Card KPI Proporsional, Neon Glow, & Kotak Teks Luas Maksimal
 st.markdown("""
 <style>
     .main { background-color: #0e1117; }
@@ -27,6 +27,11 @@ st.markdown("""
     }
     .header-title { color: #ffffff; font-size: 22px; font-weight: 700; }
     .header-subtitle { color: #94a3b8; font-size: 13px; margin-top: 5px; }
+
+    /* Memperluas tinggi kotak teks (Text Area) agar sangat leluasa untuk mengetik / paste */
+    .stTextArea textarea {
+        min-height: 250px !important;
+    }
 
     /* Animasi Kedip (Blink) untuk Kotak Peringatan Darurat */
     @keyframes blink-animation {
@@ -269,8 +274,8 @@ if selected_periode == "2026":
 # --- NAVIGASI UTAMA BERBENTUK TAB ---
 tab_dash, tab_prog_kk, tab_lha = st.tabs([
     "📊 Dashboard Monitoring Eksekutif", 
-    "📋 Modul KKA & AP (Dilengkapi Upload File & PIN 1234)", 
-    "📝 Modul LHA (Dilengkapi Upload File & PIN 1234)"
+    "📋 Modul KKA & AP (Upload File & Kotak Luas)", 
+    "📝 Modul LHA (Upload File & Kotak Luas)"
 ])
 
 # ================= TAB 1: DASHBOARD MONITORING =================
@@ -411,10 +416,10 @@ with tab_dash:
     st.dataframe(df_table_display, use_container_width=True, hide_index=True)
 
 
-# ================= TAB 2: PROGRAM AUDIT & KERTAS KERJA MULTI-AUDITOR (DENGAN UPLOAD FILE) =================
+# ================= TAB 2: PROGRAM AUDIT & KERTAS KERJA MULTI-AUDITOR =================
 with tab_prog_kk:
-    st.markdown("### Modul Program Audit & Kertas Kerja Multi-Auditor (Upload File & Proteksi PIN 1234)")
-    st.info("💡 Selain teks ringkas, Anda dapat mengunggah file lampiran lengkap (Word, Excel, Gambar, dll) ke dalam lembar KKA.")
+    st.markdown("### Modul Program Audit & Kertas Kerja Multi-Auditor (Kotak Luas & Upload File)")
+    st.info("💡 Kotak teks kini dibuat jauh lebih luas/tinggi. Untuk tabel lengkap, silakan gunakan fitur Upload File Word/Excel di bawah.")
     
     if access_role == "Admin SPI":
         id_pk_list = df_master["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_master.columns else []
@@ -478,8 +483,8 @@ with tab_prog_kk:
                             with st.form(key=f"form_multi_doc_{doc_key_id}_{idx}"):
                                 auditor_input = st.text_input("Nama / Inisial Auditor:", value=doc["auditor_name"])
                                 new_pin_input = st.text_input("Ubah / Atur PIN Keamanan Dokumen ini:", value=str(doc.get("doc_pin", "1234")), type="password")
-                                prog_input = st.text_area("Langkah-langkah Program Audit (AP):", value=doc["audit_program"], height=120)
-                                kk_input = st.text_area("Rincian Pengujian Kertas Kerja Audit (KKA):", value=doc["kertas_kerja"], height=140)
+                                prog_input = st.text_area("Langkah-langkah Program Audit (AP):", value=doc["audit_program"], height=250)
+                                kk_input = st.text_area("Rincian Pengujian Kertas Kerja Audit (KKA):", value=doc["kertas_kerja"], height=250)
                                 
                                 st.markdown("---")
                                 st.markdown(f"📁 **Lampiran File Saat Ini:** `{doc.get('attachment_name', '-')}`")
@@ -520,7 +525,6 @@ with tab_prog_kk:
                                     st.success(f"Dokumen {doc['doc_id']} berhasil dihapus!")
                                     st.rerun()
                             
-                            # Tombol Download Lampiran jika ada
                             att_name = doc.get("attachment_name", "-")
                             if att_name != "-":
                                 att_path = os.path.join(UPLOAD_DIR, att_name)
@@ -562,10 +566,10 @@ Update Terakhir: {datetime.now().strftime('%d-%m-%Y %H:%M')}
         st.warning("⚠️ Menu penyusunan Program Audit & Kertas Kerja dikhususkan untuk peran Admin SPI (Auditor).")
 
 
-# ================= TAB 3: GENERATOR LHA MULTI-AUDITOR (DENGAN UPLOAD FILE) =================
+# ================= TAB 3: GENERATOR LHA MULTI-AUDITOR =================
 with tab_lha:
-    st.markdown("### Modul Generator Lembar Hasil Audit (LHA) Multi-Auditor (Upload File & Proteksi PIN 1234)")
-    st.info("💡 Anda dapat mengunggah file bukti pendukung LHA secara aman dan privat.")
+    st.markdown("### Modul Generator Lembar Hasil Audit (LHA) Multi-Auditor (Kotak Luas & Upload File)")
+    st.info("💡 Kotak teks LHA kini jauh lebih luas. Anda juga dapat mengunggah file lampiran lengkap ke dalam sistem.")
     
     if access_role == "Admin SPI":
         id_lha_list = df_master["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_master.columns else []
@@ -631,10 +635,10 @@ with tab_lha:
                             with st.form(key=f"form_multi_lha_{lha_key_id}_{idx}"):
                                 auditor_lha_input = st.text_input("Nama / Inisial Auditor LHA:", value=lha_doc["auditor_name"])
                                 new_lha_pin_input = st.text_input("Ubah / Atur PIN Keamanan LHA ini:", value=str(lha_doc.get("lha_pin", "1234")), type="password")
-                                obs_input = st.text_area("1. Observasi / Kondisi:", value=lha_doc["observasi"], height=100)
-                                root_input = st.text_area("2. Akar Masalah (Root Cause):", value=lha_doc["root_cause"], height=100)
-                                rek_input = st.text_area("3. Rekomendasi:", value=lha_doc["rekomendasi"], height=100)
-                                imp_input = st.text_area("4. Implikasi / Risiko:", value=lha_doc["implikasi"], height=100)
+                                obs_input = st.text_area("1. Observasi / Kondisi:", value=lha_doc["observasi"], height=200)
+                                root_input = st.text_area("2. Akar Masalah (Root Cause):", value=lha_doc["root_cause"], height=200)
+                                rek_input = st.text_area("3. Rekomendasi:", value=lha_doc["rekomendasi"], height=200)
+                                imp_input = st.text_area("4. Implikasi / Risiko:", value=lha_doc["implikasi"], height=200)
                                 
                                 st.markdown("---")
                                 st.markdown(f"📁 **Lampiran File Saat Ini:** `{lha_doc.get('attachment_name', '-')}`")
@@ -677,7 +681,6 @@ with tab_lha:
                                     st.success(f"Dokumen LHA {lha_doc['lha_doc_id']} berhasil dihapus!")
                                     st.rerun()
                             
-                            # Tombol Download Lampiran LHA jika ada
                             lha_att_name = lha_doc.get("attachment_name", "-")
                             if lha_att_name != "-":
                                 lha_att_path = os.path.join(UPLOAD_DIR, lha_att_name)
