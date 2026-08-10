@@ -393,10 +393,10 @@ with tab_dash:
     st.dataframe(df_table_display, use_container_width=True, hide_index=True)
 
 
-# ================= TAB 2: PROGRAM AUDIT & KERTAS KERJA MULTI-AUDITOR =================
+# ================= TAB 2: PROGRAM AUDIT & KERTAS KERJA MULTI-AUDITOR (DENGAN CLOSE / COLLAPSE) =================
 with tab_prog_kk:
-    st.markdown("### Modul Program Audit & Kertas Kerja Multi-Auditor (Penyimpanan Permanen)")
-    st.info("💡 Setiap auditor dapat membuat bagian Program Audit (PA) dan Kertas Kerja Audit (KKA) secara mandiri. File download menggunakan nama yang konsisten agar menimpa file lama tanpa duplikat.")
+    st.markdown("### Modul Program Audit & Kertas Kerja Multi-Auditor")
+    st.info("💡 Dokumen KKA yang disimpan akan tertutup otomatis (kolaps) agar aman dari risiko tidak sengaja teredit oleh auditor lain.")
     
     if access_role == "Admin SPI":
         id_pk_list = df_master["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_master.columns else []
@@ -425,7 +425,8 @@ with tab_prog_kk:
                 st.info("Belum ada dokumen Program Audit & KKA yang dibuat untuk penugasan ini. Klik tombol ➕ di atas untuk membuat lembar kerja baru.")
             else:
                 for idx, doc in enumerate(filtered_docs):
-                    with st.expander(f"📄 [{doc['doc_id']}] Lembar Kerja — Disusun oleh: {doc['auditor_name']}", expanded=True):
+                    # Set expanded=False agar saat pertama dimuat atau setelah disave, foldernya tertutup (tersimpan rapat)
+                    with st.expander(f"📁 [{doc['doc_id']}] Lembar KKA — Disusun oleh: {doc['auditor_name']} (Terkunci / Tertutup Aman)", expanded=False):
                         with st.form(key=f"form_multi_doc_{doc['doc_id']}_{idx}"):
                             auditor_input = st.text_input("Nama / Inisial Auditor:", value=doc["auditor_name"])
                             prog_input = st.text_area("Langkah-langkah Program Audit (AP):", value=doc["audit_program"], height=120)
@@ -433,7 +434,7 @@ with tab_prog_kk:
                             
                             col_f1, col_f2 = st.columns(2)
                             with col_f1:
-                                save_sub_btn = st.form_submit_button("Simpan Perubahan Dokumen Ini")
+                                save_sub_btn = st.form_submit_button("Simpan & Tutup Dokumen")
                             with col_f2:
                                 del_sub_btn = st.form_submit_button("🗑️ Hapus Dokumen Ini")
                                 
@@ -442,7 +443,7 @@ with tab_prog_kk:
                                 doc["audit_program"] = prog_input
                                 doc["kertas_kerja"] = kk_input
                                 save_docs_to_excel()
-                                st.success(f"Dokumen {doc['doc_id']} berhasil disimpan secara permanen!")
+                                st.success(f"Dokumen {doc['doc_id']} berhasil disimpan dan ditutup rapat!")
                                 st.rerun()
                                 
                             if del_sub_btn:
@@ -477,10 +478,10 @@ Update Terakhir: {datetime.now().strftime('%d-%m-%Y %H:%M')}
         st.warning("⚠️ Menu penyusunan Program Audit & Kertas Kerja dikhususkan untuk peran Admin SPI (Auditor).")
 
 
-# ================= TAB 3: GENERATOR LHA MULTI-AUDITOR =================
+# ================= TAB 3: GENERATOR LHA MULTI-AUDITOR (DENGAN CLOSE / COLLAPSE) =================
 with tab_lha:
     st.markdown("### Modul Generator Lembar Hasil Audit (LHA) Multi-Auditor")
-    st.info("💡 Setiap auditor dapat membuat dan mengenerate LHA mandiri. File download menggunakan format Notepad (.txt) dengan nama konsisten.")
+    st.info("💡 Dokumen LHA yang disimpan akan tertutup otomatis (kolaps) untuk menjaga kerahasiaan dan keamanan dari suntingan pihak lain.")
     
     if access_role == "Admin SPI":
         id_lha_list = df_master["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_master.columns else []
@@ -511,7 +512,8 @@ with tab_lha:
                 st.info("Belum ada dokumen LHA yang dibuat untuk penugasan ini. Klik tombol ➕ di atas untuk membuat lembar LHA baru.")
             else:
                 for idx, lha_doc in enumerate(filtered_lhas):
-                    with st.expander(f"📄 [{lha_doc['lha_doc_id']}] Lembar LHA — Disusun oleh: {lha_doc['auditor_name']}", expanded=True):
+                    # Set expanded=False agar aman tertutup rapat setelah disimpan
+                    with st.expander(f"📁 [{lha_doc['lha_doc_id']}] Lembar LHA — Disusun oleh: {lha_doc['auditor_name']} (Terkunci / Tertutup Aman)", expanded=False):
                         with st.form(key=f"form_multi_lha_{lha_doc['lha_doc_id']}_{idx}"):
                             auditor_lha_input = st.text_input("Nama / Inisial Auditor LHA:", value=lha_doc["auditor_name"])
                             obs_input = st.text_area("1. Observasi / Kondisi:", value=lha_doc["observasi"], height=100)
@@ -521,7 +523,7 @@ with tab_lha:
                             
                             col_lha_f1, col_lha_f2 = st.columns(2)
                             with col_lha_f1:
-                                save_lha_sub_btn = st.form_submit_button("Simpan Perubahan LHA Ini")
+                                save_lha_sub_btn = st.form_submit_button("Simpan & Tutup LHA")
                             with col_lha_f2:
                                 del_lha_sub_btn = st.form_submit_button("🗑️ Hapus LHA Ini")
                                 
@@ -532,7 +534,7 @@ with tab_lha:
                                 lha_doc["rekomendasi"] = rek_input
                                 lha_doc["implikasi"] = imp_input
                                 save_lha_to_excel()
-                                st.success(f"Dokumen LHA {lha_doc['lha_doc_id']} berhasil disimpan secara permanen!")
+                                st.success(f"Dokumen LHA {lha_doc['lha_doc_id']} berhasil disimpan dan ditutup rapat!")
                                 st.rerun()
                                 
                             if del_lha_sub_btn:
