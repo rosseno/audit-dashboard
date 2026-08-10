@@ -81,8 +81,12 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 EXCEL_FILE = "Master_Database_Temuan_Audit_2024_2025_PSM_Ringkas.xlsx"
-EXCEL_KKA_FILE = "Database_Registry_KKA_AP.xlsx"
-EXCEL_LHA_FILE = "Database_Registry_LHA_Word.xlsx"
+EXCEL_KKA_FILE = "Database_Vault_KKA_AP.xlsx"
+EXCEL_LHA_FILE = "Database_Vault_LHA_Word.xlsx"
+VAULT_DIR = "audit_file_vault"
+
+if not os.path.exists(VAULT_DIR):
+    os.makedirs(VAULT_DIR)
 
 @st.cache_data
 def load_data():
@@ -95,43 +99,43 @@ def load_data():
 if 'df_master' not in st.session_state:
     st.session_state.df_master = load_data()
 
-# Memuat registry KKA & AP
-if 'registry_kka' not in st.session_state:
+# Memuat data vault KKA & AP
+if 'vault_kka' not in st.session_state:
     if os.path.exists(EXCEL_KKA_FILE):
         try:
             df_kka = pd.read_excel(EXCEL_KKA_FILE)
-            if 'file_path' not in df_kka.columns:
-                df_kka['file_path'] = "-"
-            st.session_state.registry_kka = df_kka.to_dict('records')
+            if 'stored_filename' not in df_kka.columns:
+                df_kka['stored_filename'] = "-"
+            st.session_state.vault_kka = df_kka.to_dict('records')
         except:
-            st.session_state.registry_kka = []
+            st.session_state.vault_kka = []
     else:
-        st.session_state.registry_kka = []
+        st.session_state.vault_kka = []
 
-# Memuat registry LHA Word
-if 'registry_lha' not in st.session_state:
+# Memuat data vault LHA Word
+if 'vault_lha' not in st.session_state:
     if os.path.exists(EXCEL_LHA_FILE):
         try:
             df_lha = pd.read_excel(EXCEL_LHA_FILE)
-            if 'file_path' not in df_lha.columns:
-                df_lha['file_path'] = "-"
-            st.session_state.registry_lha = df_lha.to_dict('records')
+            if 'stored_filename' not in df_lha.columns:
+                df_lha['stored_filename'] = "-"
+            st.session_state.vault_lha = df_lha.to_dict('records')
         except:
-            st.session_state.registry_lha = []
+            st.session_state.vault_lha = []
     else:
-        st.session_state.registry_lha = []
+        st.session_state.vault_lha = []
 
-def save_kka_registry_to_excel():
-    if st.session_state.registry_kka:
-        pd.DataFrame(st.session_state.registry_kka).to_excel(EXCEL_KKA_FILE, index=False)
+def save_vault_kka_to_excel():
+    if st.session_state.vault_kka:
+        pd.DataFrame(st.session_state.vault_kka).to_excel(EXCEL_KKA_FILE, index=False)
     else:
-        pd.DataFrame(columns=["registry_id", "target_temuan", "judul_kka", "auditor_name", "file_path", "catatan"]).to_excel(EXCEL_KKA_FILE, index=False)
+        pd.DataFrame(columns=["vault_id", "target_temuan", "judul_kka", "auditor_name", "stored_filename", "catatan"]).to_excel(EXCEL_KKA_FILE, index=False)
 
-def save_registry_to_excel():
-    if st.session_state.registry_lha:
-        pd.DataFrame(st.session_state.registry_lha).to_excel(EXCEL_LHA_FILE, index=False)
+def save_vault_lha_to_excel():
+    if st.session_state.vault_lha:
+        pd.DataFrame(st.session_state.vault_lha).to_excel(EXCEL_LHA_FILE, index=False)
     else:
-        pd.DataFrame(columns=["registry_id", "target_temuan", "judul_lha", "auditor_name", "file_path", "catatan"]).to_excel(EXCEL_LHA_FILE, index=False)
+        pd.DataFrame(columns=["vault_id", "target_temuan", "judul_lha", "auditor_name", "stored_filename", "catatan"]).to_excel(EXCEL_LHA_FILE, index=False)
 
 df_master = st.session_state.df_master
 PIN_ADMIN = "1234"
@@ -229,10 +233,10 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- NAVIGASI UTAMA BERBENTUK TAB ---
-tab_dash, tab_kka_reg, tab_lha_reg = st.tabs([
+tab_dash, tab_vault_kka, tab_vault_lha = st.tabs([
     "📊 Dashboard Monitoring Eksekutif", 
-    "📋 Daftar Registry KKA & AP", 
-    "📁 Daftar Registry LHA (File Word / Folder)"
+    "📋 Vault KKA & AP (Penyimpanan File)", 
+    "📁 Vault LHA Word (Penyimpanan File)"
 ])
 
 # ================= TAB 1: DASHBOARD MONITORING =================
@@ -270,147 +274,181 @@ with tab_dash:
     st.dataframe(df_base, use_container_width=True, hide_index=True)
 
 
-# ================= TAB 2: REGISTRY KKA & AP =================
-with tab_kka_reg:
-    st.markdown("### Daftar Indeks / Registry Program Audit (AP) & Kertas Kerja (KKA)")
-    st.info("💡 **Pusat Kendali KKA & AP:** Catat tautan file atau folder kerja KKA dan AP Anda di komputer agar terhubung rapi dengan database penugasan.")
+# ================= TAB 2: VAULT KKA & AP =================
+with tab_vault_kka:
+    st.markdown("### Vault Penyimpanan File KKA & Program Audit (AP)")
+    st.info("💡 **Penyimpanan Aman:** Unggah file asli KKA atau Program Audit (.xlsx, .docx, .pdf) dari auditor induk di sini. File tersimpan aman di sistem dan dapat diunduh kembali kapan saja.")
     
     if access_role == "Admin SPI":
         id_kka_list = df_master["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_master.columns else []
         if id_kka_list:
-            selected_kka_id = st.selectbox("Pilih ID Temuan / Penugasan untuk KKA & AP:", id_kka_list, key="kka_id_select")
+            selected_kka_id = st.selectbox("Pilih ID Temuan / Penugasan:", id_kka_list, key="vault_kka_select")
             
-            if st.button("➕ Daftarkan KKA / AP Baru"):
-                new_kka_reg_id = f"REG-KKA-{len(st.session_state.registry_kka) + 1}"
-                st.session_state.registry_kka.append({
-                    "registry_id": new_kka_reg_id,
+            if st.button("➕ Upload KKA / AP Baru"):
+                new_v_id = f"VAULT-KKA-{len(st.session_state.vault_kka) + 1}"
+                st.session_state.vault_kka.append({
+                    "vault_id": new_v_id,
                     "target_temuan": selected_kka_id,
-                    "judul_kka": "Kertas Kerja & Program Audit - ...",
-                    "auditor_name": "Auditor SPI",
-                    "file_path": r"C:\Users\Public\Documents\KKA_Audit.xlsx",
-                    "catatan": "KKA dan Program Audit lengkap."
+                    "judul_kka": "KKA & Program Audit",
+                    "auditor_name": "Auditor Induk",
+                    "stored_filename": "-",
+                    "catatan": "File KKA asli tersimpan di sistem."
                 })
-                save_kka_registry_to_excel()
+                save_vault_kka_to_excel()
                 st.rerun()
             
             st.markdown("---")
             
-            filtered_kkas = [r for r in st.session_state.registry_kka if str(r.get("target_temuan")) == str(selected_kka_id)]
+            filtered_vault_kkas = [r for r in st.session_state.vault_kka if str(r.get("target_temuan")) == str(selected_kka_id)]
             
-            if not filtered_kkas:
-                st.info("Belum ada registry KKA & AP untuk temuan ini. Klik tombol ➕ di atas untuk menambahkan.")
+            if not filtered_vault_kkas:
+                st.info("Belum ada file KKA yang diunggah untuk temuan ini. Klik tombol ➕ di atas.")
             else:
-                for idx, reg in enumerate(filtered_kkas):
-                    reg_key = reg['registry_id']
+                for idx, reg in enumerate(filtered_vault_kkas):
+                    reg_key = reg['vault_id']
                     with st.container():
-                        st.markdown(f"📋 **[{reg['registry_id']}] Temuan ID: {reg['target_temuan']}**")
+                        st.markdown(f"📋 **[{reg['vault_id']}] Temuan ID: {reg['target_temuan']}**")
                         
-                        with st.form(key=f"form_reg_kka_{reg_key}_{idx}"):
-                            judul_kka_input = st.text_input("Judul / Keterangan Dokumen KKA & AP:", value=reg["judul_kka"])
-                            auditor_kka_input = st.text_input("Nama Penyusun / Auditor KKA:", value=reg["auditor_name"])
+                        with st.form(key=f"form_vault_kka_{reg_key}_{idx}"):
+                            judul_input = st.text_input("Judul / Keterangan Dokumen:", value=reg["judul_kka"])
+                            auditor_input = st.text_input("Sumber / Penyusun:", value=reg["auditor_name"])
                             
-                            path_kka_input = st.text_input(
-                                "Path File / Folder KKA di Komputer (Contoh: D:\\Audit_2025\\KKA_Pemasaran.xlsx):", 
-                                value=reg["file_path"]
-                            )
+                            uploaded_file = st.file_uploader("Upload / Ganti File KKA (.xlsx, .docx, .pdf):", type=["xlsx", "xls", "docx", "doc", "pdf"], key=f"up_f_kka_{reg_key}_{idx}")
                             
-                            catatan_kka_input = st.text_area("Catatan KKA:", value=reg["catatan"], height=70)
+                            catatan_input = st.text_area("Catatan:", value=reg["catatan"], height=70)
                             
-                            col_k1, col_k2 = st.columns(2)
-                            with col_k1:
-                                save_kka_btn = st.form_submit_button("Simpan Registry KKA")
-                            with col_k2:
-                                del_kka_btn = st.form_submit_button("🗑️ Hapus Registry KKA Ini")
+                            col_v1, col_v2 = st.columns(2)
+                            with col_v1:
+                                save_btn = st.form_submit_button("Simpan & Unggah File")
+                            with col_v2:
+                                del_btn = st.form_submit_button("🗑️ Hapus Dokumen Ini")
                                 
-                            if save_kka_btn:
-                                reg["judul_kka"] = judul_kka_input
-                                reg["auditor_name"] = auditor_kka_input
-                                reg["file_path"] = path_kka_input
-                                reg["catatan"] = catatan_kka_input
-                                save_kka_registry_to_excel()
-                                st.success("Registry KKA berhasil diperbarui!")
+                            if save_btn:
+                                reg["judul_kka"] = judul_input
+                                reg["auditor_name"] = auditor_input
+                                reg["catatan"] = catatan_input
+                                
+                                if uploaded_file is not None:
+                                    safe_name = f"{reg_key}_{uploaded_file.name}"
+                                    file_path = os.path.join(VAULT_DIR, safe_name)
+                                    with open(file_path, "wb") as f:
+                                        f.write(uploaded_file.read())
+                                    reg["stored_filename"] = safe_name
+                                    st.toast("File berhasil diunggah dan disimpan!")
+                                    
+                                save_vault_kka_to_excel()
+                                st.success("Data KKA berhasil diperbarui!")
                                 st.rerun()
                                 
-                            if del_kka_btn:
-                                st.session_state.registry_kka.remove(reg)
-                                save_kka_registry_to_excel()
-                                st.success("Registry KKA berhasil dihapus!")
+                            if del_btn:
+                                st.session_state.vault_kka.remove(reg)
+                                save_vault_kka_to_excel()
+                                st.success("Dokumen berhasil dihapus!")
                                 st.rerun()
 
-                        st.info(f"📂 **Lokasi File KKA di Komputer:** `{reg['file_path']}`\n\n*(Tip: Salin path di atas lalu tempelkan di File Explorer Windows untuk membuka file KKA-nya langsung.)*")
+                        # Tombol Download File jika sudah ada
+                        current_file = reg.get("stored_filename", "-")
+                        if current_file != "-" and os.path.exists(os.path.join(VAULT_DIR, current_file)):
+                            with open(os.path.join(VAULT_DIR, current_file), "rb") as file_to_down:
+                                st.download_button(
+                                    label=f"📥 Download File Tersimpan: {current_file}",
+                                    data=file_to_down,
+                                    file_name=current_file,
+                                    mime="application/octet-stream",
+                                    key=f"dl_kka_{reg_key}_{idx}"
+                                )
+                        else:
+                            st.warning("⚠️ Belum ada file fisik yang diunggah.")
                         st.markdown("---")
     else:
-        st.warning("⚠️ Menu registrasi KKA dikhususkan untuk peran Admin SPI (Auditor).")
+        st.warning("⚠️ Menu penyimpanan file dikhususkan untuk peran Admin SPI.")
 
 
-# ================= TAB 3: REGISTRY LHA WORD / FOLDER =================
-with tab_lha_reg:
-    st.markdown("### Daftar Indeks / Registry LHA (File Dokumen Word di Komputer / Folder)")
-    st.info("💡 **Pusat Kendali LHA:** Catat tautan file atau foldernya di sini agar semua temuan tercatat rapi di aplikasi.")
+# ================= TAB 3: VAULT LHA WORD =================
+with tab_vault_lha:
+    st.markdown("### Vault Penyimpanan File LHA (.docx / .pdf)")
+    st.info("💡 **Pusat Arsip LHA:** Unggah file laporan hasil audit resmi dari auditor induk di sini. File aman tersimpan di aplikasi dan siap diunduh kapan saja.")
     
     if access_role == "Admin SPI":
         id_lha_list = df_master["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_master.columns else []
         if id_lha_list:
-            selected_reg_id = st.selectbox("Pilih ID Temuan untuk Diregistrasi LHA:", id_lha_list, key="reg_id_select")
+            selected_lha_id = st.selectbox("Pilih ID Temuan / Penugasan:", id_lha_list, key="vault_lha_select")
             
-            if st.button("➕ Daftarkan LHA Word Baru"):
-                new_reg_id = f"REG-LHA-{len(st.session_state.registry_lha) + 1}"
-                st.session_state.registry_lha.append({
-                    "registry_id": new_reg_id,
-                    "target_temuan": selected_reg_id,
-                    "judul_lha": "Laporan Hasil Audit - ...",
-                    "auditor_name": "Auditor SPI",
-                    "file_path": r"C:\Users\Public\Documents\LHA_Audit.docx",
-                    "catatan": "Draft LHA lengkap dengan tabel berselang-seling."
+            if st.button("➕ Upload LHA Baru"):
+                new_v_lha_id = f"VAULT-LHA-{len(st.session_state.vault_lha) + 1}"
+                st.session_state.vault_lha.append({
+                    "vault_id": new_v_lha_id,
+                    "target_temuan": selected_lha_id,
+                    "judul_lha": "Laporan Hasil Audit (LHA)",
+                    "auditor_name": "Auditor Induk",
+                    "stored_filename": "-",
+                    "catatan": "File LHA tersimpan di sistem."
                 })
-                save_registry_to_excel()
+                save_vault_lha_to_excel()
                 st.rerun()
             
             st.markdown("---")
             
-            filtered_regs = [r for r in st.session_state.registry_lha if str(r.get("target_temuan")) == str(selected_reg_id)]
+            filtered_vault_lhas = [r for r in st.session_state.vault_lha if str(r.get("target_temuan")) == str(selected_lha_id)]
             
-            if not filtered_regs:
-                st.info("Belum ada registry LHA Word untuk temuan ini. Klik tombol ➕ di atas untuk menambahkan.")
+            if not filtered_vault_lhas:
+                st.info("Belum ada file LHA yang diunggah untuk temuan ini. Klik tombol ➕ di atas.")
             else:
-                for idx, reg in enumerate(filtered_regs):
-                    reg_key = reg['registry_id']
+                for idx, reg in enumerate(filtered_vault_lhas):
+                    reg_key = reg['vault_id']
                     with st.container():
-                        st.markdown(f"📄 **[{reg['registry_id']}] Temuan ID: {reg['target_temuan']}**")
+                        st.markdown(f"📁 **[{reg['vault_id']}] Temuan ID: {reg['target_temuan']}**")
                         
-                        with st.form(key=f"form_reg_{reg_key}_{idx}"):
-                            judul_input = st.text_input("Judul / Keterangan Dokumen LHA:", value=reg["judul_lha"])
-                            auditor_input = st.text_input("Nama Penyusun / Auditor:", value=reg["auditor_name"])
+                        with st.form(key=f"form_vault_lha_{reg_key}_{idx}"):
+                            judul_input = st.text_input("Judul / Keterangan LHA:", value=reg["judul_lha"])
+                            auditor_input = st.text_input("Sumber / Penyusun:", value=reg["auditor_name"])
                             
-                            path_input = st.text_input(
-                                "Path File Word / Folder di Komputer (Contoh: D:\\Audit_2025\\LHA_Pemasaran.docx):", 
-                                value=reg["file_path"]
-                            )
+                            uploaded_lha_file = st.file_uploader("Upload / Ganti File LHA (.docx, .pdf):", type=["docx", "doc", "pdf"], key=f"up_f_lha_{reg_key}_{idx}")
                             
-                            catatan_input = st.text_area("Catatan Tambahan:", value=reg["catatan"], height=70)
+                            catatan_input = st.text_area("Catatan LHA:", value=reg["catatan"], height=70)
                             
-                            col_r1, col_r2 = st.columns(2)
-                            with col_r1:
-                                save_reg_btn = st.form_submit_button("Simpan Registry LHA")
-                            with col_r2:
-                                del_reg_btn = st.form_submit_button("🗑️ Hapus Registry Ini")
+                            col_l1, col_l2 = st.columns(2)
+                            with col_l1:
+                                save_lha_btn = st.form_submit_button("Simpan & Unggah LHA")
+                            with col_l2:
+                                del_lha_btn = st.form_submit_button("🗑️ Hapus LHA Ini")
                                 
-                            if save_reg_btn:
+                            if save_lha_btn:
                                 reg["judul_lha"] = judul_input
                                 reg["auditor_name"] = auditor_input
-                                reg["file_path"] = path_input
                                 reg["catatan"] = catatan_input
-                                save_registry_to_excel()
-                                st.success("Registry LHA berhasil diperbarui!")
+                                
+                                if uploaded_lha_file is not None:
+                                    safe_lha_name = f"{reg_key}_{uploaded_lha_file.name}"
+                                    file_path = os.path.join(VAULT_DIR, safe_lha_name)
+                                    with open(file_path, "wb") as f:
+                                        f.write(uploaded_lha_file.read())
+                                    reg["stored_filename"] = safe_lha_name
+                                    st.toast("File LHA berhasil diunggah!")
+                                    
+                                save_vault_lha_to_excel()
+                                st.success("Data LHA berhasil diperbarui!")
                                 st.rerun()
                                 
-                            if del_reg_btn:
-                                st.session_state.registry_lha.remove(reg)
-                                save_registry_to_excel()
-                                st.success("Registry berhasil dihapus!")
+                            if del_lha_btn:
+                                st.session_state.vault_lha.remove(reg)
+                                save_vault_lha_to_excel()
+                                st.success("LHA berhasil dihapus!")
                                 st.rerun()
 
-                        st.info(f"📂 **Lokasi File di Komputer:** `{reg['file_path']}`\n\n*(Tip: Salin path di atas lalu tempelkan di File Explorer Windows untuk membuka file Word-nya langsung.)*")
+                        # Tombol Download LHA jika sudah ada
+                        current_lha_file = reg.get("stored_filename", "-")
+                        if current_lha_file != "-" and os.path.exists(os.path.join(VAULT_DIR, current_lha_file)):
+                            with open(os.path.join(VAULT_DIR, current_lha_file), "rb") as file_to_down_lha:
+                                st.download_button(
+                                    label=f"📥 Download File LHA Tersimpan: {current_lha_file}",
+                                    data=file_to_down_lha,
+                                    file_name=current_lha_file,
+                                    mime="application/octet-stream",
+                                    key=f"dl_lha_{reg_key}_{idx}"
+                                )
+                        else:
+                            st.warning("⚠️ Belum ada file LHA fisik yang diunggah.")
                         st.markdown("---")
     else:
-        st.warning("⚠️ Menu registrasi LHA dikhususkan untuk peran Admin SPI (Auditor).")
+        st.warning("⚠️ Menu penyimpanan LHA dikhususkan untuk peran Admin SPI.")
