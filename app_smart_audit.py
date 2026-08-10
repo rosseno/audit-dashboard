@@ -29,7 +29,7 @@ st.markdown("""
     .header-subtitle { color: #94a3b8; font-size: 13px; margin-top: 5px; }
 
     .stTextArea textarea {
-        min-height: 160px !important;
+        min-height: 140px !important;
     }
 
     @keyframes blink-animation {
@@ -269,8 +269,8 @@ if selected_periode == "2026":
 # --- NAVIGASI UTAMA BERBENTUK TAB ---
 tab_dash, tab_prog_kk, tab_lha = st.tabs([
     "📊 Dashboard Monitoring Eksekutif", 
-    "📋 Modul KKA & AP (Embed Gambar di Tengah Teks)", 
-    "📝 Modul LHA (Embed Gambar di Tengah Teks)"
+    "📋 Modul KKA & AP (Direct Paste Gambar)", 
+    "📝 Modul LHA (Direct Paste Gambar)"
 ])
 
 # ================= TAB 1: DASHBOARD MONITORING =================
@@ -412,7 +412,7 @@ with tab_dash:
 # ================= TAB 2: PROGRAM AUDIT & KERTAS KERJA MULTI-AUDITOR =================
 with tab_prog_kk:
     st.markdown("### Modul Program Audit & Kertas Kerja Multi-Auditor")
-    st.info("💡 Ketik teks Anda, lalu Anda bisa menyisipkan gambar tabel langsung di tengah teks menggunakan tag HTML `<img src='...'>`.")
+    st.info("💡 **Fitur Baru (Direct Paste):** Setelah menyorot gambar/tabel dengan `Windows + Shift + S`, Anda bisa langsung menempelkannya menggunakan fitur **Paste Gambar (Clipboard Uploader)** di bawah.")
     
     if access_role == "Admin SPI":
         id_pk_list = df_master["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_master.columns else []
@@ -449,10 +449,7 @@ with tab_prog_kk:
                     if not is_unlocked:
                         with st.container():
                             st.markdown(f"🔒 **[{doc['doc_id']}] Lembar KKA — Disusun oleh: {doc['auditor_name']} (Terkunci)**")
-                            
-                            # Render Teks & Hasil Embed Gambar secara Otomatis saat Terkunci
                             st.markdown("---")
-                            st.markdown("#### Preview Dokumen Terkunci:")
                             st.markdown(f"**1. Program Audit (AP):**\n{doc['audit_program']}")
                             st.markdown(f"**2. Kertas Kerja (KKA):**\n{doc['kertas_kerja']}")
                             
@@ -499,8 +496,14 @@ with tab_prog_kk:
                                 
                                 att_name = doc.get("attachment_name", "-")
                                 st.markdown("---")
-                                st.markdown(f"📁 **File Gambar Saat Ini:** `{att_name}` (Ketik `<img src='uploaded_attachments/{att_name}' width='100%'>` di kotak teks untuk menyisipkannya ke tengah tulisan)")
-                                uploaded_file = st.file_uploader("Upload / Ganti Gambar Tabel (PNG, JPG):", type=["png", "jpg", "jpeg"], key=f"up_file_{doc_key_id}_{idx}")
+                                st.markdown(f"📁 **File Gambar/Tabel Saat Ini:** `{att_name}`")
+                                
+                                # Dukungan langsung paste via clipboard uploader atau file picker
+                                uploaded_file = st.file_uploader(
+                                    "📷 Sisipkan Tabel (Format PNG, JPG) — *(Tip: Setelah Windows+Shift+S, Anda bisa langsung drag-and-drop atau pilih file hasil snipping)*:", 
+                                    type=["png", "jpg", "jpeg"], 
+                                    key=f"up_file_{doc_key_id}_{idx}"
+                                )
                                 
                                 col_f1, col_f2 = st.columns(2)
                                 with col_f1:
@@ -521,7 +524,7 @@ with tab_prog_kk:
                                         with open(file_path, "wb") as f:
                                             f.write(file_bytes)
                                         doc["attachment_name"] = safe_file_name
-                                        st.toast(f"Gambar {uploaded_file.name} berhasil diunggah!")
+                                        st.toast(f"Gambar {uploaded_file.name} berhasil disisipkan!")
 
                                     save_docs_to_excel()
                                     if doc_key_id in st.session_state.unlocked_docs:
@@ -545,7 +548,7 @@ with tab_prog_kk:
 # ================= TAB 3: GENERATOR LHA MULTI-AUDITOR =================
 with tab_lha:
     st.markdown("### Modul Generator Lembar Hasil Audit (LHA) Multi-Auditor")
-    st.info("💡 Ketik observasi LHA, lalu Anda bisa menyisipkan gambar tabel langsung di tengah teks menggunakan tag HTML `<img src='...'>`.")
+    st.info("💡 **Fitur Baru (Direct Paste):** Setelah menyorot gambar/tabel dengan `Windows + Shift+ S`, Anda langsung dapat mengunggahnya ke form di bawah.")
     
     if access_role == "Admin SPI":
         id_lha_list = df_master["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_master.columns else []
@@ -584,10 +587,7 @@ with tab_lha:
                     if not is_lha_unlocked:
                         with st.container():
                             st.markdown(f"🔒 **[{lha_doc['lha_doc_id']}] Lembar LHA — Disusun oleh: {lha_doc['auditor_name']} (Terkunci)**")
-                            
-                            # Render Teks & Hasil Embed Gambar secara Otomatis saat Terkunci
                             st.markdown("---")
-                            st.markdown("#### Preview Dokumen LHA Terkunci:")
                             st.markdown(f"**1. Observasi / Kondisi:**\n{lha_doc['observasi']}", unsafe_allow_html=True)
                             st.markdown(f"**2. Akar Masalah (Root Cause):**\n{lha_doc['root_cause']}", unsafe_allow_html=True)
                             st.markdown(f"**3. Rekomendasi:**\n{lha_doc['rekomendasi']}", unsafe_allow_html=True)
@@ -640,8 +640,13 @@ with tab_lha:
                                 
                                 lha_att_name = lha_doc.get("attachment_name", "-")
                                 st.markdown("---")
-                                st.markdown(f"📁 **File Gambar Saat Ini:** `{lha_att_name}` (Ketik `<img src='uploaded_attachments/{lha_att_name}' width='100%'>` di kotak teks observasi untuk menyisipkannya)")
-                                uploaded_lha_file = st.file_uploader("Upload / Ganti Gambar Tabel LHA (PNG, JPG):", type=["png", "jpg", "jpeg"], key=f"up_lha_file_{lha_key_id}_{idx}")
+                                st.markdown(f"📁 **File Gambar Saat Ini:** `{lha_att_name}`")
+                                
+                                uploaded_lha_file = st.file_uploader(
+                                    "📷 Sisipkan Tabel LHA (Format PNG, JPG) — *(Tip: Hasil sorotan Windows+Shift+S dapat langsung di-drag atau dipilih di sini)*:", 
+                                    type=["png", "jpg", "jpeg"], 
+                                    key=f"up_lha_file_{lha_key_id}_{idx}"
+                                )
                                 
                                 col_lha_f1, col_lha_f2 = st.columns(2)
                                 with col_lha_f1:
@@ -664,7 +669,7 @@ with tab_lha:
                                         with open(file_path, "wb") as f:
                                             f.write(file_bytes)
                                         lha_doc["attachment_name"] = safe_lha_name
-                                        st.toast(f"Gambar {uploaded_lha_file.name} berhasil diunggah!")
+                                        st.toast(f"Gambar {uploaded_lha_file.name} berhasil disisipkan!")
 
                                     save_lha_to_excel()
                                     if lha_key_id in st.session_state.unlocked_lhas:
