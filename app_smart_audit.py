@@ -29,7 +29,14 @@ st.markdown("""
     .header-subtitle { color: #94a3b8; font-size: 13px; margin-top: 5px; }
 
     .stTextArea textarea {
-        min-height: 180px !important;
+        min-height: 150px !important;
+    }
+
+    /* Membatasi lebar maksimum gambar agar tidak terlalu besar/raksasa */
+    .embedded-img-container img {
+        max-width: 700px !important;
+        border-radius: 8px;
+        border: 1px solid #334155;
     }
 
     /* Animasi Kedip (Blink) untuk Kotak Peringatan Darurat */
@@ -270,8 +277,8 @@ if selected_periode == "2026":
 # --- NAVIGASI UTAMA BERBENTUK TAB ---
 tab_dash, tab_prog_kk, tab_lha = st.tabs([
     "📊 Dashboard Monitoring Eksekutif", 
-    "📋 Modul KKA & AP (Embed Gambar Tabel Langsung)", 
-    "📝 Modul LHA (Embed Gambar Tabel Langsung)"
+    "📋 Modul KKA & AP (Embed Gambar Proporsional)", 
+    "📝 Modul LHA (Embed Gambar Proporsional)"
 ])
 
 # ================= TAB 1: DASHBOARD MONITORING =================
@@ -410,10 +417,10 @@ with tab_dash:
     st.dataframe(df_table_display, use_container_width=True, hide_index=True)
 
 
-# ================= TAB 2: PROGRAM AUDIT & KERTAS KERJA MULTI-AUDITOR (EMBED GAMBAR) =================
+# ================= TAB 2: PROGRAM AUDIT & KERTAS KERJA MULTI-AUDITOR =================
 with tab_prog_kk:
-    st.markdown("### Modul Program Audit & Kertas Kerja Multi-Auditor (Embed Gambar Tabel Langsung)")
-    st.info("💡 Gambar tabel yang diunggah akan langsung tampil di bawah teks dokumen Anda secara utuh.")
+    st.markdown("### Modul Program Audit & Kertas Kerja Multi-Auditor")
+    st.info("💡 Gambar tabel yang disisipkan akan tampil proporsional di bawah teks dokumen Anda.")
     
     if access_role == "Admin SPI":
         id_pk_list = df_master["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_master.columns else []
@@ -474,13 +481,15 @@ with tab_prog_kk:
                                     st.session_state.unlocked_docs.remove(doc_key_id)
                                     st.rerun()
 
-                            # Tampilkan Preview Gambar/Tabel di Layar jika sudah ada file gambar terlampir
+                            # Tampilkan Preview Gambar dengan Lebar Terkontrol & Rapi
                             att_name = doc.get("attachment_name", "-")
                             if att_name != "-" and att_name.lower().endswith(('.png', '.jpg', '.jpeg')):
                                 att_path = os.path.join(UPLOAD_DIR, att_name)
                                 if os.path.exists(att_path):
-                                    st.markdown("📷 **Preview Tabel / Gambar yang Tersemat di Dokumen:**")
-                                    st.image(att_path, use_container_width=True)
+                                    st.markdown("📷 **Tabel / Gambar yang Tersemat di Dokumen:**")
+                                    st.markdown('<div class="embedded-img-container">', unsafe_allow_html=True)
+                                    st.image(att_path, width=650)
+                                    st.markdown('</div>', unsafe_allow_html=True)
                                     st.markdown("---")
 
                             with st.form(key=f"form_multi_doc_{doc_key_id}_{idx}"):
@@ -490,12 +499,12 @@ with tab_prog_kk:
                                 prog_text = doc["audit_program"].to_string(index=False) if isinstance(doc["audit_program"], pd.DataFrame) else str(doc["audit_program"])
                                 kk_text = doc["kertas_kerja"].to_string(index=False) if isinstance(doc["kertas_kerja"], pd.DataFrame) else str(doc["kertas_kerja"])
 
-                                prog_input = st.text_area("1. Uraian Teks Program Audit (AP):", value=prog_text, height=150)
-                                kk_input = st.text_area("2. Catatan Ringkas Kertas Kerja Audit (KKA):", value=kk_text, height=180)
+                                prog_input = st.text_area("1. Uraian Teks Program Audit (AP):", value=prog_text, height=140)
+                                kk_input = st.text_area("2. Catatan Ringkas Kertas Kerja Audit (KKA):", value=kk_text, height=160)
                                 
                                 st.markdown("---")
                                 st.markdown(f"📁 **File Gambar / Tabel Saat Ini:** `{att_name}`")
-                                uploaded_file = st.file_uploader("Insert / Sisipkan Gambar Tabel (PNG, JPG):", type=["png", "jpg", "jpeg"], key=f"up_file_{doc_key_id}_{idx}")
+                                uploaded_file = st.file_uploader("Insert / Ganti Gambar Tabel (PNG, JPG):", type=["png", "jpg", "jpeg"], key=f"up_file_{doc_key_id}_{idx}")
                                 
                                 col_f1, col_f2 = st.columns(2)
                                 with col_f1:
@@ -560,10 +569,10 @@ Update Terakhir: {datetime.now().strftime('%d-%m-%Y %H:%M')}
         st.warning("⚠️ Menu penyusunan Program Audit & Kertas Kerja dikhususkan untuk peran Admin SPI (Auditor).")
 
 
-# ================= TAB 3: GENERATOR LHA MULTI-AUDITOR (EMBED GAMBAR) =================
+# ================= TAB 3: GENERATOR LHA MULTI-AUDITOR =================
 with tab_lha:
-    st.markdown("### Modul Generator Lembar Hasil Audit (LHA) Multi-Auditor (Embed Gambar Tabel Langsung)")
-    st.info("💡 Gambar tabel observasi/rekomendasi yang diunggah akan langsung tampil di dalam lembar LHA Anda.")
+    st.markdown("### Modul Generator Lembar Hasil Audit (LHA) Multi-Auditor")
+    st.info("💡 Gambar tabel LHA yang disisipkan akan tampil proporsional di bawah teks dokumen Anda.")
     
     if access_role == "Admin SPI":
         id_lha_list = df_master["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_master.columns else []
@@ -626,13 +635,15 @@ with tab_lha:
                                     st.session_state.unlocked_lhas.remove(lha_key_id)
                                     st.rerun()
 
-                            # Tampilkan Preview Gambar LHA di Layar jika ada
+                            # Tampilkan Preview Gambar LHA dengan Lebar Terkontrol
                             lha_att_name = lha_doc.get("attachment_name", "-")
                             if lha_att_name != "-" and lha_att_name.lower().endswith(('.png', '.jpg', '.jpeg')):
                                 lha_att_path = os.path.join(UPLOAD_DIR, lha_att_name)
                                 if os.path.exists(lha_att_path):
-                                    st.markdown("📷 **Preview Tabel / Gambar LHA yang Tersemat di Dokumen:**")
-                                    st.image(lha_att_path, use_container_width=True)
+                                    st.markdown("📷 **Tabel / Gambar LHA yang Tersemat di Dokumen:**")
+                                    st.markdown('<div class="embedded-img-container">', unsafe_allow_html=True)
+                                    st.image(lha_att_path, width=650)
+                                    st.markdown('</div>', unsafe_allow_html=True)
                                     st.markdown("---")
 
                             with st.form(key=f"form_multi_lha_{lha_key_id}_{idx}"):
@@ -644,14 +655,14 @@ with tab_lha:
                                 rek_txt = lha_doc["rekomendasi"].to_string(index=False) if isinstance(lha_doc["rekomendasi"], pd.DataFrame) else str(lha_doc["rekomendasi"])
                                 imp_txt = lha_doc["implikasi"].to_string(index=False) if isinstance(lha_doc["implikasi"], pd.DataFrame) else str(lha_doc["implikasi"])
 
-                                obs_input = st.text_area("1. Observasi / Kondisi:", value=obs_txt, height=130)
-                                root_input = st.text_area("2. Akar Masalah (Root Cause):", value=root_txt, height=130)
-                                rek_input = st.text_area("3. Rekomendasi:", value=rek_txt, height=130)
-                                imp_input = st.text_area("4. Implikasi / Risiko:", value=imp_txt, height=130)
+                                obs_input = st.text_area("1. Observasi / Kondisi:", value=obs_txt, height=120)
+                                root_input = st.text_area("2. Akar Masalah (Root Cause):", value=root_txt, height=120)
+                                rek_input = st.text_area("3. Rekomendasi:", value=rek_txt, height=120)
+                                imp_input = st.text_area("4. Implikasi / Risiko:", value=imp_txt, height=120)
                                 
                                 st.markdown("---")
                                 st.markdown(f"📁 **File Gambar / Tabel Saat Ini:** `{lha_att_name}`")
-                                uploaded_lha_file = st.file_uploader("Insert / Sisipkan Gambar Tabel LHA (PNG, JPG):", type=["png", "jpg", "jpeg"], key=f"up_lha_file_{lha_key_id}_{idx}")
+                                uploaded_lha_file = st.file_uploader("Insert / Ganti Gambar Tabel LHA (PNG, JPG):", type=["png", "jpg", "jpeg"], key=f"up_lha_file_{lha_key_id}_{idx}")
                                 
                                 col_lha_f1, col_lha_f2 = st.columns(2)
                                 with col_lha_f1:
