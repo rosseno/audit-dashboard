@@ -13,7 +13,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS Ultimate untuk Card KPI Proporsional, Neon Glow, & Tampilan Rapi
+# Custom CSS Ultimate untuk Card KPI Proporsional, Neon Glow, & Kotak Teks Fleksibel
 st.markdown("""
 <style>
     .main { background-color: #0e1117; }
@@ -27,6 +27,11 @@ st.markdown("""
     }
     .header-title { color: #ffffff; font-size: 22px; font-weight: 700; }
     .header-subtitle { color: #94a3b8; font-size: 13px; margin-top: 5px; }
+
+    /* Memperluas tinggi kotak teks (Text Area) agar sangat leluasa untuk mengetik */
+    .stTextArea textarea {
+        min-height: 200px !important;
+    }
 
     /* Animasi Kedip (Blink) untuk Kotak Peringatan Darurat */
     @keyframes blink-animation {
@@ -269,8 +274,8 @@ if selected_periode == "2026":
 # --- NAVIGASI UTAMA BERBENTUK TAB ---
 tab_dash, tab_prog_kk, tab_lha = st.tabs([
     "📊 Dashboard Monitoring Eksekutif", 
-    "📋 Modul KKA & AP (Format Tabel Interaktif & Upload)", 
-    "📝 Modul LHA (Format Tabel Interaktif & Upload)"
+    "📋 Modul KKA & AP (Format Fleksibel + Upload File)", 
+    "📝 Modul LHA (Format Fleksibel + Upload File)"
 ])
 
 # ================= TAB 1: DASHBOARD MONITORING =================
@@ -409,10 +414,10 @@ with tab_dash:
     st.dataframe(df_table_display, use_container_width=True, hide_index=True)
 
 
-# ================= TAB 2: PROGRAM AUDIT & KERTAS KERJA MULTI-AUDITOR (DENGAN TABEL INTERAKTIF) =================
+# ================= TAB 2: PROGRAM AUDIT & KERTAS KERJA MULTI-AUDITOR (FORMAT FLEKSIBEL) =================
 with tab_prog_kk:
-    st.markdown("### Modul Program Audit & Kertas Kerja Multi-Auditor (Format Tabel Interaktif & Upload)")
-    st.info("💡 Anda dapat mengetik, menambah baris, atau meng-copy paste langsung tabel dari Excel ke dalam tabel interaktif di bawah ini agar rapi bergaris.")
+    st.markdown("### Modul Program Audit & Kertas Kerja Multi-Auditor (Format Fleksibel + Upload File)")
+    st.info("💡 Tanpa batasan tabel kaku! Anda bebas mengetik catatan, ringkasan, atau langsung mengunggah file Word/Excel lengkap Anda.")
     
     if access_role == "Admin SPI":
         id_pk_list = df_master["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_master.columns else []
@@ -427,8 +432,8 @@ with tab_prog_kk:
                         "doc_id": new_id_doc,
                         "target_temuan": selected_pk_id,
                         "auditor_name": f"Auditor {len(st.session_state.multi_audit_docs) + 1}",
-                        "audit_program": pd.DataFrame([{"No": 1, "Langkah Kerja / Prosedur AP": "-", "Status / Hasil": "-"}]),
-                        "kertas_kerja": pd.DataFrame([{"No": 1, "No & Nama": "-", "Jabatan": "-", "Kelas": "-", "Keterangan": "-"}]),
+                        "audit_program": "-",
+                        "kertas_kerja": "-",
                         "doc_pin": "1234",
                         "attachment_name": "-"
                     })
@@ -445,12 +450,6 @@ with tab_prog_kk:
                 for idx, doc in enumerate(filtered_docs):
                     doc_key_id = doc['doc_id']
                     is_unlocked = doc_key_id in st.session_state.unlocked_docs
-                    
-                    # Konversi data lama jika berupa string text biasa ke format DataFrame tabel
-                    if not isinstance(doc.get("audit_program"), pd.DataFrame):
-                        doc["audit_program"] = pd.DataFrame([{"No": 1, "Langkah Kerja / Prosedur AP": str(doc.get("audit_program", "-")), "Status / Hasil": "-"}])
-                    if not isinstance(doc.get("kertas_kerja"), pd.DataFrame):
-                        doc["kertas_kerja"] = pd.DataFrame([{"No": 1, "No & Nama": str(doc.get("kertas_kerja", "-")), "Jabatan": "-", "Kelas": "-", "Keterangan": "-"}])
 
                     if not is_unlocked:
                         with st.container():
@@ -483,15 +482,15 @@ with tab_prog_kk:
                                 auditor_input = st.text_input("Nama / Inisial Auditor:", value=doc["auditor_name"])
                                 new_pin_input = st.text_input("Ubah / Atur PIN Keamanan Dokumen ini:", value=str(doc.get("doc_pin", "1234")), type="password")
                                 
-                                st.markdown("##### 1. Tabel Program Audit (AP):")
-                                edited_ap = st.data_editor(doc["audit_program"], num_rows="dynamic", use_container_width=True, key=f"editor_ap_{doc_key_id}_{idx}")
-                                
-                                st.markdown("##### 2. Tabel Rincian Pengujian Kertas Kerja Audit (KKA):")
-                                edited_kk = st.data_editor(doc["kertas_kerja"], num_rows="dynamic", use_container_width=True, key=f"editor_kk_{doc_key_id}_{idx}")
+                                prog_text = doc["audit_program"].to_string(index=False) if isinstance(doc["audit_program"], pd.DataFrame) else str(doc["audit_program"])
+                                kk_text = doc["kertas_kerja"].to_string(index=False) if isinstance(doc["kertas_kerja"], pd.DataFrame) else str(doc["kertas_kerja"])
+
+                                prog_input = st.text_area("1. Uraian Langkah-langkah Program Audit (AP):", value=prog_text, height=180)
+                                kk_input = st.text_area("2. Catatan Ringkas / Pengujian Kertas Kerja Audit (KKA):", value=kk_text, height=220)
                                 
                                 st.markdown("---")
-                                st.markdown(f"📁 **Lampiran File Saat Ini:** `{doc.get('attachment_name', '-')}`")
-                                uploaded_file = st.file_uploader("Unggah / Ganti File Pendukung (Word, Excel, PDF, Gambar):", type=["docx", "xlsx", "xls", "pdf", "png", "jpg", "jpeg", "txt"], key=f"up_file_{doc_key_id}_{idx}")
+                                st.markdown(f"📁 **File Lampiran Saat Ini:** `{doc.get('attachment_name', '-')}`")
+                                uploaded_file = st.file_uploader("Unggah File KKA / AP Lengkap (Word, Excel, PDF, Gambar):", type=["docx", "xlsx", "xls", "pdf", "png", "jpg", "jpeg", "txt"], key=f"up_file_{doc_key_id}_{idx}")
                                 
                                 col_f1, col_f2 = st.columns(2)
                                 with col_f1:
@@ -501,8 +500,8 @@ with tab_prog_kk:
                                     
                                 if save_sub_btn:
                                     doc["auditor_name"] = auditor_input
-                                    doc["audit_program"] = edited_ap
-                                    doc["kertas_kerja"] = edited_kk
+                                    doc["audit_program"] = prog_input
+                                    doc["kertas_kerja"] = kk_input
                                     doc["doc_pin"] = new_pin_input
                                     
                                     if uploaded_file is not None:
@@ -535,7 +534,7 @@ with tab_prog_kk:
                                     with open(att_path, "rb") as f:
                                         file_data = f.read()
                                     st.download_button(
-                                        label=f"📥 Download Lampiran File: {att_name}",
+                                        label=f"📥 Download File Lampiran Utuh: {att_name}",
                                         data=file_data,
                                         file_name=att_name,
                                         key=f"dl_att_{doc_key_id}_{idx}"
@@ -552,10 +551,10 @@ File Lampiran: {doc.get('attachment_name', '-')}
 Update Terakhir: {datetime.now().strftime('%d-%m-%Y %H:%M')}
 --------------------------------------------------
 1. PROGRAM AUDIT (AP):
-{doc['audit_program'].to_string(index=False)}
+{doc['audit_program']}
 
 2. KERTAS KERJA AUDIT (KKA):
-{doc['kertas_kerja'].to_string(index=False)}
+{doc['kertas_kerja']}
 =================================================="""
                             st.download_button(
                                 label=f"📥 Download Ringkasan KKA {doc['doc_id']} (Format Notepad .txt)",
@@ -569,10 +568,10 @@ Update Terakhir: {datetime.now().strftime('%d-%m-%Y %H:%M')}
         st.warning("⚠️ Menu penyusunan Program Audit & Kertas Kerja dikhususkan untuk peran Admin SPI (Auditor).")
 
 
-# ================= TAB 3: GENERATOR LHA MULTI-AUDITOR (DENGAN TABEL INTERAKTIF) =================
+# ================= TAB 3: GENERATOR LHA MULTI-AUDITOR (FORMAT FLEKSIBEL) =================
 with tab_lha:
-    st.markdown("### Modul Generator Lembar Hasil Audit (LHA) Multi-Auditor (Format Tabel Interaktif & Upload)")
-    st.info("💡 Anda dapat mengetik atau meng-copy paste tabel observasi & rekomendasi langsung ke dalam tabel interaktif di bawah ini.")
+    st.markdown("### Modul Generator Lembar Hasil Audit (LHA) Multi-Auditor (Format Fleksibel + Upload File)")
+    st.info("💡 Tanpa batasan tabel kaku! Anda bebas mengisi poin observasi, akar masalah, rekomendasi, atau mengunggah file LHA Word/Excel Anda.")
     
     if access_role == "Admin SPI":
         id_lha_list = df_master["ID Temuan"].dropna().astype(str).unique().tolist() if "ID Temuan" in df_master.columns else []
@@ -587,10 +586,10 @@ with tab_lha:
                         "lha_doc_id": new_lha_id,
                         "target_temuan": selected_lha_id,
                         "auditor_name": f"Auditor LHA {len(st.session_state.multi_lha_docs) + 1}",
-                        "observasi": pd.DataFrame([{"No": 1, "Uraian Observasi / Kondisi": "-"}]),
-                        "root_cause": pd.DataFrame([{"No": 1, "Analisis Akar Masalah (Root Cause)": "-"}]),
-                        "rekomendasi": pd.DataFrame([{"No": 1, "Butir Rekomendasi Auditor": "-"}]),
-                        "implikasi": pd.DataFrame([{"No": 1, "Implikasi / Risiko": "-"}]),
+                        "observasi": "-",
+                        "root_cause": "-",
+                        "rekomendasi": "-",
+                        "implikasi": "-",
                         "lha_pin": "1234",
                         "attachment_name": "-"
                     })
@@ -607,11 +606,6 @@ with tab_lha:
                 for idx, lha_doc in enumerate(filtered_lhas):
                     lha_key_id = lha_doc['lha_doc_id']
                     is_lha_unlocked = lha_key_id in st.session_state.unlocked_lhas
-                    
-                    # Konversi data lama string ke tabel DataFrame jika belum
-                    for key_field, col_name in [("observasi", "Uraian Observasi / Kondisi"), ("root_cause", "Analisis Akar Masalah (Root Cause)"), ("rekomendasi", "Butir Rekomendasi Auditor"), ("implikasi", "Implikasi / Risiko")]:
-                        if not isinstance(lha_doc.get(key_field), pd.DataFrame):
-                            lha_doc[key_field] = pd.DataFrame([{"No": 1, col_name: str(lha_doc.get(key_field, "-"))}])
 
                     if not is_lha_unlocked:
                         with st.container():
@@ -644,21 +638,19 @@ with tab_lha:
                                 auditor_lha_input = st.text_input("Nama / Inisial Auditor LHA:", value=lha_doc["auditor_name"])
                                 new_lha_pin_input = st.text_input("Ubah / Atur PIN Keamanan LHA ini:", value=str(lha_doc.get("lha_pin", "1234")), type="password")
                                 
-                                st.markdown("##### 1. Tabel Observasi / Kondisi:")
-                                edited_obs = st.data_editor(lha_doc["observasi"], num_rows="dynamic", use_container_width=True, key=f"editor_obs_{lha_key_id}_{idx}")
-                                
-                                st.markdown("##### 2. Tabel Akar Masalah (Root Cause):")
-                                edited_root = st.data_editor(lha_doc["root_cause"], num_rows="dynamic", use_container_width=True, key=f"editor_root_{lha_key_id}_{idx}")
-                                
-                                st.markdown("##### 3. Tabel Rekomendasi:")
-                                edited_rek = st.data_editor(lha_doc["rekomendasi"], num_rows="dynamic", use_container_width=True, key=f"editor_rek_{lha_key_id}_{idx}")
-                                
-                                st.markdown("##### 4. Tabel Implikasi / Risiko:")
-                                edited_imp = st.data_editor(lha_doc["implikasi"], num_rows="dynamic", use_container_width=True, key=f"editor_imp_{lha_key_id}_{idx}")
+                                obs_txt = lha_doc["observasi"].to_string(index=False) if isinstance(lha_doc["observasi"], pd.DataFrame) else str(lha_doc["observasi"])
+                                root_txt = lha_doc["root_cause"].to_string(index=False) if isinstance(lha_doc["root_cause"], pd.DataFrame) else str(lha_doc["root_cause"])
+                                rek_txt = lha_doc["rekomendasi"].to_string(index=False) if isinstance(lha_doc["rekomendasi"], pd.DataFrame) else str(lha_doc["rekomendasi"])
+                                imp_txt = lha_doc["implikasi"].to_string(index=False) if isinstance(lha_doc["implikasi"], pd.DataFrame) else str(lha_doc["implikasi"])
+
+                                obs_input = st.text_area("1. Observasi / Kondisi:", value=obs_txt, height=150)
+                                root_input = st.text_area("2. Akar Masalah (Root Cause):", value=root_txt, height=150)
+                                rek_input = st.text_area("3. Rekomendasi:", value=rek_txt, height=150)
+                                imp_input = st.text_area("4. Implikasi / Risiko:", value=imp_txt, height=150)
                                 
                                 st.markdown("---")
-                                st.markdown(f"📁 **Lampiran File Saat Ini:** `{lha_doc.get('attachment_name', '-')}`")
-                                uploaded_lha_file = st.file_uploader("Unggah / Ganti File Lampiran LHA (Word, Excel, PDF, Gambar):", type=["docx", "xlsx", "xls", "pdf", "png", "jpg", "jpeg", "txt"], key=f"up_lha_file_{lha_key_id}_{idx}")
+                                st.markdown(f"📁 **File Lampiran Saat Ini:** `{lha_doc.get('attachment_name', '-')}`")
+                                uploaded_lha_file = st.file_uploader("Unggah File LHA Lengkap (Word, Excel, PDF, Gambar):", type=["docx", "xlsx", "xls", "pdf", "png", "jpg", "jpeg", "txt"], key=f"up_lha_file_{lha_key_id}_{idx}")
                                 
                                 col_lha_f1, col_lha_f2 = st.columns(2)
                                 with col_lha_f1:
@@ -668,10 +660,10 @@ with tab_lha:
                                     
                                 if save_lha_sub_btn:
                                     lha_doc["auditor_name"] = auditor_lha_input
-                                    lha_doc["observasi"] = edited_obs
-                                    lha_doc["root_cause"] = edited_root
-                                    lha_doc["rekomendasi"] = edited_rek
-                                    lha_doc["implikasi"] = edited_imp
+                                    lha_doc["observasi"] = obs_input
+                                    lha_doc["root_cause"] = root_input
+                                    lha_doc["rekomendasi"] = rek_input
+                                    lha_doc["implikasi"] = imp_input
                                     lha_doc["lha_pin"] = new_lha_pin_input
                                     
                                     if uploaded_lha_file is not None:
@@ -704,7 +696,7 @@ with tab_lha:
                                     with open(lha_att_path, "rb") as f:
                                         lha_file_data = f.read()
                                     st.download_button(
-                                        label=f"📥 Download Lampiran File LHA: {lha_att_name}",
+                                        label=f"📥 Download File Lampiran Utuh: {lha_att_name}",
                                         data=lha_file_data,
                                         file_name=lha_att_name,
                                         key=f"dl_lha_att_{lha_key_id}_{idx}"
@@ -721,16 +713,16 @@ File Lampiran: {lha_doc.get('attachment_name', '-')}
 Update Terakhir: {datetime.now().strftime('%d-%m-%Y %H:%M')}
 --------------------------------------------------
 1. OBSERVASI / KONDISI:
-{lha_doc['observasi'].to_string(index=False)}
+{lha_doc['observasi']}
 
 2. AKAR MASALAH (ROOT CAUSE):
-{lha_doc['root_cause'].to_string(index=False)}
+{lha_doc['root_cause']}
 
 3. REKOMENDASI:
-{lha_doc['rekomendasi'].to_string(index=False)}
+{lha_doc['rekomendasi']}
 
 4. IMPLIKASI / RISIKO:
-{lha_doc['implikasi'].to_string(index=False)}
+{lha_doc['implikasi']}
 =================================================="""
                             st.download_button(
                                 label=f"📥 Download Ringkasan LHA {lha_doc['lha_doc_id']} (Format Notepad .txt)",
