@@ -410,19 +410,24 @@ with tab_vault_kka:
 
     if st.session_state.vault_kka:
         st.markdown("#### Daftar File KKA & AP Tersimpan:")
-        df_kka_view = pd.DataFrame(st.session_state.vault_kka)
-        st.dataframe(df_kka_view, use_container_width=True, hide_index=True)
         
-        for item in st.session_state.vault_kka:
+        # --- PERBAIKAN: DITAMBAHKAN TOMBOL HAPUS DI VAULT KKA ---
+        for i, item in enumerate(st.session_state.vault_kka):
             f_path = os.path.join(VAULT_DIR, item["Nama File"])
-            if os.path.exists(f_path):
-                with open(f_path, "rb") as f:
-                    st.download_button(
-                        label=f"📥 Unduh KKA: {item['Nama File']}",
-                        data=f,
-                        file_name=item['Nama File'],
-                        key=f"dl_kka_{item['Nama File']}"
-                    )
+            col1, col2, col3 = st.columns([3, 1, 1])
+            with col1:
+                st.write(f"📄 **{item['Nama File']}** ({item['Tipe']}) - {item['Tanggal Upload']}")
+            with col2:
+                if os.path.exists(f_path):
+                    with open(f_path, "rb") as f:
+                        st.download_button("📥 Unduh", f, file_name=item['Nama File'], key=f"dl_kka_{i}")
+            with col3:
+                if st.button("🗑️ Hapus", key=f"del_kka_{i}"):
+                    if os.path.exists(f_path):
+                        os.remove(f_path)
+                    st.session_state.vault_kka.pop(i)
+                    pd.DataFrame(st.session_state.vault_kka).to_excel(EXCEL_KKA_FILE, index=False)
+                    st.rerun()
 
 with tab_vault_lha:
     st.markdown("### 📁 Vault Penyimpanan File LHA (.docx / .pdf)")
@@ -443,16 +448,21 @@ with tab_vault_lha:
 
     if st.session_state.vault_lha:
         st.markdown("#### Daftar File LHA Tersimpan:")
-        df_lha_view = pd.DataFrame(st.session_state.vault_lha)
-        st.dataframe(df_lha_view, use_container_width=True, hide_index=True)
         
-        for item in st.session_state.vault_lha:
+        # --- PERBAIKAN: DITAMBAHKAN TOMBOL HAPUS DI VAULT LHA ---
+        for i, item in enumerate(st.session_state.vault_lha):
             f_path = os.path.join(VAULT_DIR, item["Nama File"])
-            if os.path.exists(f_path):
-                with open(f_path, "rb") as f:
-                    st.download_button(
-                        label=f"📥 Unduh LHA: {item['Nama File']}",
-                        data=f,
-                        file_name=item['Nama File'],
-                        key=f"dl_lha_{item['Nama File']}"
-                    )
+            col1, col2, col3 = st.columns([3, 1, 1])
+            with col1:
+                st.write(f"📄 **{item['Nama File']}** ({item['Tipe']}) - {item['Tanggal Upload']}")
+            with col2:
+                if os.path.exists(f_path):
+                    with open(f_path, "rb") as f:
+                        st.download_button("📥 Unduh", f, file_name=item['Nama File'], key=f"dl_lha_{i}")
+            with col3:
+                if st.button("🗑️ Hapus", key=f"del_lha_{i}"):
+                    if os.path.exists(f_path):
+                        os.remove(f_path)
+                    st.session_state.vault_lha.pop(i)
+                    pd.DataFrame(st.session_state.vault_lha).to_excel(EXCEL_LHA_FILE, index=False)
+                    st.rerun()
