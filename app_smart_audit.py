@@ -118,7 +118,7 @@ def load_data():
 if 'df_master' not in st.session_state:
     st.session_state.df_master = load_data()
 
-# Memuat data vault KKA & LHA
+# Memuat data vault
 if 'vault_kka' not in st.session_state:
     if os.path.exists(EXCEL_KKA_FILE):
         st.session_state.vault_kka = pd.read_excel(EXCEL_KKA_FILE).to_dict('records')
@@ -259,6 +259,35 @@ with tab_dash:
         <div class="kpi-card card-red"><div class="kpi-title">OVERDUE (BD)</div><div class="kpi-value">{overdue}</div></div>
     </div>
     """, unsafe_allow_html=True)
+
+    # --- TABEL REKAPITULASI MATRIKS TINDAK LANJUT ---
+    if not df_base.empty:
+        st.markdown("### Rekapitulasi Matriks Tindak Lanjut Hasil Audit")
+        
+        # Membuat ringkasan rekapitulasi per bidang
+        rekap_data = []
+        unique_bidangs = sorted(df_base[col_bidang].dropna().astype(str).unique())
+        
+        for idx, b in enumerate(unique_bidangs, 1):
+            sub_df = df_base[df_base[col_bidang].astype(str) == str(b)]
+            j_temuan = len(sub_df)
+            j_selesai = len(sub_df[sub_df[col_status].str.contains("Selesai|SLS", case=False, na=False)])
+            j_eval = len(sub_df[sub_df[col_status].str.contains("Evaluasi|EVAL", case=False, na=False)])
+            j_bd = len(sub_df[sub_df[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)])
+            
+            rekap_data.append({
+                "No": chr(64 + idx),
+                "Objek Audit": f"Bidang {b}",
+                "Jumlah Temuan": j_temuan,
+                "Jumlah Rekomendasi": j_temuan,
+                "Selesai (SLS)": j_selesai,
+                "EVALUASI AUDITOR": j_eval,
+                "Belum Ditindaklanjuti (BD)": j_bd,
+                "TPTD": 0
+            })
+            
+        df_rekap = pd.DataFrame(rekap_data)
+        st.dataframe(df_rekap, use_container_width=True, hide_index=True)
 
     # --- GRAFIK ANALITIK PENDUKUNG ---
     if not df_base.empty:
