@@ -90,12 +90,22 @@ menu_pilihan = st.sidebar.radio("Menu Utama:", [
 ])
 
 # --- LOGIKA FILTER DATA ---
+# --- LOGIKA FILTER DATA ---
 df_filtered = df_global.copy()
 if not df_filtered.empty:
     if chosen_unit != "Semua Unit" and 'Bidang' in df_filtered.columns:
         df_filtered = df_filtered[df_filtered['Bidang'].str.contains(chosen_unit, case=False, na=False)]
     if selected_periode != "Semua Periode" and 'Tahun Audit' in df_filtered.columns:
         df_filtered = df_filtered[df_filtered['Tahun Audit'].astype(str) == selected_periode]
+        if 'filter_status' not in st.session_state:
+        st.session_state.filter_status = "Semua"
+        
+    if st.session_state.filter_status != "Semua" and 'Status' in df_filtered.columns:
+        df_filtered = df_filtered[df_filtered['Status'].str.contains(st.session_state.filter_status, case=False, na=False)]
+    
+    # Filter tambahan berdasarkan klik Card Status
+    if st.session_state.filter_status != "Semua" and 'Status' in df_filtered.columns:
+        df_filtered = df_filtered[df_filtered['Status'].str.contains(st.session_state.filter_status, case=False, na=False)]
 
 # --- HALAMAN 1: DASHBOARD UTAMA ---
 if menu_pilihan == "Dashboard Visualisasi & Tabel":
@@ -106,15 +116,26 @@ if menu_pilihan == "Dashboard Visualisasi & Tabel":
     jml_eval = len(df_filtered[df_filtered['Status'].str.contains('EVAL', case=False, na=False)]) if not df_filtered.empty and 'Status' in df_filtered.columns else 0
     jml_sls = len(df_filtered[df_filtered['Status'].str.contains('SLS', case=False, na=False)]) if not df_filtered.empty and 'Status' in df_filtered.columns else 0
 
+ if 'filter_status' not in st.session_state:
+        st.session_state.filter_status = "Semua"
+
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.markdown(f'<div class="metric-card"><div class="metric-title">TOTAL TEMUAN</div><div class="metric-value">{total_temuan}</div></div>', unsafe_allow_html=True)
+        if st.button(f"TOTAL TEMUAN\n\n{total_temuan}", use_container_width=True):
+            st.session_state.filter_status = "Semua"
+            st.rerun()
     with col2:
-        st.markdown(f'<div class="metric-card"><div class="metric-title">STATUS BD</div><div class="metric-value">{jml_bd}</div></div>', unsafe_allow_html=True)
+        if st.button(f"STATUS BD\n\n{jml_bd}", use_container_width=True):
+            st.session_state.filter_status = "BD"
+            st.rerun()
     with col3:
-        st.markdown(f'<div class="metric-card"><div class="metric-title">STATUS EVAL</div><div class="metric-value">{jml_eval}</div></div>', unsafe_allow_html=True)
+        if st.button(f"STATUS EVAL\n\n{jml_eval}", use_container_width=True):
+            st.session_state.filter_status = "EVAL"
+            st.rerun()
     with col4:
-        st.markdown(f'<div class="metric-card"><div class="metric-title">STATUS SLS</div><div class="metric-value">{jml_sls}</div></div>', unsafe_allow_html=True)
+        if st.button(f"STATUS SLS\n\n{jml_sls}", use_container_width=True):
+            st.session_state.filter_status = "SLS"
+            st.rerun()
 
     st.markdown("<br>", unsafe_allow_html=True)
 
