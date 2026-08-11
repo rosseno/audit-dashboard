@@ -73,6 +73,16 @@ st.markdown("""
         gap: 15px;
         animation: blink-animation 1.5s infinite ease-in-out;
     }
+    
+    .notification-box {
+        background: rgba(16, 185, 129, 0.15);
+        border: 2px solid #10b981;
+        padding: 15px 20px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        color: #34d399;
+        font-weight: 600;
+    }
 
     .kpi-row { display: flex; gap: 14px; width: 100%; margin-bottom: 20px; }
     .kpi-card {
@@ -115,6 +125,10 @@ def load_data():
 
 if 'df_master' not in st.session_state:
     st.session_state.df_master = load_data()
+
+# Inisialisasi daftar notifikasi upload di session state
+if 'notification_list' not in st.session_state:
+    st.session_state.notification_list = []
 
 df_master = st.session_state.df_master
 col_bidang = "Bidang" if "Bidang" in df_master.columns else df_master.columns[5]
@@ -209,6 +223,16 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
+# --- PUSAT NOTIFIKASI LIVE UNTUK ADMIN/DIREKSI ---
+if st.session_state.notification_list and access_role in ["Direktur Utama", "Admin SPI", "Direktur Operasi & Komersial"]:
+    st.markdown("### 🔔 Pusat Notifikasi Unggah Dokumen Tindak Lanjut")
+    for note in st.session_state.notification_list:
+        st.markdown(f"""
+        <div class="notification-box">
+            📥 <b>{note['waktu']}</b> — Unit/Auditee <b>{note['bidang']}</b> telah mengunggah file bukti tindak lanjut: <b>{note['filename']}</b>
+        </div>
+        """, unsafe_allow_html=True)
+
 # --- TAB UTAMA ---
 tab_dash, tab_vault_kka, tab_vault_lha = st.tabs([
     "📊 Dashboard Monitoring Eksekutif", 
@@ -253,7 +277,7 @@ with tab_dash:
         if st.button(f"🚨 OVERDUE\n\n{overdue}", use_container_width=True):
             st.session_state.kpi_filter = "BD"
 
-    # --- TABEL REKAPITULASI DENGAN BARIS JUMLAH BERWARNA ---
+    # --- TABEL REKAPITULASI MATRIKS TINDAK LANJUT ---
     if not df_base.empty:
         st.markdown("### Rekapitulasi Matriks Tindak Lanjut Hasil Audit")
         
@@ -286,7 +310,7 @@ with tab_dash:
 
         st.dataframe(df_rekap.style.apply(highlight_total_row, axis=1), use_container_width=True, hide_index=True)
 
-    # --- DETAIL & UPLOAD TINDAK LANJUT ---
+    # --- DETAIL & UPLOAD BUKTI TINDAK LANJUT ---
     st.markdown("---")
     st.markdown("### Detail Data Temuan & Rekomendasi")
     
@@ -300,13 +324,29 @@ with tab_dash:
     df_table_display["No"] = range(1, len(df_table_display) + 1)
     st.dataframe(df_table_display, use_container_width=True, hide_index=True)
 
-    # --- FITUR UPLOAD TINDAK LANJUT ---
-    st.markdown("### 📤 Unggah Bukti Tindak Lanjut")
-    uploaded_file = st.file_uploader("Pilih file bukti tindak lanjut (.pdf, .docx, .xlsx)", type=["pdf", "docx", "xlsx"])
+    # --- FITUR UPLOAD OLEH AUDITEE + PENGIRIMAN NOTIFIKASI ---
+    st.markdown("### 📤 Unggah Bukti Tindak Lanjut (Auditee)")
+    uploaded_file = st.file_uploader("Pilih file bukti tindak lanjut (.pdf, .docx, .xlsx)", type=["pdf", "docx", "xlsx"], key="uploader_tl")
+    
     if uploaded_file is not None:
-        with open(os.path.join(VAULT_DIR, uploaded_file.name), "wb") as f:
+        file_path = os.path.join(VAULT_DIR, uploaded_file.name)
+        with open(file_path, "wb") as f:
             f.write(uploaded_file.getbuffer())
-        st.success(f"File {uploaded_file.name} berhasil diunggah!")
+        
+        # Ambil nama bidang aktif saat ini sebagai identitas pengunggah
+        current_unit = chosen_unit if access_role == "Auditee" else access_role
+        waktu_sekarang = datetime.now().strftime("%d-%m-%Y %H:%M")
+        
+        # Tambahkan ke daftar notifikasi jika belum ada di rekaman terakhir
+        new_note = {
+            "waktu": waktu_sekarang,
+            "bidang": current_unit,
+            "filename": uploaded_file.name
+        }
+        if not st.session_state.notification_list or st.session_state.notification_list[-1]["filename"] != uploaded_file.name:
+            st.session_state.notification_list.append(new_note)
+            
+        st.success(f"File {uploaded_file.name} berhasil diunggah! Notifikasi terkirim ke Pimpinan/Admin SPI.")
 
 with tab_vault_kka:
     st.markdown("### Vault Penyimpanan File KKA & Program Audit")
