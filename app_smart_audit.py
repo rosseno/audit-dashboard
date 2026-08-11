@@ -104,8 +104,6 @@ st.markdown("""
 
 # --- CONFIG DATA ---
 EXCEL_FILE = "Master_Database_Temuan_Audit_2024_2025_PSM_Ringkas.xlsx"
-EXCEL_KKA_FILE = "Database_Vault_KKA_AP.xlsx"
-EXCEL_LHA_FILE = "Database_Vault_LHA_Word.xlsx"
 VAULT_DIR = "audit_file_vault"
 
 if not os.path.exists(VAULT_DIR):
@@ -117,19 +115,6 @@ def load_data():
 
 if 'df_master' not in st.session_state:
     st.session_state.df_master = load_data()
-
-# Memuat data vault
-if 'vault_kka' not in st.session_state:
-    if os.path.exists(EXCEL_KKA_FILE):
-        st.session_state.vault_kka = pd.read_excel(EXCEL_KKA_FILE).to_dict('records')
-    else:
-        st.session_state.vault_kka = []
-
-if 'vault_lha' not in st.session_state:
-    if os.path.exists(EXCEL_LHA_FILE):
-        st.session_state.vault_lha = pd.read_excel(EXCEL_LHA_FILE).to_dict('records')
-    else:
-        st.session_state.vault_lha = []
 
 df_master = st.session_state.df_master
 col_bidang = "Bidang" if "Bidang" in df_master.columns else df_master.columns[5]
@@ -268,8 +253,6 @@ with tab_dash:
         if st.button(f"🚨 OVERDUE\n\n{overdue}", use_container_width=True):
             st.session_state.kpi_filter = "BD"
 
-    st.write(f"Filter Aktif Tabel: **{st.session_state.kpi_filter}**")
-
     # --- TABEL REKAPITULASI DENGAN BARIS JUMLAH BERWARNA ---
     if not df_base.empty:
         st.markdown("### Rekapitulasi Matriks Tindak Lanjut Hasil Audit")
@@ -277,12 +260,7 @@ with tab_dash:
         rekap_data = []
         unique_bidangs = sorted(df_base[col_bidang].dropna().astype(str).unique())
         
-        tot_tem = 0
-        tot_rek = 0
-        tot_sls = 0
-        tot_eval = 0
-        tot_bd = 0
-        tot_tptd = 0
+        tot_tem = 0; tot_sls = 0; tot_eval = 0; tot_bd = 0
         
         for idx, b in enumerate(unique_bidangs, 1):
             sub_df = df_base[df_base[col_bidang].astype(str) == str(b)]
@@ -291,33 +269,14 @@ with tab_dash:
             j_eval = len(sub_df[sub_df[col_status].str.contains("Evaluasi|EVAL", case=False, na=False)])
             j_bd = len(sub_df[sub_df[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)])
             
-            tot_tem += j_temuan
-            tot_rek += j_temuan
-            tot_sls += j_selesai
-            tot_eval += j_eval
-            tot_bd += j_bd
+            tot_tem += j_temuan; tot_sls += j_selesai; tot_eval += j_eval; tot_bd += j_bd
             
             rekap_data.append({
-                "No": chr(64 + idx),
-                "Objek Audit": f"Bidang {b}",
-                "Jumlah Temuan": j_temuan,
-                "Jumlah Rekomendasi": j_temuan,
-                "Selesai (SLS)": j_selesai,
-                "EVALUASI AUDITOR": j_eval,
-                "Belum Ditindaklanjuti (BD)": j_bd,
-                "TPTD": 0
+                "No": chr(64 + idx), "Objek Audit": f"Bidang {b}", "Jumlah Temuan": j_temuan,
+                "Selesai (SLS)": j_selesai, "EVALUASI AUDITOR": j_eval, "Belum Ditindaklanjuti (BD)": j_bd
             })
             
-        rekap_data.append({
-            "No": "",
-            "Objek Audit": "JUMLAH",
-            "Jumlah Temuan": tot_tem,
-            "Jumlah Rekomendasi": tot_rek,
-            "Selesai (SLS)": tot_sls,
-            "EVALUASI AUDITOR": tot_eval,
-            "Belum Ditindaklanjuti (BD)": tot_bd,
-            "TPTD": tot_tptd
-        })
+        rekap_data.append({"No": "", "Objek Audit": "JUMLAH", "Jumlah Temuan": tot_tem, "Selesai (SLS)": tot_sls, "EVALUASI AUDITOR": tot_eval, "Belum Ditindaklanjuti (BD)": tot_bd})
             
         df_rekap = pd.DataFrame(rekap_data)
 
@@ -325,29 +284,9 @@ with tab_dash:
             is_total = s['Objek Audit'] == 'JUMLAH'
             return ['background-color: rgba(30, 58, 138, 0.6); color: #60a5fa; font-weight: bold;' if is_total else '' for _ in s]
 
-        styled_rekap = df_rekap.style.apply(highlight_total_row, axis=1)
-        st.dataframe(styled_rekap, use_container_width=True, hide_index=True)
+        st.dataframe(df_rekap.style.apply(highlight_total_row, axis=1), use_container_width=True, hide_index=True)
 
-    # --- GRAFIK ANALITIK PENDUKUNG ---
-    if not df_base.empty:
-        st.markdown("---")
-        col_g1, col_g2 = st.columns(2)
-        with col_g1:
-            st.markdown("#### Distribusi Status Tindak Lanjut")
-            status_counts = df_base[col_status].value_counts().reset_index()
-            status_counts.columns = ['Status', 'Jumlah']
-            fig_status = px.pie(status_counts, names='Status', values='Jumlah', hole=0.4, color_discrete_sequence=px.colors.sequential.RdBu)
-            fig_status.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white')
-            st.plotly_chart(fig_status, use_container_width=True)
-            
-        with col_g2:
-            st.markdown("#### Temuan Berdasarkan Bidang")
-            bidang_counts = df_base[col_bidang].value_counts().reset_index()
-            bidang_counts.columns = ['Bidang', 'Jumlah']
-            fig_bidang = px.bar(bidang_counts, x='Bidang', y='Jumlah', color='Bidang', color_discrete_sequence=px.colors.sequential.Plasma)
-            fig_bidang.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white', showlegend=False)
-            st.plotly_chart(fig_bidang, use_container_width=True)
-
+    # --- DETAIL & UPLOAD TINDAK LANJUT ---
     st.markdown("---")
     st.markdown("### Detail Data Temuan & Rekomendasi")
     
@@ -356,32 +295,23 @@ with tab_dash:
     else:
         df_table_final = df_base[df_base[col_status].str.contains(st.session_state.kpi_filter, case=False, na=False)]
 
-    # Pilih kolom yang ditampilkan
-    target_columns = [
-        "No", 
-        "ID Temuan", 
-        "Bidang", 
-        "Judul Temuan Audit", 
-        "Rekomendasi Utama / Tindak Lanjut", 
-        "Status", 
-        "PIC Temuan Audit"
-    ]
-    
-    available_cols = [c for c in target_columns if c in df_table_final.columns]
-    
-    if available_cols:
-        df_table_display = df_table_final[available_cols].copy()
-        # Reset kolom No agar selalu dimulai dari angka 1
-        df_table_display["No"] = range(1, len(df_table_display) + 1)
-    else:
-        df_table_display = df_table_final
-
+    target_columns = ["No", "ID Temuan", "Bidang", "Judul Temuan Audit", "Rekomendasi Utama / Tindak Lanjut", "Status", "PIC Temuan Audit"]
+    df_table_display = df_table_final[[c for c in target_columns if c in df_table_final.columns]].copy()
+    df_table_display["No"] = range(1, len(df_table_display) + 1)
     st.dataframe(df_table_display, use_container_width=True, hide_index=True)
 
+    # --- FITUR UPLOAD TINDAK LANJUT ---
+    st.markdown("### 📤 Unggah Bukti Tindak Lanjut")
+    uploaded_file = st.file_uploader("Pilih file bukti tindak lanjut (.pdf, .docx, .xlsx)", type=["pdf", "docx", "xlsx"])
+    if uploaded_file is not None:
+        with open(os.path.join(VAULT_DIR, uploaded_file.name), "wb") as f:
+            f.write(uploaded_file.getbuffer())
+        st.success(f"File {uploaded_file.name} berhasil diunggah!")
+
 with tab_vault_kka:
-    st.markdown("### Vault Penyimpanan File KKA & Program Audit (AP)")
-    st.info("💡 **Penyimpanan Aman:** Unggah file asli KKA atau Program Audit (.xlsx, .docx, .pdf) dari auditor induk di sini.")
+    st.markdown("### Vault Penyimpanan File KKA & Program Audit")
+    st.info("Unggah KKA/AP di sini.")
 
 with tab_vault_lha:
-    st.markdown("### Vault Penyimpanan File LHA (.docx / .pdf)")
-    st.info("💡 **Pusat Arsip LHA:** Unggah file laporan hasil audit resmi dari auditor induk di sini.")
+    st.markdown("### Vault Penyimpanan File LHA")
+    st.info("Unggah LHA di sini.")
