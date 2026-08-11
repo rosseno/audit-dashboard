@@ -5,6 +5,9 @@ import plotly.graph_objects as go
 import io
 from datetime import datetime
 import os
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaFileUpload
 
 st.set_page_config(
     page_title="Executive Audit Dashboard | PT Pelindo Solusi Maritim",
@@ -112,14 +115,44 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# --- CONFIG DATA ---
+# --- CONFIG DATA & GOOGLE DRIVE API ---
 EXCEL_FILE = "Master_Database_Temuan_Audit_2024_2025_PSM_Ringkas.xlsx"
 EXCEL_KKA_FILE = "Database_Vault_KKA_AP.xlsx"
 EXCEL_LHA_FILE = "Database_Vault_LHA_Word.xlsx"
 VAULT_DIR = "audit_file_vault"
 
+FOLDER_ID_GDRIVE = "1mlwxcgdqxBiuVyAp5xU9x2rbj79L0TyT30oH6kHTAdntb5bJXs5Dew_Xynt1pWZdUbPhUFqi"
+CREDENTIALS_FILE = "credentials.json"
+
 if not os.path.exists(VAULT_DIR):
     os.makedirs(VAULT_DIR)
+
+def upload_to_google_drive(local_file_path, file_name):
+    """Fungsi untuk mengunggah file lokal otomatis ke Google Drive"""
+    if not os.path.exists(CREDENTIALS_FILE):
+        return False, "File credentials.json belum ada di folder project!"
+    
+    try:
+        SCOPES = ['https://www.googleapis.com/auth/drive.file']
+        creds = service_account.Credentials.from_service_account_file(CREDENTIALS_FILE, scopes=SCOPES)
+        service = build('drive', 'v3', credentials=creds)
+
+        file_metadata = {
+            'name': file_name,
+            'parents': [FOLDER_ID_GDRIVE]
+        }
+        
+        media = MediaFileUpload(local_file_path, resumable=True)
+        
+        file = service.files().create(
+            body=file_metadata,
+            media_body=media,
+            fields='id'
+        ).execute()
+        
+        return True, file.get('id')
+    except Exception as e:
+        return False, str(e)
 
 @st.cache_data
 def load_data():
@@ -347,29 +380,35 @@ with tab_dash:
     df_table_display["No"] = range(1, len(df_table_display) + 1)
     st.dataframe(df_table_display, use_container_width=True, hide_index=True)
 
-    # --- FITUR UPLOAD OLEH AUDITEE + ARSIP FILE ---
-    st.markdown("### 📤 Unggah Bukti Tindak Lanjut (Auditee)")
-    uploaded_file = st.file_uploader("Pilih file bukti tindak lanjut (.pdf, .docx, .xlsx)", type=["pdf", "docx", "xlsx"], key="uploader_tl")
-    
-    if uploaded_file is not None:
-        file_path = os.path.join(VAULT_DIR, uploaded_file.name)
-        with open(file_path, "wb") as f:
-            f.write(uploaded_file.getbuffer())
+    # --- FITUR UPLOAD OLEH AUDITEE & ADMIN (DIREKSI DIKECUALIKAN) ---
+    if access_role in ["Auditee", "Admin SPI"]:
+        st.markdown("### 📤 Unggah Bukti Tindak Lanjut")
+        uploaded_file = st.file_uploader("Pilih file bukti tindak lanjut (.pdf, .docx, .xlsx)", type=["pdf", "docx", "xlsx"], key="uploader_tl")
         
-        current_unit = chosen_unit if access_role == "Auditee" else access_role
-        waktu_sekarang = datetime.now().strftime("%d-%m-%Y %H:%M")
-        
-        new_note = {
-            "waktu": waktu_sekarang,
-            "bidang": current_unit,
-            "filename": uploaded_file.name
-        }
-        if not st.session_state.notification_list or st.session_state.notification_list[-1]["filename"] != uploaded_file.name:
-            st.session_state.notification_list.append(new_note)
+        if uploaded_file is not None:
+            file_path = os.path.join(VAULT_DIR, uploaded_file.name)
+            with open(file_path, "wb") as f:
+                f.write(uploaded_file.getbuffer())
             
-        st.success(f"File {uploaded_file.name} berhasil diunggah!")
+            # Upload otomatis ke Google Drive
+            success, result = upload_to_google_drive(file_path, uploaded_file.name)
+            if success:
+                st.success(f"File {uploaded_file.name} berhasil diunggah lokal & otomatis masuk ke Google Drive!")
+            else:
+                st.warning(f"File tersimpan lokal, namun gagal sync ke Google Drive: {result}")
+            
+            current_unit = chosen_unit if access_role == "Auditee" else access_role
+            waktu_sekarang = datetime.now().strftime("%d-%m-%Y %H:%M")
+            
+            new_note = {
+                "waktu": waktu_sekarang,
+                "bidang": current_unit,
+                "filename": uploaded_file.name
+            }
+            if not st.session_state.notification_list or st.session_state.notification_list[-1]["filename"] != uploaded_file.name:
+                st.session_state.notification_list.append(new_note)
 
-    # --- DAFTAR ARSIP FILE UNGGAHAN AUDITEE DENGAN FITUR HAPUS ---
+    # --- DAFTAR ARSIP FILE UNGGAHAN DENGAN FITUR HAPUS ---
     if st.session_state.notification_list:
         st.markdown("### 📂 Arsip Unggahan Bukti Tindak Lanjut")
         for i, note in enumerate(st.session_state.notification_list):
@@ -400,18 +439,20 @@ with tab_vault_kka:
         file_path = os.path.join(VAULT_DIR, uploaded_kka.name)
         with open(file_path, "wb") as f:
             f.write(uploaded_kka.getbuffer())
+        
+        # Sync ke Google Drive
+        upload_to_google_drive(file_path, uploaded_kka.name)
+        
         st.session_state.vault_kka.append({
             "Nama File": uploaded_kka.name,
             "Tanggal Upload": datetime.now().strftime("%d-%m-%Y %H:%M"),
             "Tipe": "KKA / AP"
         })
         pd.DataFrame(st.session_state.vault_kka).to_excel(EXCEL_KKA_FILE, index=False)
-        st.success(f"File KKA '{uploaded_kka.name}' berhasil disimpan ke Vault!")
+        st.success(f"File KKA '{uploaded_kka.name}' berhasil disimpan ke Vault & Google Drive!")
 
     if st.session_state.vault_kka:
         st.markdown("#### Daftar File KKA & AP Tersimpan:")
-        
-        # --- PERBAIKAN: DITAMBAHKAN TOMBOL HAPUS DI VAULT KKA ---
         for i, item in enumerate(st.session_state.vault_kka):
             f_path = os.path.join(VAULT_DIR, item["Nama File"])
             col1, col2, col3 = st.columns([3, 1, 1])
@@ -438,18 +479,20 @@ with tab_vault_lha:
         file_path = os.path.join(VAULT_DIR, uploaded_lha.name)
         with open(file_path, "wb") as f:
             f.write(uploaded_lha.getbuffer())
+        
+        # Sync ke Google Drive
+        upload_to_google_drive(file_path, uploaded_lha.name)
+        
         st.session_state.vault_lha.append({
             "Nama File": uploaded_lha.name,
             "Tanggal Upload": datetime.now().strftime("%d-%m-%Y %H:%M"),
             "Tipe": "LHA"
         })
         pd.DataFrame(st.session_state.vault_lha).to_excel(EXCEL_LHA_FILE, index=False)
-        st.success(f"File LHA '{uploaded_lha.name}' berhasil disimpan ke Vault!")
+        st.success(f"File LHA '{uploaded_lha.name}' berhasil disimpan ke Vault & Google Drive!")
 
     if st.session_state.vault_lha:
         st.markdown("#### Daftar File LHA Tersimpan:")
-        
-        # --- PERBAIKAN: DITAMBAHKAN TOMBOL HAPUS DI VAULT LHA ---
         for i, item in enumerate(st.session_state.vault_lha):
             f_path = os.path.join(VAULT_DIR, item["Nama File"])
             col1, col2, col3 = st.columns([3, 1, 1])
