@@ -356,7 +356,7 @@ with tab_dash:
     else:
         df_table_final = df_base[df_base[col_status].str.contains(st.session_state.kpi_filter, case=False, na=False)]
 
-    # Pilih kolom yang ditampilkan sesuai permintaan (Dibuang yang tidak perlu)
+    # Pilih kolom yang ditampilkan
     target_columns = [
         "No", 
         "ID Temuan", 
@@ -367,11 +367,12 @@ with tab_dash:
         "PIC Temuan Audit"
     ]
     
-    # Pastikan hanya kolom yang ada di dataframe yang dipilih untuk menghindari eror
     available_cols = [c for c in target_columns if c in df_table_final.columns]
     
     if available_cols:
         df_table_display = df_table_final[available_cols].copy()
+        # Reset kolom No agar selalu dimulai dari angka 1
+        df_table_display["No"] = range(1, len(df_table_display) + 1)
     else:
         df_table_display = df_table_final
 
