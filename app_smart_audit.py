@@ -45,7 +45,7 @@ def load_data():
 
 df_global = load_data()
 
-# --- SIDEBAR FILTER & MENU (LENGKAP DENGAN PERIODE) ---
+# --- SIDEBAR FILTER & MENU ---
 st.sidebar.title("Panel Navigasi & Filter")
 access_role = st.sidebar.selectbox("Pilih Peran:", ["Auditee", "Admin SPI", "Direksi"])
 chosen_unit = st.sidebar.selectbox("Pilih Unit / Bidang:", ["Semua Unit", "Bidang Operasi Dan Teknik", "Bidang SDM", "Bidang Pengadaan", "Bidang Pemasaran", "Bidang Keuangan", "Bidang HSSE"])
@@ -74,6 +74,20 @@ if not df_filtered.empty:
 # --- HALAMAN 1: DASHBOARD UTAMA ---
 if menu_pilihan == "Dashboard Visualisasi & Tabel":
     
+    # KARTU METRIK (CARDS) DI ATAS GRAFIK
+    total_temuan = len(df_filtered) if not df_filtered.empty else 0
+    jml_eval = len(df_filtered[df_filtered['Status'].str.contains('EVAL', case=False, na=False)]) if not df_filtered.empty and 'Status' in df_filtered.columns else 0
+    jml_bd = len(df_filtered[df_filtered['Status'].str.contains('BD', case=False, na=False)]) if not df_filtered.empty and 'Status' in df_filtered.columns else 0
+    jml_sls = len(df_filtered[df_filtered['Status'].str.contains('SLS', case=False, na=False)]) if not df_filtered.empty and 'Status' in df_filtered.columns else 0
+
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Total Temuan", total_temuan)
+    c2.metric("Status BD (Belum Dilanjuti)", jml_bd)
+    c3.metric("Status EVAL (Evaluasi)", jml_eval)
+    c4.metric("Status SLS (Selesai)", jml_sls)
+
+    st.markdown("---")
+
     tab1, tab2 = st.tabs(["Visualisasi Grafik Progres & Sebaran", "Grafik Tren Perbandingan Antar Tahun"])
     
     with tab1:
