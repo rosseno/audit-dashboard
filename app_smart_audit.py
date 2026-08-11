@@ -18,7 +18,6 @@ st.markdown("""
 <style>
     .main { background-color: #0e1117; }
     
-    /* Animasi Teks Berjalan dari Kanan ke Kiri */
     @keyframes marquee {
         0% { transform: translateX(100%); }
         100% { transform: translateX(-100%); }
@@ -133,37 +132,116 @@ if 'vault_lha' not in st.session_state:
         st.session_state.vault_lha = []
 
 df_master = st.session_state.df_master
+col_bidang = "Bidang" if "Bidang" in df_master.columns else df_master.columns[5]
 col_periode = "Tahun Audit" if "Tahun Audit" in df_master.columns else df_master.columns[3]
+col_status = "Status" if "Status" in df_master.columns else "Status_TL"
 
-# --- SIDEBAR & AKSES ---
+PIN_ADMIN = "1234"
+
+# --- SIDEBAR & FILTER PERIODE ---
 st.sidebar.markdown("## Filter Control Panel")
-periode_options = ["Semua Periode"] + sorted(list(df_master[col_periode].dropna().astype(str).unique()))
+existing_periods = sorted(list(df_master[col_periode].dropna().astype(str).unique()))
+if "2026" not in existing_periods:
+    existing_periods.append("2026")
+
+periode_options = ["Semua Periode"] + existing_periods
 selected_periode = st.sidebar.selectbox("Periode Audit:", periode_options)
-df_filtered = df_master[df_master[col_periode].astype(str) == str(selected_periode)] if selected_periode != "Semua Periode" else df_master.copy()
 
-access_role = st.sidebar.selectbox("Pilih Peran / Jabatan:", ["Direktur Utama", "Admin SPI", "Auditee"])
-df_base = df_filtered.copy() if access_role == "Admin SPI" else df_filtered.head(0)
+if selected_periode == "2026":
+    df_filtered_periode = df_master.head(0).copy()
+else:
+    df_filtered_periode = df_master[df_master[col_periode].astype(str) == str(selected_periode)] if selected_periode != "Semua Periode" else df_master.copy()
 
-# --- HEADER & TAB ---
+current_available_bidang = sorted(list(df_filtered_periode[col_bidang].dropna().astype(str).unique())) if not df_filtered_periode.empty else sorted(list(df_master[col_bidang].dropna().astype(str).unique()))
+
+st.sidebar.markdown("---")
+st.sidebar.markdown("## Hak Akses & Portofolio")
+
+# --- PILIHAN PERAN LENGKAP KEMBALI ---
+access_role = st.sidebar.selectbox(
+    "Pilih Peran / Jabatan:",
+    [
+        "Direktur Utama",
+        "Direktur Operasi & Komersial",
+        "Direktur Keuangan, SDM, HSSE, IT, PAP, Umum & RT",
+        "Auditee",
+        "Admin SPI"
+    ]
+)
+
+if 'admin_logged_in' not in st.session_state:
+    st.session_state.admin_logged_in = False
+
+if access_role == "Admin SPI":
+    if not st.session_state.admin_logged_in:
+        entered_pin = st.sidebar.text_input("Masukkan PIN Admin:", type="password")
+        if entered_pin == PIN_ADMIN:
+            st.session_state.admin_logged_in = True
+            st.sidebar.success("Login Admin Berhasil!")
+            st.rerun()
+        elif entered_pin:
+            st.sidebar.error("PIN Salah!")
+    else:
+        st.sidebar.success("Status: Admin Aktif")
+        if st.sidebar.button("Logout Admin"):
+            st.session_state.admin_logged_in = False
+            st.rerun()
+
+# Logika Akses Berdasarkan Peran
+if access_role == "Direktur Utama":
+    sub_choice = st.sidebar.selectbox("Tinjau Cakupan:", ["Semua Bidang (Keseluruhan)", "SPI", "Hukum", "Sekper", "Pengadaan"])
+    if sub_choice == "Semua Bidang (Keseluruhan)":
+        df_base = df_filtered_periode.copy()
+    else:
+        df_base = df_filtered_periode[df_filtered_periode[col_bidang].str.contains(sub_choice, case=False, na=False)]
+
+elif access_role == "Direktur Operasi & Komersial":
+    ops_choices = ["Operasi", "Teknik", "Pemasaran"]
+    df_base = df_filtered_periode[df_filtered_periode[col_bidang].str.contains('|'.join(ops_choices), case=False, na=False)]
+
+elif access_role == "Direktur Keuangan, SDM, HSSE, IT, PAP, Umum & RT":
+    fin_choices = ["Keuangan", "SDM", "HSSE", "IT", "PAP", "Umum", "Rumah Tangga"]
+    df_base = df_filtered_periode[df_filtered_periode[col_bidang].str.contains('|'.join(fin_choices), case=False, na=False)]
+
+elif access_role == "Auditee":
+    chosen_unit = st.sidebar.selectbox("Pilih Bidang:", current_available_bidang if current_available_bidang else ["Tidak ada data"])
+    df_base = df_filtered_periode[df_filtered_periode[col_bidang].astype(str) == str(chosen_unit)]
+
+else:
+    if st.session_state.admin_logged_in:
+        chosen_admin_filter = st.sidebar.selectbox("Filter Bidang:", ["Semua Bidang"] + current_available_bidang)
+        if chosen_admin_filter == "Semua Bidang":
+            df_base = df_filtered_periode.copy()
+        else:
+            df_base = df_filtered_periode[df_filtered_periode[col_bidang].astype(str) == str(chosen_admin_filter)]
+    else:
+        df_base = df_filtered_periode.head(0)
+
+# --- HEADER UTAMA ---
 st.markdown("""
 <div class="header-banner">
-    <div class="header-title">SMART AUDIT MONITORING DASHBOARD</div>
-    <div class="header-subtitle">Internal Audit Unit — PT Pelindo Solusi Maritim</div>
+    <div class="header-title">SMART AUDIT MONITORING DASHBOARD - PT PELINDO SOLUSI MARITIM</div>
+    <div class="header-subtitle">Sistem Pemantauan Granular Hasil Audit Kepatuhan & Performansi — Internal Audit Unit</div>
 </div>
 """, unsafe_allow_html=True)
 
-tab_dash, tab_vault_kka, tab_vault_lha = st.tabs(["📊 Dashboard", "📋 Vault KKA/AP", "📁 Vault LHA"])
+# --- TAB UTAMA ---
+tab_dash, tab_vault_kka, tab_vault_lha = st.tabs([
+    "📊 Dashboard Monitoring Eksekutif", 
+    "📋 Vault KKA & AP (Penyimpanan File)", 
+    "📁 Vault LHA Word (Penyimpanan File)"
+])
 
 with tab_dash:
-    st.markdown("### Ringkasan Eksekutif")
+    st.markdown("### Ringkasan Eksekutif KPI")
     total_temuan = len(df_base)
-    st.markdown(f"**Total Temuan:** {total_temuan}")
-    st.dataframe(df_base, use_container_width=True)
+    st.markdown(f"**Total Temuan untuk Peran Ini:** {total_temuan}")
+    st.dataframe(df_base, use_container_width=True, hide_index=True)
 
 with tab_vault_kka:
     st.markdown("### Vault KKA & AP")
-    st.info("Penyimpanan file KKA/AP.")
+    st.info("Penyimpanan file KKA dan Program Audit.")
 
 with tab_vault_lha:
     st.markdown("### Vault LHA Word")
-    st.info("Penyimpanan file LHA.")
+    st.info("Penyimpanan file Laporan Hasil Audit.")
