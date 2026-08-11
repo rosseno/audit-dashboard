@@ -251,14 +251,26 @@ with tab_dash:
     evaluasi = len(df_base[df_base[col_status].str.contains("Evaluasi|EVAL", case=False, na=False)]) if not df_base.empty else 0
     overdue = len(df_base[df_base[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)]) if not df_base.empty else 0
 
-    st.markdown(f"""
-    <div class="kpi-row">
-        <div class="kpi-card card-blue"><div class="kpi-title">TOTAL TEMUAN</div><div class="kpi-value">{total_temuan}</div></div>
-        <div class="kpi-card card-green"><div class="kpi-title">SELESAI (SLS)</div><div class="kpi-value">{selesai}</div></div>
-        <div class="kpi-card card-yellow"><div class="kpi-title">EVALUASI (EVAL)</div><div class="kpi-value">{evaluasi}</div></div>
-        <div class="kpi-card card-red"><div class="kpi-title">OVERDUE (BD)</div><div class="kpi-value">{overdue}</div></div>
-    </div>
-    """, unsafe_allow_html=True)
+    # Inisialisasi session state untuk filter kartu KPI
+    if 'kpi_filter' not in st.session_state:
+        st.session_state.kpi_filter = "SEMUA"
+
+    # Baris Tombol Kartu KPI Interaktif
+    k_col1, k_col2, k_col3, k_col4 = st.columns(4)
+    with k_col1:
+        if st.button(f"📊 TOTAL\n\n{total_temuan}", use_container_width=True):
+            st.session_state.kpi_filter = "SEMUA"
+    with k_col2:
+        if st.button(f"✅ SELESAI\n\n{selesai}", use_container_width=True):
+            st.session_state.kpi_filter = "SLS"
+    with k_col3:
+        if st.button(f"⚠️ EVALUASI\n\n{evaluasi}", use_container_width=True):
+            st.session_state.kpi_filter = "EVAL"
+    with k_col4:
+        if st.button(f"🚨 OVERDUE\n\n{overdue}", use_container_width=True):
+            st.session_state.kpi_filter = "BD"
+
+    st.write(f"Filter Aktif Tabel: **{st.session_state.kpi_filter}**")
 
     # --- TABEL REKAPITULASI BERWARNA & ELEGAN ---
     if not df_base.empty:
@@ -321,7 +333,14 @@ with tab_dash:
 
     st.markdown("---")
     st.markdown("### Detail Data Temuan & Rekomendasi")
-    st.dataframe(df_base, use_container_width=True, hide_index=True)
+    
+    # Filter tabel detail berdasarkan pilihan tombol kartu KPI
+    if st.session_state.kpi_filter == "SEMUA":
+        df_table_final = df_base
+    else:
+        df_table_final = df_base[df_base[col_status].str.contains(st.session_state.kpi_filter, case=False, na=False)]
+
+    st.dataframe(df_table_final, use_container_width=True, hide_index=True)
 
 with tab_vault_kka:
     st.markdown("### Vault Penyimpanan File KKA & Program Audit (AP)")
