@@ -27,6 +27,32 @@ def upload_to_drive_via_script(file_path):
 # --- PENGATURAN HALAMAN ---
 st.set_page_config(page_title="Executive Audit Dashboard | PT Pelindo Solusi Maritim", page_icon="🛡️", layout="wide")
 
+# --- CUSTOM CSS UNTUK KARTU (CARDS) & TAMPILAN ---
+st.markdown("""
+<style>
+    .metric-card {
+        background-color: #1e293b;
+        border: 1px solid #334155;
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    }
+    .metric-title {
+        color: #94a3b8;
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 5px;
+        text-transform: uppercase;
+    }
+    .metric-value {
+        color: #f8fafc;
+        font-size: 24px;
+        font-weight: 800;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 # Banner Merdeka
 st.markdown("""
 <div style="background: linear-gradient(135deg, #991b1b 0%, #dc2626 50%); padding: 12px; border-radius: 8px; color: white; text-align: center; font-weight: 800; margin-bottom: 15px;">
@@ -74,19 +100,23 @@ if not df_filtered.empty:
 # --- HALAMAN 1: DASHBOARD UTAMA ---
 if menu_pilihan == "Dashboard Visualisasi & Tabel":
     
-    # KARTU METRIK (CARDS) DI ATAS GRAFIK
+    # KARTU METRIK (CARDS) RAPI & ELEGAN
     total_temuan = len(df_filtered) if not df_filtered.empty else 0
-    jml_eval = len(df_filtered[df_filtered['Status'].str.contains('EVAL', case=False, na=False)]) if not df_filtered.empty and 'Status' in df_filtered.columns else 0
     jml_bd = len(df_filtered[df_filtered['Status'].str.contains('BD', case=False, na=False)]) if not df_filtered.empty and 'Status' in df_filtered.columns else 0
+    jml_eval = len(df_filtered[df_filtered['Status'].str.contains('EVAL', case=False, na=False)]) if not df_filtered.empty and 'Status' in df_filtered.columns else 0
     jml_sls = len(df_filtered[df_filtered['Status'].str.contains('SLS', case=False, na=False)]) if not df_filtered.empty and 'Status' in df_filtered.columns else 0
 
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Total Temuan", total_temuan)
-    c2.metric("Status BD (Belum Dilanjuti)", jml_bd)
-    c3.metric("Status EVAL (Evaluasi)", jml_eval)
-    c4.metric("Status SLS (Selesai)", jml_sls)
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.markdown(f'<div class="metric-card"><div class="metric-title">Total Temuan</div><div class="metric-value">{total_temuan}</div></div>', unsafe_allow_html=True)
+    with col2:
+        st.markdown(f'<div class="metric-card"><div class="metric-title">Status BD (Belum Dilanjuti)</div><div class="metric-value">{jml_bd}</div></div>', unsafe_allow_html=True)
+    with col3:
+        st.markdown(f'<div class="metric-card"><div class="metric-title">Status EVAL (Evaluasi)</div><div class="metric-value">{jml_eval}</div></div>', unsafe_allow_html=True)
+    with col4:
+        st.markdown(f'<div class="metric-card"><div class="metric-title">Status SLS (Selesai)</div><div class="metric-value">{jml_sls}</div></div>', unsafe_allow_html=True)
 
-    st.markdown("---")
+    st.markdown("<br>", unsafe_allow_html=True)
 
     tab1, tab2 = st.tabs(["Visualisasi Grafik Progres & Sebaran", "Grafik Tren Perbandingan Antar Tahun"])
     
@@ -97,7 +127,14 @@ if menu_pilihan == "Dashboard Visualisasi & Tabel":
             st.subheader("Progres Status per Bidang")
             if not df_filtered.empty and 'Bidang' in df_filtered.columns and 'Status' in df_filtered.columns:
                 fig_bar = px.histogram(df_filtered, y='Bidang', color='Status', barmode='stack', template="plotly_dark")
-                fig_bar.update_layout(xaxis_title="Jumlah", yaxis_title="Bidang", legend_title="Status")
+                # Mengatur tinggi agar bar tidak terlalu raksasa, serta memperbesar ukuran font label
+                fig_bar.update_layout(
+                    height=400, 
+                    xaxis_title="Jumlah", 
+                    yaxis_title="Bidang", 
+                    legend_title="Status",
+                    font=dict(size=12)
+                )
                 st.plotly_chart(fig_bar, use_container_width=True)
             else:
                 st.info("Data grafik bar belum tersedia pada filter ini.")
@@ -106,6 +143,7 @@ if menu_pilihan == "Dashboard Visualisasi & Tabel":
             st.subheader("Proporsi Status")
             if not df_filtered.empty and 'Status' in df_filtered.columns:
                 fig_pie = px.pie(df_filtered, names='Status', hole=0.5, template="plotly_dark")
+                fig_pie.update_layout(height=400, font=dict(size=12))
                 st.plotly_chart(fig_pie, use_container_width=True)
             else:
                 st.info("Data proporsi belum tersedia.")
@@ -114,6 +152,7 @@ if menu_pilihan == "Dashboard Visualisasi & Tabel":
         st.subheader("Grafik Tren Perbandingan Antar Tahun Temuan Audit")
         if not df_global.empty and 'Tahun Audit' in df_global.columns:
             fig_trend = px.histogram(df_global, x='Tahun Audit', color='Bidang' if 'Bidang' in df_global.columns else None, barmode='group', template="plotly_dark")
+            fig_trend.update_layout(height=420, font=dict(size=12))
             st.plotly_chart(fig_trend, use_container_width=True)
         else:
             st.info("Kolom 'Tahun Audit' tidak ditemukan dalam data.")
