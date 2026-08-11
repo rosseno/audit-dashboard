@@ -13,12 +13,11 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS Ultimate + Banner HUT RI Proporsional & Besar
+# Custom CSS Ultimate + Banner HUT RI Besar & Bergerak
 st.markdown("""
 <style>
     .main { background-color: #0e1117; }
     
-    /* Animasi Teks Berjalan dari Kanan ke Kiri */
     @keyframes marquee {
         0% { transform: translateX(100%); }
         100% { transform: translateX(-100%); }
@@ -119,7 +118,7 @@ def load_data():
 if 'df_master' not in st.session_state:
     st.session_state.df_master = load_data()
 
-# Memuat data vault
+# Memuat data vault KKA & LHA
 if 'vault_kka' not in st.session_state:
     if os.path.exists(EXCEL_KKA_FILE):
         st.session_state.vault_kka = pd.read_excel(EXCEL_KKA_FILE).to_dict('records')
@@ -260,6 +259,26 @@ with tab_dash:
         <div class="kpi-card card-red"><div class="kpi-title">OVERDUE (BD)</div><div class="kpi-value">{overdue}</div></div>
     </div>
     """, unsafe_allow_html=True)
+
+    # --- GRAFIK ANALITIK PENDUKUNG ---
+    if not df_base.empty:
+        st.markdown("---")
+        col_g1, col_g2 = st.columns(2)
+        with col_g1:
+            st.markdown("#### Distribusi Status Tindak Lanjut")
+            status_counts = df_base[col_status].value_counts().reset_index()
+            status_counts.columns = ['Status', 'Jumlah']
+            fig_status = px.pie(status_counts, names='Status', values='Jumlah', hole=0.4, color_discrete_sequence=px.colors.sequential.RdBu)
+            fig_status.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white')
+            st.plotly_chart(fig_status, use_container_width=True)
+            
+        with col_g2:
+            st.markdown("#### Temuan Berdasarkan Bidang")
+            bidang_counts = df_base[col_bidang].value_counts().reset_index()
+            bidang_counts.columns = ['Bidang', 'Jumlah']
+            fig_bidang = px.bar(bidang_counts, x='Bidang', y='Jumlah', color='Bidang', color_discrete_sequence=px.colors.sequential.Plasma)
+            fig_bidang.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white', showlegend=False)
+            st.plotly_chart(fig_bidang, use_container_width=True)
 
     st.markdown("---")
     st.markdown("### Detail Data Temuan & Rekomendasi")
