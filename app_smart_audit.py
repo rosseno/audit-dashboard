@@ -251,11 +251,9 @@ with tab_dash:
     evaluasi = len(df_base[df_base[col_status].str.contains("Evaluasi|EVAL", case=False, na=False)]) if not df_base.empty else 0
     overdue = len(df_base[df_base[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)]) if not df_base.empty else 0
 
-    # Inisialisasi session state untuk filter kartu KPI
     if 'kpi_filter' not in st.session_state:
         st.session_state.kpi_filter = "SEMUA"
 
-    # Baris Tombol Kartu KPI Interaktif
     k_col1, k_col2, k_col3, k_col4 = st.columns(4)
     with k_col1:
         if st.button(f"📊 TOTAL\n\n{total_temuan}", use_container_width=True):
@@ -272,12 +270,19 @@ with tab_dash:
 
     st.write(f"Filter Aktif Tabel: **{st.session_state.kpi_filter}**")
 
-    # --- TABEL REKAPITULASI BERWARNA & ELEGAN ---
+    # --- TABEL REKAPITULASI BERSIH TANPA WARNA KOLOM + BARIS TOTAL ---
     if not df_base.empty:
         st.markdown("### Rekapitulasi Matriks Tindak Lanjut Hasil Audit")
         
         rekap_data = []
         unique_bidangs = sorted(df_base[col_bidang].dropna().astype(str).unique())
+        
+        tot_tem = 0
+        tot_rek = 0
+        tot_sls = 0
+        tot_eval = 0
+        tot_bd = 0
+        tot_tptd = 0
         
         for idx, b in enumerate(unique_bidangs, 1):
             sub_df = df_base[df_base[col_bidang].astype(str) == str(b)]
@@ -285,6 +290,12 @@ with tab_dash:
             j_selesai = len(sub_df[sub_df[col_status].str.contains("Selesai|SLS", case=False, na=False)])
             j_eval = len(sub_df[sub_df[col_status].str.contains("Evaluasi|EVAL", case=False, na=False)])
             j_bd = len(sub_df[sub_df[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)])
+            
+            tot_tem += j_temuan
+            tot_rek += j_temuan
+            tot_sls += j_selesai
+            tot_eval += j_eval
+            tot_bd += j_bd
             
             rekap_data.append({
                 "No": chr(64 + idx),
@@ -297,19 +308,20 @@ with tab_dash:
                 "TPTD": 0
             })
             
+        # Tambahkan Baris Jumlah Total di Bawah
+        rekap_data.append({
+            "No": "",
+            "Objek Audit": "JUMLAH",
+            "Jumlah Temuan": tot_tem,
+            "Jumlah Rekomendasi": tot_rek,
+            "Selesai (SLS)": tot_sls,
+            "EVALUASI AUDITOR": tot_eval,
+            "Belum Ditindaklanjuti (BD)": tot_bd,
+            "TPTD": tot_tptd
+        })
+            
         df_rekap = pd.DataFrame(rekap_data)
-
-        def color_coding(val, col_name):
-            if col_name == "Selesai (SLS)" and val > 0:
-                return 'background-color: rgba(16, 185, 129, 0.25); color: #34d399; font-weight: bold;'
-            elif col_name == "EVALUASI AUDITOR" and val > 0:
-                return 'background-color: rgba(245, 158, 11, 0.25); color: #fbbf24; font-weight: bold;'
-            elif col_name == "Belum Ditindaklanjuti (BD)" and val > 0:
-                return 'background-color: rgba(239, 68, 68, 0.25); color: #f87171; font-weight: bold;'
-            return ''
-
-        styled_rekap = df_rekap.style.apply(lambda col: [color_coding(v, col.name) for v in col], subset=["Selesai (SLS)", "EVALUASI AUDITOR", "Belum Ditindaklanjuti (BD)"])
-        st.dataframe(styled_rekap, use_container_width=True, hide_index=True)
+        st.dataframe(df_rekap, use_container_width=True, hide_index=True)
 
     # --- GRAFIK ANALITIK PENDUKUNG ---
     if not df_base.empty:
@@ -334,7 +346,6 @@ with tab_dash:
     st.markdown("---")
     st.markdown("### Detail Data Temuan & Rekomendasi")
     
-    # Filter tabel detail berdasarkan pilihan tombol kartu KPI
     if st.session_state.kpi_filter == "SEMUA":
         df_table_final = df_base
     else:
