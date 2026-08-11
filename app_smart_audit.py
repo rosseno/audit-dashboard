@@ -270,7 +270,7 @@ with tab_dash:
 
     st.write(f"Filter Aktif Tabel: **{st.session_state.kpi_filter}**")
 
-    # --- TABEL REKAPITULASI BERSIH DENGAN BARIS JUMLAH BERWARNA ---
+    # --- TABEL REKAPITULASI DENGAN BARIS JUMLAH BERWARNA ---
     if not df_base.empty:
         st.markdown("### Rekapitulasi Matriks Tindak Lanjut Hasil Audit")
         
@@ -308,7 +308,6 @@ with tab_dash:
                 "TPTD": 0
             })
             
-        # Baris Jumlah Total
         rekap_data.append({
             "No": "",
             "Objek Audit": "JUMLAH",
@@ -357,7 +356,26 @@ with tab_dash:
     else:
         df_table_final = df_base[df_base[col_status].str.contains(st.session_state.kpi_filter, case=False, na=False)]
 
-    st.dataframe(df_table_final, use_container_width=True, hide_index=True)
+    # Pilih kolom yang ditampilkan sesuai permintaan (Dibuang yang tidak perlu)
+    target_columns = [
+        "No", 
+        "ID Temuan", 
+        "Bidang", 
+        "Judul Temuan Audit", 
+        "Rekomendasi Utama / Tindak Lanjut", 
+        "Status", 
+        "PIC Temuan Audit"
+    ]
+    
+    # Pastikan hanya kolom yang ada di dataframe yang dipilih untuk menghindari eror
+    available_cols = [c for c in target_columns if c in df_table_final.columns]
+    
+    if available_cols:
+        df_table_display = df_table_final[available_cols].copy()
+    else:
+        df_table_display = df_table_final
+
+    st.dataframe(df_table_display, use_container_width=True, hide_index=True)
 
 with tab_vault_kka:
     st.markdown("### Vault Penyimpanan File KKA & Program Audit (AP)")
