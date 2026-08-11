@@ -45,10 +45,17 @@ def load_data():
 
 df_global = load_data()
 
-# --- SIDEBAR FILTER & MENU ---
+# --- SIDEBAR FILTER & MENU (LENGKAP DENGAN PERIODE) ---
 st.sidebar.title("Panel Navigasi & Filter")
 access_role = st.sidebar.selectbox("Pilih Peran:", ["Auditee", "Admin SPI", "Direksi"])
 chosen_unit = st.sidebar.selectbox("Pilih Unit / Bidang:", ["Semua Unit", "Bidang Operasi Dan Teknik", "Bidang SDM", "Bidang Pengadaan", "Bidang Pemasaran", "Bidang Keuangan", "Bidang HSSE"])
+
+# Filter Periode / Tahun Audit
+list_periode = ["Semua Periode"]
+if not df_global.empty and 'Tahun Audit' in df_global.columns:
+    tahun_unik = sorted(df_global['Tahun Audit'].dropna().unique().astype(str).tolist())
+    list_periode.extend(tahun_unik)
+selected_periode = st.sidebar.selectbox("Pilih Periode (Tahun):", list_periode)
 
 menu_pilihan = st.sidebar.radio("Menu Utama:", [
     "Dashboard Visualisasi & Tabel", 
@@ -56,16 +63,17 @@ menu_pilihan = st.sidebar.radio("Menu Utama:", [
     "Status Koneksi Drive"
 ])
 
-# --- FILTER DATA ---
+# --- LOGIKA FILTER DATA ---
 df_filtered = df_global.copy()
-if not df_filtered.empty and chosen_unit != "Semua Unit":
-    if 'Bidang' in df_filtered.columns:
+if not df_filtered.empty:
+    if chosen_unit != "Semua Unit" and 'Bidang' in df_filtered.columns:
         df_filtered = df_filtered[df_filtered['Bidang'].str.contains(chosen_unit, case=False, na=False)]
+    if selected_periode != "Semua Periode" and 'Tahun Audit' in df_filtered.columns:
+        df_filtered = df_filtered[df_filtered['Tahun Audit'].astype(str) == selected_periode]
 
-# --- HALAMAN 1: DASHBOARD UTAMA (SESUAI GAMBAR) ---
+# --- HALAMAN 1: DASHBOARD UTAMA ---
 if menu_pilihan == "Dashboard Visualisasi & Tabel":
     
-    # Tab Navigasi Atas Grafik
     tab1, tab2 = st.tabs(["Visualisasi Grafik Progres & Sebaran", "Grafik Tren Perbandingan Antar Tahun"])
     
     with tab1:
@@ -78,7 +86,7 @@ if menu_pilihan == "Dashboard Visualisasi & Tabel":
                 fig_bar.update_layout(xaxis_title="Jumlah", yaxis_title="Bidang", legend_title="Status")
                 st.plotly_chart(fig_bar, use_container_width=True)
             else:
-                st.info("Data grafik bar belum tersedia pada file Excel.")
+                st.info("Data grafik bar belum tersedia pada filter ini.")
                 
         with col_chart2:
             st.subheader("Proporsi Status")
@@ -90,8 +98,8 @@ if menu_pilihan == "Dashboard Visualisasi & Tabel":
 
     with tab2:
         st.subheader("Grafik Tren Perbandingan Antar Tahun Temuan Audit")
-        if not df_filtered.empty and 'Tahun Audit' in df_filtered.columns:
-            fig_trend = px.histogram(df_filtered, x='Tahun Audit', color='Bidang' if 'Bidang' in df_filtered.columns else None, barmode='group', template="plotly_dark")
+        if not df_global.empty and 'Tahun Audit' in df_global.columns:
+            fig_trend = px.histogram(df_global, x='Tahun Audit', color='Bidang' if 'Bidang' in df_global.columns else None, barmode='group', template="plotly_dark")
             st.plotly_chart(fig_trend, use_container_width=True)
         else:
             st.info("Kolom 'Tahun Audit' tidak ditemukan dalam data.")
@@ -101,7 +109,7 @@ if menu_pilihan == "Dashboard Visualisasi & Tabel":
     if not df_filtered.empty:
         st.dataframe(df_filtered, use_container_width=True)
     else:
-        st.warning("Master database Excel belum tersedia di folder lokal.")
+        st.warning("Tidak ada data yang sesuai dengan filter yang dipilih.")
 
 # --- HALAMAN 2: UNGGAH DOKUMEN DENGAN GOOGLE DRIVE ---
 elif menu_pilihan == "Unggah Dokumen Audit (Auto-Drive)":
