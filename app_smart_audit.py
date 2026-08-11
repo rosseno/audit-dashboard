@@ -13,23 +13,24 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS Ultimate + Tema Kemerdekaan
+# Custom CSS Ultimate + Banner Kemerdekaan yang Jelas & Elegan
 st.markdown("""
 <style>
     .main { background-color: #0e1117; }
     
-    /* Header Kemerdekaan */
+    /* Banner Kemerdekaan Diperbaiki */
     .merdeka-banner {
-        background: linear-gradient(90deg, #b91c1c 0%, #ffffff 50%, #b91c1c 100%);
-        padding: 15px;
+        background: linear-gradient(135deg, #991b1b 0%, #dc2626 50%, #b91c1c 100%);
+        padding: 16px;
         border-radius: 10px;
         text-align: center;
         margin-bottom: 20px;
-        color: #000;
+        color: #ffffff !important;
         font-weight: 800;
-        font-size: 20px;
-        box-shadow: 0 4px 10px rgba(185, 28, 28, 0.4);
-        border: 2px solid #fff;
+        font-size: 18px;
+        letter-spacing: 1px;
+        box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+        border: 2px solid #fca5a5;
     }
     
     .header-banner {
@@ -85,9 +86,8 @@ st.markdown("""
 # --- UCAPAN KEMERDEKAAN ---
 st.markdown("""
 <div class="merdeka-banner">
-    🇮🇩 DIRGAHAYU REPUBLIK INDONESIA KE-81 | MERDEKA! 🇮🇩
+    🇮🇩 DIRGAHAYU REPUBLIK INDONESIA KE-81 — NUSANTARA BARU, INDONESIA MAJU (MERDEKA!) 🇮🇩
 </div>
 """, unsafe_allow_html=True)
 
-# [Sisa kode tetap sama seperti sebelumnya...]
-# Pastikan Bapak tetap menyalin bagian bawah kode dari `EXCEL_FILE = ...` hingga akhir
+# Lanjutkan sisa kode program Anda di bawah ini seperti biasa...
