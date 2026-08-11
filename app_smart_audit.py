@@ -114,6 +114,8 @@ st.markdown("""
 
 # --- CONFIG DATA ---
 EXCEL_FILE = "Master_Database_Temuan_Audit_2024_2025_PSM_Ringkas.xlsx"
+EXCEL_KKA_FILE = "Database_Vault_KKA_AP.xlsx"
+EXCEL_LHA_FILE = "Database_Vault_LHA_Word.xlsx"
 VAULT_DIR = "audit_file_vault"
 
 if not os.path.exists(VAULT_DIR):
@@ -125,6 +127,18 @@ def load_data():
 
 if 'df_master' not in st.session_state:
     st.session_state.df_master = load_data()
+
+if 'vault_kka' not in st.session_state:
+    if os.path.exists(EXCEL_KKA_FILE):
+        st.session_state.vault_kka = pd.read_excel(EXCEL_KKA_FILE).to_dict('records')
+    else:
+        st.session_state.vault_kka = []
+
+if 'vault_lha' not in st.session_state:
+    if os.path.exists(EXCEL_LHA_FILE):
+        st.session_state.vault_lha = pd.read_excel(EXCEL_LHA_FILE).to_dict('records')
+    else:
+        st.session_state.vault_lha = []
 
 if 'notification_list' not in st.session_state:
     st.session_state.notification_list = []
@@ -222,7 +236,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# --- PUSAT NOTIFIKASI LIVE DENGAN TOMBOL UNDUH (DI BAWAH SIDEBAR) ---
+# --- PUSAT NOTIFIKASI LIVE DENGAN TOMBOL UNDUH ---
 if st.session_state.notification_list and access_role in ["Direktur Utama", "Admin SPI", "Direktur Operasi & Komersial"]:
     st.markdown("### 🔔 Pusat Notifikasi Unggah Dokumen Tindak Lanjut")
     for note in st.session_state.notification_list:
@@ -356,9 +370,67 @@ with tab_dash:
         st.success(f"File {uploaded_file.name} berhasil diunggah! Notifikasi terkirim ke Pimpinan/Admin SPI.")
 
 with tab_vault_kka:
-    st.markdown("### Vault Penyimpanan File KKA & Program Audit")
-    st.info("Unggah KKA/AP di sini.")
+    st.markdown("### 📋 Vault Penyimpanan File KKA & Program Audit (AP)")
+    st.info("💡 **Arsip Dokumen KKA & Program Audit:** Unggah dan kelola file pendukung audit di sini.")
+    
+    uploaded_kka = st.file_uploader("Unggah File KKA / AP (.xlsx, .docx, .pdf)", type=["xlsx", "docx", "pdf"], key="uploader_kka")
+    if uploaded_kka is not None:
+        file_path = os.path.join(VAULT_DIR, uploaded_kka.name)
+        with open(file_path, "wb") as f:
+            f.write(uploaded_kka.getbuffer())
+        st.session_state.vault_kka.append({
+            "Nama File": uploaded_kka.name,
+            "Tanggal Upload": datetime.now().strftime("%d-%m-%Y %H:%M"),
+            "Tipe": "KKA / AP"
+        })
+        pd.DataFrame(st.session_state.vault_kka).to_excel(EXCEL_KKA_FILE, index=False)
+        st.success(f"File KKA '{uploaded_kka.name}' berhasil disimpan ke Vault!")
+
+    if st.session_state.vault_kka:
+        st.markdown("#### Daftar File KKA & AP Tersimpan:")
+        df_kka_view = pd.DataFrame(st.session_state.vault_kka)
+        st.dataframe(df_kka_view, use_container_width=True, hide_index=True)
+        
+        for item in st.session_state.vault_kka:
+            f_path = os.path.join(VAULT_DIR, item["Nama File"])
+            if os.path.exists(f_path):
+                with open(f_path, "rb") as f:
+                    st.download_button(
+                        label=f"📥 Unduh KKA: {item['Nama File']}",
+                        data=f,
+                        file_name=item['Nama File'],
+                        key=f"dl_kka_{item['Nama File']}"
+                    )
 
 with tab_vault_lha:
-    st.markdown("### Vault Penyimpanan File LHA")
-    st.info("Unggah LHA di sini.")
+    st.markdown("### 📁 Vault Penyimpanan File LHA (.docx / .pdf)")
+    st.info("💡 **Pusat Arsip Laporan Hasil Audit (LHA):** Unggah laporan resmi di sini.")
+    
+    uploaded_lha = st.file_uploader("Unggah File LHA (.docx, .pdf)", type=["docx", "pdf"], key="uploader_lha")
+    if uploaded_lha is not None:
+        file_path = os.path.join(VAULT_DIR, uploaded_lha.name)
+        with open(file_path, "wb") as f:
+            f.write(uploaded_lha.getbuffer())
+        st.session_state.vault_lha.append({
+            "Nama File": uploaded_lha.name,
+            "Tanggal Upload": datetime.now().strftime("%d-%m-%Y %H:%M"),
+            "Tipe": "LHA"
+        })
+        pd.DataFrame(st.session_state.vault_lha).to_excel(EXCEL_LHA_FILE, index=False)
+        st.success(f"File LHA '{uploaded_lha.name}' berhasil disimpan ke Vault!")
+
+    if st.session_state.vault_lha:
+        st.markdown("#### Daftar File LHA Tersimpan:")
+        df_lha_view = pd.DataFrame(st.session_state.vault_lha)
+        st.dataframe(df_lha_view, use_container_width=True, hide_index=True)
+        
+        for item in st.session_state.vault_lha:
+            f_path = os.path.join(VAULT_DIR, item["Nama File"])
+            if os.path.exists(f_path):
+                with open(f_path, "rb") as f:
+                    st.download_button(
+                        label=f"📥 Unduh LHA: {item['Nama File']}",
+                        data=f,
+                        file_name=item['Nama File'],
+                        key=f"dl_lha_{item['Nama File']}"
+                    )
