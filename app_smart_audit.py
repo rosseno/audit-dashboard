@@ -112,7 +112,34 @@ if menu_pilihan == "Dashboard Visualisasi & Tabel":
     jml_bd = len(df_filtered[df_filtered['Status'].str.contains('BD', case=False, na=False)]) if not df_filtered.empty and 'Status' in df_filtered.columns else 0
     jml_eval = len(df_filtered[df_filtered['Status'].str.contains('EVAL', case=False, na=False)]) if not df_filtered.empty and 'Status' in df_filtered.columns else 0
     jml_sls = len(df_filtered[df_filtered['Status'].str.contains('SLS', case=False, na=False)]) if not df_filtered.empty and 'Status' in df_filtered.columns else 0
-
+# --- BANNER PERINGATAN BLINKING STATUS BD ---
+if 'jml_bd' in locals() and jml_bd > 0:
+    st.markdown(
+        f"""
+        <style>
+        @keyframes blink-animation {{
+            0% {{ opacity: 1; }}
+            50% {{ opacity: 0.3; }}
+            100% {{ opacity: 1; }}
+        }}
+        .blinking-banner {{
+            background-color: #ff4b4b;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 16px;
+            animation: blink-animation 1.5s infinite;
+            margin-bottom: 20px;
+        }}
+        </style>
+        <div class="blinking-banner">
+            🚨 PERINGATAN: Terdapat {jml_bd} Temuan dengan Status BD (Belum Ditindaklanjuti) yang memerlukan perhatian segera!
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
     col1, col2, col3, col4 = st.columns(4)
     with col1:
             if st.button(f"TOTAL TEMUAN\n\n{total_temuan}", use_container_width=True):
