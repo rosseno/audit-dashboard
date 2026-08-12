@@ -59,37 +59,36 @@ st.markdown("""
     DIRGAHAYU REPUBLIK INDONESIA KE-81 — NUSANTARA BARU, INDONESIA MAJU!
 </div>
 """, unsafe_allow_html=True)
-# --- BANNER PERINGATAN MERAH PEKAT & FONT KUNING MENYALA ---
+# --- BANNER PERINGATAN MENGGUNAKAN ST.WARNING (PASTI KUNING/MENCORAK) ---
 if 'jml_bd' in locals() and jml_bd > 0:
     st.markdown(
-        f"""
+        """
         <style>
-        @keyframes scary-pulse {{
-            0% {{ opacity: 1; transform: scale(1); }}
-            50% {{ opacity: 0.4; transform: scale(0.98); }}
-            100% {{ opacity: 1; transform: scale(1); }}
-        }}
-        .custom-alert-box {{
-            background-color: #8b0000 !important;
-            padding: 18px 24px;
-            border-radius: 8px;
-            text-align: center;
-            box-shadow: 0 0 25px rgba(255, 0, 0, 0.9);
-            animation: scary-pulse 0.8s infinite ease-in-out;
-            margin-bottom: 20px;
-            border: 3px solid #ffcc00;
-        }}
-        .custom-alert-box span {{
-            color: #ffff00 !important;
+        @keyframes blink-warning {
+            0% { opacity: 1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+        .stAlert {
+            animation: blink-warning 1s infinite ease-in-out;
+            background-color: #b71c1c !important;
+            border: 2px solid #ffeb3b !important;
+        }
+        .stAlert p {
+            color: #ffeb3b !important;
             font-weight: 900 !important;
-            font-size: 19px !important;
-            letter-spacing: 0.5px;
-        }}
+            font-size: 18px !important;
+            text-align: center;
+        }
         </style>
-        <div class="custom-alert-box">
-            <span>🚨 PERINGATAN KERAS: Terdapat {jml_bd} Temuan dengan Status BD (Belum Ditindaklanjuti) yang Memerlukan Perhatian & Tindak Lanjut Segera! 🚨</span>
-        </div>
-        
+        """,
+        unsafe_allow_html=True
+    )
+    
+    st.warning(f"🚨 PERINGATAN KERAS: Terdapat {jml_bd} Temuan dengan Status BD (Belum Ditindaklanjuti) yang Memerlukan Perhatian & Tindak Lanjut Segera! 🚨")
+    
+    st.markdown(
+        """
         <audio autoplay style="display:none;">
             <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
         </audio>
