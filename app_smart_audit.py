@@ -15,6 +15,8 @@ st.set_page_config(
 
 # Custom CSS Ultimate + Banner HUT RI Besar & Bergerak
 st.markdown("""
+    ... (isi kode HTML tabel di sini) ...
+""", unsafe_allow_html=True)
 <style>
     .main { background-color: #0e1117; }
     
