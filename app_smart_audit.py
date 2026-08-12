@@ -114,23 +114,23 @@ if menu_pilihan == "Dashboard Visualisasi & Tabel":
     jml_eval = len(df_filtered[df_filtered['Status'].str.contains('EVAL', case=False, na=False)]) if not df_filtered.empty and 'Status' in df_filtered.columns else 0
     jml_sls = len(df_filtered[df_filtered['Status'].str.contains('SLS', case=False, na=False)]) if not df_filtered.empty and 'Status' in df_filtered.columns else 0
 
-col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3, col4 = st.columns(4)
     with col1:
-        if st.button(f"TOTAL TEMUAN\n\n{total_temuan}", use_container_width=True):
-            st.session_state.filter_status = "Semua"
-            st.rerun()
+            if st.button(f"TOTAL TEMUAN\n\n{total_temuan}", use_container_width=True):
+                st.session_state.filter_status = "Semua"
+                st.rerun()
     with col2:
-        if st.button(f"STATUS BD\n\n{jml_bd}", use_container_width=True):
-            st.session_state.filter_status = "BD"
-            st.rerun()
-    with col3:
-        if st.button(f"STATUS EVAL\n\n{jml_eval}", use_container_width=True):
-            st.session_state.filter_status = "EVAL"
-            st.rerun()
-    with col4:
-        if st.button(f"STATUS SLS\n\n{jml_sls}", use_container_width=True):
-            st.session_state.filter_status = "SLS"
-            st.rerun()
+            if st.button(f"STATUS BD\n\n{jml_bd}", use_container_width=True):
+                st.session_state.filter_status = "BD"
+                st.rerun()
+        with col3:
+            if st.button(f"STATUS EVAL\n\n{jml_eval}", use_container_width=True):
+                st.session_state.filter_status = "EVAL"
+                st.rerun()
+        with col4:
+            if st.button(f"STATUS SLS\n\n{jml_sls}", use_container_width=True):
+                st.session_state.filter_status = "SLS"
+                st.rerun()
 
     st.markdown("<br>", unsafe_allow_html=True)
 
