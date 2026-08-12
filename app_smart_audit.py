@@ -112,9 +112,9 @@ st.markdown("""
         font-weight: 600;
     }
 }
-    /* Pengaturan ukuran font tabel */
-    .stDataFrame th, .stDataFrame td {
-        font-size: 45px !important;
+   .stDataFrame div[data-testid="stVirtualGrid"] *,
+    .stDataFrame [role="gridcell"] span {
+        font-size: 16px !important;
     }
 </style>
 """, unsafe_allow_html=True)
