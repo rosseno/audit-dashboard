@@ -38,7 +38,7 @@ st.markdown("""
     }
     div.stButton > button {
         min-height: 120px;
-        font-size: 30px;
+        font-size: 60px;
         font-weight: bold;
     }
     .merdeka-text {
