@@ -48,9 +48,8 @@ st.markdown("""
         letter-spacing: 1px;
         animation: marquee 18s linear infinite;
     }
-    }
-    .stTabs [data-baseweb="tab"] p {
-        font-size: 25px !important;
+    .stTabs button {
+        font-size: 18px !important;
         font-weight: bold !important;
     }
     
