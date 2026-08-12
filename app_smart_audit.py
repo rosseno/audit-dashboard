@@ -112,9 +112,82 @@ st.markdown("""
         font-weight: 600;
     }
 }
-   .stDataFrame [data-testid="stDataFrame"] *, 
-    .stTable * {
-        font-size: 22px !important;
+   st.markdown("""
+    <table style="width:100%; font-size:20px; color:white; border-collapse:collapse;">
+        <tr style="border-bottom: 1px solid #444;">
+            <th style="text-align:left; padding:8px;">No</th>
+            <th style="text-align:left; padding:8px;">Objek Audit</th>
+            <th style="text-align:right; padding:8px;">Jumlah Temuan</th>
+            <th style="text-align:right; padding:8px;">Selesai (SLS)</th>
+            <th style="text-align:right; padding:8px;">EVALUASI AUDITOR</th>
+            <th style="text-align:right; padding:8px;">Belum Ditindaklanjuti (BD)</th>
+        </tr>
+        <!-- Masukkan data baris tabel Bapak di sini -->
+                     <tr style="border-bottom: 1px solid #333;">
+        <td style="text-align:left; padding:8px;">A</td>
+        <td style="text-align:left; padding:8px;">Bidang Bidang HSSE</td>
+        <td style="text-align:right; padding:8px;">11</td>
+        <td style="text-align:right; padding:8px;">4</td>
+        <td style="text-align:right; padding:8px;">7</td>
+        <td style="text-align:right; padding:8px;">0</td>
+                 <tr style="border-bottom: 1px solid #333;">
+        <td style="text-align:left; padding:8px;">B</td>
+        <td style="text-align:left; padding:8px;">Bidang Bidang Keuangan</td>
+        <td style="text-align:right; padding:8px;">17</td>
+        <td style="text-align:right; padding:8px;">16</td>
+        <td style="text-align:right; padding:8px;">0</td>
+        <td style="text-align:right; padding:8px;">1</td>
+        </tr>
+                 <tr style="border-bottom: 1px solid #333;">
+        <td style="text-align:left; padding:8px;">C</td>
+        <td style="text-align:left; padding:8px;">Bidang Bidang Keuangan & Komersil</td>
+        <td style="text-align:right; padding:8px;">2</td>
+        <td style="text-align:right; padding:8px;">2</td>
+        <td style="text-align:right; padding:8px;">0</td>
+        <td style="text-align:right; padding:8px;">0</td>
+               </tr>  
+ <tr style="border-bottom: 1px solid #333;">
+        <td style="text-align:left; padding:8px;">C</td>
+        <td style="text-align:left; padding:8px;">Bidang Bidang Operasi & Teknik</td>
+        <td style="text-align:right; padding:8px;">2</td>
+        <td style="text-align:right; padding:8px;">2</td>
+        <td style="text-align:right; padding:8px;">0</td>
+        <td style="text-align:right; padding:8px;">0</td>
+           </tr>  
+<tr style="border-bottom: 1px solid #333;">
+        <td style="text-align:left; padding:8px;">C</td>
+        <td style="text-align:left; padding:8px;">Bidang Bidang HSSE</td>
+        <td style="text-align:right; padding:8px;">2</td>
+        <td style="text-align:right; padding:8px;">2</td>
+        <td style="text-align:right; padding:8px;">0</td>
+        <td style="text-align:right; padding:8px;">0</td>
+           </tr>  
+<tr style="border-bottom: 1px solid #333;">
+        <td style="text-align:left; padding:8px;">C</td>
+        <td style="text-align:left; padding:8px;">Bidang Bidang SDM</td>
+        <td style="text-align:right; padding:8px;">2</td>
+        <td style="text-align:right; padding:8px;">2</td>
+        <td style="text-align:right; padding:8px;">0</td>
+        <td style="text-align:right; padding:8px;">0</td>
+           </tr>  
+  <tr style="border-bottom: 1px solid #333;">
+        <td style="text-align:left; padding:8px;">C</td>
+        <td style="text-align:left; padding:8px;">Bidang Bidang Pemasaran</td>
+        <td style="text-align:right; padding:8px;">2</td>
+        <td style="text-align:right; padding:8px;">2</td>
+        <td style="text-align:right; padding:8px;">0</td>
+        <td style="text-align:right; padding:8px;">0</td>
+           </tr> 
+   <tr style="border-bottom: 1px solid #333;">
+        <td style="text-align:left; padding:8px;">C</td>
+        <td style="text-align:left; padding:8px;">Bidang Bidang Pengadaan</td>
+        <td style="text-align:right; padding:8px;">2</td>
+        <td style="text-align:right; padding:8px;">2</td>
+        <td style="text-align:right; padding:8px;">0</td>
+        <td style="text-align:right; padding:8px;">0</td>              
+           </tr>   
+    </table>
+""", unsafe_allow_html=True)
     }
 </style>
 """, unsafe_allow_html=True)
