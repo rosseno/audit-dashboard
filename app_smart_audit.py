@@ -49,8 +49,8 @@ st.markdown("""
         animation: marquee 18s linear infinite;
     }
     }
-    div.stButton > button p {
-        font-size: 50px !important;
+    .stTabs [data-baseweb="tab"] p {
+        font-size: 25px !important;
         font-weight: bold !important;
     }
     
