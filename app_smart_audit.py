@@ -112,8 +112,7 @@ st.markdown("""
         font-weight: 600;
     }
 }
-   .stDataFrame td, .stDataFrame th, 
-    .stTable td, .stTable th {
+   .stDataFrame div, .stTable div, .dataframe span {
         font-size: 18px !important;
     }
 </style>
