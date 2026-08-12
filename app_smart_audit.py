@@ -36,11 +36,15 @@ st.markdown("""
    div.stButton > button {
         min-height: 120px;
     }
+    div.stButton > button p {
+     font-size: 24px !important;
+     font-weight: bold !important;
+    }
     .merdeka-text {
         display: inline-block;
         color: #ffffff !important;
         font-weight: 800;
-        font-size: 6px;
+        font-size: 14px;
         letter-spacing: 1px;
         animation: marquee 18s linear infinite;
     }
