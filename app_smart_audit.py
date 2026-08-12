@@ -111,6 +111,11 @@ st.markdown("""
         color: #34d399;
         font-weight: 600;
     }
+}
+    /* Pengaturan ukuran font tabel */
+    .stDataFrame th, .stDataFrame td {
+        font-size: 15px !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
