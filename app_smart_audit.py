@@ -52,7 +52,7 @@ st.markdown("""
         display: inline-block;
         color: #ffffff !important;
         font-weight: 800;
-        font-size: 40px;
+        font-size: 30px;
         letter-spacing: 1px;
         animation: marquee 18s linear infinite;
     }
