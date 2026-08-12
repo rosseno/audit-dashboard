@@ -114,7 +114,7 @@ st.markdown("""
 }
     /* Pengaturan ukuran font tabel */
     .stDataFrame th, .stDataFrame td {
-        font-size: 15px !important;
+        font-size: 25px !important;
     }
 </style>
 """, unsafe_allow_html=True)
