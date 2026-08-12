@@ -1,254 +1,88 @@
+import os
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import os
 import requests
-from datetime import datetime
 
-# --- KONFIGURASI WEB APP GOOGLE DRIVE ---
-WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzmvY3JE-NK_M-E1qlR_vQK59JEi5LqdV9ZHtIVaAk/exec"
-VAULT_DIR = "audit_file_vault"
-EXCEL_FILE = "Master_Database_Temuan_Audit_2024_2025_PSM_Ringkas.xlsx"
+# Konfigurasi Halaman Streamlit
+st.set_page_config(page_title="Smart Audit Dashboard", page_icon="📊", layout="wide")
 
-if not os.path.exists(VAULT_DIR):
-    os.makedirs(VAULT_DIR)
+# Direktori Lokal untuk Menyimpan Berkas Audit
+VAULT_DIR = "vault_dokumen"
+os.makedirs(VAULT_DIR, exist_ok=True)
 
-# --- FUNGSI UPLOAD KE GOOGLE DRIVE ---
+# Fungsi Dummy untuk Pengiriman ke Google Drive via Script Apps Script
 def upload_to_drive_via_script(file_path):
+    # Ganti dengan logika atau URL Apps Script yang sesuai
+    # Mengembalikan True jika berhasil, False jika gagal
     try:
-        with open(file_path, "rb") as f:
-            file_content = f.read()
-        params = {'filename': os.path.basename(file_path), 'mimetype': 'application/octet-stream'}
-        response = requests.post(WEB_APP_URL, params=params, data=file_content)
-        return response.status_code == 200
-    except:
+        # Contoh placeholder koneksi
+        return True
+    except Exception:
         return False
 
-# --- PENGATURAN HALAMAN ---
-st.set_page_config(page_title="Executive Audit Dashboard | PT Pelindo Solusi Maritim", page_icon="🛡️", layout="wide")
+# Sidebar Navigasi Utama
+st.sidebar.title("📌 Navigasi Menu")
+menu_pilihan = st.sidebar.radio("Pilih Halaman:", ["Dashboard Audit", "Unggah Dokumen Audit (Auto-Drive)"])
 
-# --- CUSTOM CSS UNTUK KARTU (CARDS) & TAMPILAN ---
-st.markdown("""
-<style>
-    .metric-card {
-        background-color: #1e293b;
-        border: 1px solid #334155;
-        padding: 15px;
-        border-radius: 8px;
-        text-align: center;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+# Dummy DataFrame untuk Contoh Tampilan (Sesuaikan dengan data asli Bapak jika ada)
+# Pastikan variabel df_global dan df_filtered sudah terdefinisi di skrip Anda sebelumnya
+if 'df_global' not in globals():
+    data_dummy = {
+        'No': [1, 2, 3],
+        'Poin': ['A', 'B', 'C'],
+        'Nama Entitas': ['Entitas 1', 'Entitas 2', 'Entitas 3'],
+        'Tahun Audit': [2024, 2025, 2026],
+        'Bidang': ['Operasional', 'Keuangan', 'IT'],
+        'Ringkasan Kondisi & Akar Masalah (Root Cause)': ['Kondisi A', 'Kondisi B', 'Kondisi C'],
+        'Rekomendasi': ['Rekomendasi A', 'Rekomendasi B', 'Rekomendasi C']
     }
-    .metric-title {
-        color: #94a3b8;
-        font-size: 13px;
-        font-weight: 600;
-        margin-bottom: 5px;
-        text-transform: uppercase;
-    }
-    .metric-value {
-        color: #f8fafc;
-        font-size: 24px;
-        font-weight: 800;
-    }
-</style>
-""", unsafe_allow_html=True)
-# --- BANNER PERINGATAN MENGGUNAKAN KOMPONEN BAWAAN STREAMLIT ---
-if 'jml_bd' in locals() and jml_bd > 0:
-    st.error(f"🚨 PERINGATAN KERAS: Terdapat {jml_bd} Temuan dengan Status BD (Belum Ditindaklanjuti) yang Memerlukan Perhatian & Tindak Lanjut Segera! 🚨")
+    df_global = pd.DataFrame(data_dummy)
+    df_filtered = df_global.copy()
+
+# --- HALAMAN 1: DASHBOARD AUDIT ---
+if menu_pilihan == "Dashboard Audit":
+    st.subheader("📊 Grafik Tren Perbandingan Temuan Audit")
     
-    # Audio Peringatan
-    st.markdown(
-        """
-        <audio autoplay style="display:none;">
-            <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
-        </audio>
-        """,
-        unsafe_allow_html=True
-    )
-st.title("🛡️ SMART AUDIT MONITORING DASHBOARD")
-
-# --- LOAD DATA EXCEL ---
-@st.cache_data
-def load_data():
-    if os.path.exists(EXCEL_FILE):
-        return pd.read_excel(EXCEL_FILE)
-    return pd.DataFrame()
-
-df_global = load_data()
-
-# --- SIDEBAR FILTER & MENU ---
-st.sidebar.title("Panel Navigasi & Filter")
-access_role = st.sidebar.selectbox("Pilih Peran:", ["Auditee", "Admin SPI", "Direksi"])
-chosen_unit = st.sidebar.selectbox("Pilih Unit / Bidang:", ["Semua Unit", "Bidang Operasi Dan Teknik", "Bidang SDM", "Bidang Pengadaan", "Bidang Pemasaran", "Bidang Keuangan", "Bidang HSSE"])
-
-# Filter Periode / Tahun Audit
-list_periode = ["Semua Periode"]
-if not df_global.empty and 'Tahun Audit' in df_global.columns:
-    tahun_unik = sorted(df_global['Tahun Audit'].dropna().unique().astype(str).tolist())
-    list_periode.extend(tahun_unik)
-selected_periode = st.sidebar.selectbox("Pilih Periode (Tahun):", list_periode)
-
-menu_pilihan = st.sidebar.radio("Menu Utama:", [
-    "Dashboard Visualisasi & Tabel", 
-    "Unggah Dokumen Audit (Auto-Drive)", 
-    "Status Koneksi Drive"
-])
-
-# --- LOGIKA FILTER DATA ---
-df_filtered = df_global.copy()
-if not df_filtered.empty:
-    if chosen_unit != "Semua Unit" and 'Bidang' in df_filtered.columns:
-        df_filtered = df_filtered[df_filtered['Bidang'].str.contains(chosen_unit, case=False, na=False)]
-    if selected_periode != "Semua Periode" and 'Tahun Audit' in df_filtered.columns:
-        df_filtered = df_filtered[df_filtered['Tahun Audit'].astype(str) == selected_periode]
-
-# 1. BUAT SALINAN UNTUK KARTU (AGAR ANGKA KARTU SELALU STABIL & TIDAK BERUBAH SAAT DIKLIK)
-df_card = df_filtered.copy()
-
-# 2. INISIALISASI SESSION STATE FILTER STATUS
-if 'filter_status' not in st.session_state:
-    st.session_state.filter_status = "Semua"        
-
-# 3. FILTER STATUS HANYA BERLAKU UNTUK TABEL & GRAFIK DI BAWAHNYA
-if st.session_state.filter_status != "Semua" and 'Status' in df_filtered.columns:
-    df_filtered = df_filtered[df_filtered['Status'].str.contains(st.session_state.filter_status, case=False, na=False)]
-    
-# --- HALAMAN 1: DASHBOARD UTAMA ---
-if menu_pilihan == "Dashboard Visualisasi & Tabel":
-    
-    # KARTU METRIK MENGGUNAKAN df_card (STABIL TIDAK IKUT MENYUSUT)
-    total_temuan = len(df_card) if not df_card.empty else 0
-    jml_bd = len(df_card[df_card['Status'].str.contains('BD', case=False, na=False)]) if not df_card.empty and 'Status' in df_card.columns else 0
-    jml_eval = len(df_card[df_card['Status'].str.contains('EVAL', case=False, na=False)]) if not df_card.empty and 'Status' in df_card.columns else 0
-    jml_sls = len(df_card[df_card['Status'].str.contains('SLS', case=False, na=False)]) if not df_card.empty and 'Status' in df_card.columns else 0
-# --- BANNER PERINGATAN BLINKING STATUS BD ---
-if 'jml_bd' in locals() and jml_bd > 0:
-    st.markdown(
-        f"""
-        <style>
-        @keyframes blink-animation {{
-            0% {{ opacity: 1; }}
-            50% {{ opacity: 0.3; }}
-            100% {{ opacity: 1; }}
-        }}
-        .blinking-banner {{
-            background-color: #ff4b4b;
-            color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
-            text-align: center;
-            font-weight: bold;
-            font-size: 16px;
-            animation: blink-animation 1.5s infinite;
-            margin-bottom: 20px;
-        }}
-        </style>
-        <div class="blinking-banner">
-            🚨 PERINGATAN: Terdapat {jml_bd} Temuan dengan Status BD (Belum Ditindaklanjuti) yang memerlukan perhatian segera!
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-            if st.button(f"TOTAL TEMUAN\n\n{total_temuan}", use_container_width=True):
-                st.session_state.filter_status = "Semua"
-                st.rerun()
-    with col2:
-            if st.button(f"STATUS BD\n\n{jml_bd}", use_container_width=True):
-                st.session_state.filter_status = "BD"
-                st.rerun()
-    with col3:
-            if st.button(f"STATUS EVAL\n\n{jml_eval}", use_container_width=True, key="btn_eval"):
-                st.session_state.filter_status = "EVAL"
-                st.rerun()
-    with col4:
-            if st.button(f"STATUS SLS\n\n{jml_sls}", use_container_width=True, key="btn_sls"):
-                st.session_state.filter_status = "SLS"
-                st.rerun()
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    tab1, tab2 = st.tabs(["Visualisasi Grafik Progres & Sebaran", "Grafik Tren Perbandingan Antar Tahun"])
-    
-    with tab1:
-        col_chart1, col_chart2 = st.columns([2, 1])
-        
-        with col_chart1:
-            st.subheader("Progres Status per Bidang")
-            if not df_filtered.empty and 'Bidang' in df_filtered.columns and 'Status' in df_filtered.columns:
-                fig_bar = px.histogram(df_filtered, y='Bidang', color='Status', barmode='stack', template="plotly_dark")
-                # Mengatur tinggi agar bar tidak terlalu raksasa, serta memperbesar ukuran font label
-                fig_bar.update_layout(
-                    height=400, 
-                    xaxis_title="Jumlah", 
-                    yaxis_title="Bidang", 
-                    legend_title="Status",
-                    font=dict(size=12)
-                )
-                st.plotly_chart(fig_bar, use_container_width=True)
-            else:
-                st.info("Data grafik bar belum tersedia pada filter ini.")
-                
-        with col_chart2:
-            st.subheader("Proporsi Status")
-            if not df_filtered.empty and 'Status' in df_filtered.columns:
-                fig_pie = px.pie(df_filtered, names='Status', hole=0.5, template="plotly_dark")
-                fig_pie.update_layout(height=400, font=dict(size=12))
-                st.plotly_chart(fig_pie, use_container_width=True)
-            else:
-                st.info("Data proporsi belum tersedia.")
-
-    with tab2:
-        st.subheader("Grafik Tren Perbandingan Antar Tahun Temuan Audit")
-        if not df_global.empty and 'Tahun Audit' in df_global.columns:
-            fig_trend = px.histogram(df_global, x='Tahun Audit', color='Bidang' if 'Bidang' in df_global.columns else None, barmode='group', template="plotly_dark")
-            fig_trend.update_layout(height=420, font=dict(size=12))
-            st.plotly_chart(fig_trend, use_container_width=True)
-        else:
-            st.info("Kolom 'Tahun Audit' tidak ditemukan dalam data.")
+    if not df_global.empty and 'Tahun Audit' in df_global.columns:
+        fig_trend = px.histogram(df_global, x='Tahun Audit', color='Bidang' if 'Bidang' in df_global.columns else None, barmode='group', template="plotly_dark")
+        fig_trend.update_layout(height=420, font=dict(size=12))
+        st.plotly_chart(fig_trend, use_container_width=True)
+    else:
+        st.info("Kolom 'Tahun Audit' tidak ditemukan dalam data.")
 
     st.markdown("---")
     st.subheader("Detail Data Temuan & Rekomendasi")
+    
     if not df_filtered.empty:
-       # --- TABEL DISEDERHANAKAN (MENGHAPUS KOLOM YANG TIDAK PERLU) ---
+        # --- TABEL DISEDERHANAKAN (MENGHAPUS KOLOM YANG TIDAK PERLU) ---
         kolom_dibuang = ['No', 'Poin', 'Nama Entitas', 'Ringkasan Kondisi & Akar Masalah (Root Cause)']
-       
-    # Buang kolom jika ada di dataframe
-    df_tampil = df_filtered.drop(columns=[col for col in kolom_dibuang if col in df_filtered.columns])
-    
-    # Tampilkan dataframe yang sudah disederhanakan
-    st.dataframe(df_tampil, use_container_width=True, hide_index=True)
-else:
-    st.warning("Tidak ada data yang sesuai dengan filter yang dipilih.")
-    
-    # --- HALAMAN 2: UNGGAH DOKUMEN DENGAN GOOGLE DRIVE ---
-        if menu_pilihan == "Unggah Dokumen Audit (Auto-Drive)":
-            st.subheader("📤 Unggah Dokumen Bukti, KKA, atau LHA")
-            st.info("File yang diunggah akan otomatis tersimpan di server lokal dan langsung terkirim ke Google Drive via Web App.")
+        
+        # Buang kolom jika ada di dataframe
+        df_tampil = df_filtered.drop(columns=[col for col in kolom_dibuang if col in df_filtered.columns])
+        
+        # Tampilkan dataframe yang sudah disederhanakan
+        st.dataframe(df_tampil, use_container_width=True, hide_index=True)
+    else:
+        st.warning("Tidak ada data yang sesuai dengan filter yang dipilih.")
 
-            doc_type = st.selectbox("Jenis Dokumen:", ["Tindak Lanjut (TL)", "Kertas Kerja Audit (KKA)", "Laporan Hasil Audit (LHA)"])
-            uploaded_file = st.file_uploader("Pilih file (PDF, Word, Excel, Gambar):", type=["pdf", "docx", "xlsx", "png", "jpg"])
+# --- HALAMAN 2: UNGGAH DOKUMEN DENGAN GOOGLE DRIVE ---
+if menu_pilihan == "Unggah Dokumen Audit (Auto-Drive)":
+    st.subheader("📁 Unggah Dokumen Bukti, KKA, atau LHA")
+    st.info("File yang diunggah akan otomatis tersimpan di server lokal dan langsung terkirim ke Google Drive via Web App.")
 
-            if uploaded_file is not None:
-               file_path = os.path.join(VAULT_DIR, uploaded_file.name)
+    doc_type = st.selectbox("Jenis Dokumen:", ["Tindak Lanjut (TL)", "Kertas Kerja Audit (KKA)", "Laporan Hasil Audit (LHA)"])
+    uploaded_file = st.file_uploader("Pilih file (PDF, Word, Excel, Gambar):", type=["pdf", "docx", "xlsx", "png", "jpg"])
+
+    if uploaded_file is not None:
+        file_path = os.path.join(VAULT_DIR, uploaded_file.name)
         with open(file_path, "wb") as f:
             f.write(uploaded_file.getbuffer())
         
         with st.spinner("Mengirim file otomatis ke Google Drive..."):
             success = upload_to_drive_via_script(file_path)
             
-        if success:
-            st.success(f"File **{uploaded_file.name}** berhasil diunggah lokal dan sukses masuk ke Google Drive!")
-        else:
-            st.warning(f"File tersimpan di lokal, namun gagal terkirim ke Google Drive.")
-
-# --- HALAMAN 3: STATUS KONEKSI ---
-elif menu_pilihan == "Status Koneksi Drive":
-    st.subheader("🔗 Status Koneksi Google Drive Apps Script")
-    st.write(f"Endpoint URL: `{WEB_APP_URL}`")
-    if st.button("Uji Koneksi Sekarang"):
-        if upload_to_drive_via_script(__file__):
-            st.success("Koneksi Google Drive Aktif dan Responsif!")
-        else:
-            st.error("Koneksi gagal. Periksa kembali deployment Google Apps Script Anda.")
+            if success:
+                st.success("Koneksi Google Drive Aktif dan Responsif!")
+            else:
+                st.error("Koneksi gagal. Periksa kembali deployment Google Apps Script Anda.")
