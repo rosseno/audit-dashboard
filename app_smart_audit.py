@@ -95,28 +95,32 @@ menu_pilihan = st.sidebar.radio("Menu Utama:", [
 ])
 
 # --- LOGIKA FILTER DATA ---
-# --- LOGIKA FILTER DATA ---
 df_filtered = df_global.copy()
 if not df_filtered.empty:
     if chosen_unit != "Semua Unit" and 'Bidang' in df_filtered.columns:
         df_filtered = df_filtered[df_filtered['Bidang'].str.contains(chosen_unit, case=False, na=False)]
     if selected_periode != "Semua Periode" and 'Tahun Audit' in df_filtered.columns:
         df_filtered = df_filtered[df_filtered['Tahun Audit'].astype(str) == selected_periode]
-    if 'filter_status' not in st.session_state:
-       st.session_state.filter_status = "Semua"       
-    if st.session_state.filter_status != "Semua" and 'Status' in df_filtered.columns:
-        df_filtered = df_filtered[df_filtered['Status'].str.contains(st.session_state.filter_status, case=False, na=False)]
-    
-   
 
+# 1. BUAT SALINAN UNTUK KARTU (AGAR ANGKA KARTU SELALU STABIL & TIDAK BERUBAH SAAT DIKLIK)
+df_card = df_filtered.copy()
+
+# 2. INISIALISASI SESSION STATE FILTER STATUS
+if 'filter_status' not in st.session_state:
+    st.session_state.filter_status = "Semua"        
+
+# 3. FILTER STATUS HANYA BERLAKU UNTUK TABEL & GRAFIK DI BAWAHNYA
+if st.session_state.filter_status != "Semua" and 'Status' in df_filtered.columns:
+    df_filtered = df_filtered[df_filtered['Status'].str.contains(st.session_state.filter_status, case=False, na=False)]
+    
 # --- HALAMAN 1: DASHBOARD UTAMA ---
 if menu_pilihan == "Dashboard Visualisasi & Tabel":
     
-    # KARTU METRIK (CARDS) RAPI & ELEGAN
-    total_temuan = len(df_filtered) if not df_filtered.empty else 0
-    jml_bd = len(df_filtered[df_filtered['Status'].str.contains('BD', case=False, na=False)]) if not df_filtered.empty and 'Status' in df_filtered.columns else 0
-    jml_eval = len(df_filtered[df_filtered['Status'].str.contains('EVAL', case=False, na=False)]) if not df_filtered.empty and 'Status' in df_filtered.columns else 0
-    jml_sls = len(df_filtered[df_filtered['Status'].str.contains('SLS', case=False, na=False)]) if not df_filtered.empty and 'Status' in df_filtered.columns else 0
+    # KARTU METRIK MENGGUNAKAN df_card (STABIL TIDAK IKUT MENYUSUT)
+    total_temuan = len(df_card) if not df_card.empty else 0
+    jml_bd = len(df_card[df_card['Status'].str.contains('BD', case=False, na=False)]) if not df_card.empty and 'Status' in df_card.columns else 0
+    jml_eval = len(df_card[df_card['Status'].str.contains('EVAL', case=False, na=False)]) if not df_card.empty and 'Status' in df_card.columns else 0
+    jml_sls = len(df_card[df_card['Status'].str.contains('SLS', case=False, na=False)]) if not df_card.empty and 'Status' in df_card.columns else 0
 # --- BANNER PERINGATAN BLINKING STATUS BD ---
 if 'jml_bd' in locals() and jml_bd > 0:
     st.markdown(
