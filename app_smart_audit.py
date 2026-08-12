@@ -211,13 +211,18 @@ if 'jml_bd' in locals() and jml_bd > 0:
     st.markdown("---")
     st.subheader("Detail Data Temuan & Rekomendasi")
     if not df_filtered.empty:
-       kolom_tampil = ['ID Temuan', 'Judul Temuan Audit', 'Bidang', 'Tingkat Risiko', 'Rekomendasi Utama / Tindak Lanjut', 'Status']
-    kolom_tersedia = [col for col in kolom_tampil if col in df_filtered.columns]
-    st.dataframe(df_filtered[kolom_tersedia], use_container_width=True, hide_index=True)
+       # --- TABEL DISEDERHANAKAN (MENGHAPUS KOLOM YANG TIDAK PERLU) ---
+    kolom_dibuang = ['No', 'Poin', 'Nama Entitas', 'Ringkasan Kondisi & Akar Masalah (Root Cause)']
+       
+    # Buang kolom jika ada di dataframe
+    df_tampil = df_filtered.drop(columns=[col for col in kolom_dibuang if col in df_filtered.columns])
+    
+    # Tampilkan dataframe yang sudah disederhanakan
+    st.dataframe(df_tampil, use_container_width=True, hide_index=True)
 else:
     st.warning("Tidak ada data yang sesuai dengan filter yang dipilih.")
-
-# --- HALAMAN 2: UNGGAH DOKUMEN DENGAN GOOGLE DRIVE ---
+    
+    # --- HALAMAN 2: UNGGAH DOKUMEN DENGAN GOOGLE DRIVE ---
 elif menu_pilihan == "Unggah Dokumen Audit (Auto-Drive)":
     st.subheader("📤 Unggah Dokumen Bukti, KKA, atau LHA")
     st.info("File yang diunggah akan otomatis tersimpan di server lokal dan langsung terkirim ke Google Drive via Web App.")
