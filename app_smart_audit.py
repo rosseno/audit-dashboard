@@ -223,15 +223,15 @@ else:
     st.warning("Tidak ada data yang sesuai dengan filter yang dipilih.")
     
     # --- HALAMAN 2: UNGGAH DOKUMEN DENGAN GOOGLE DRIVE ---
-    if menu_pilihan == "Unggah Dokumen Audit (Auto-Drive)":
-    st.subheader("📤 Unggah Dokumen Bukti, KKA, atau LHA")
-    st.info("File yang diunggah akan otomatis tersimpan di server lokal dan langsung terkirim ke Google Drive via Web App.")
+        if menu_pilihan == "Unggah Dokumen Audit (Auto-Drive)":
+            st.subheader("📤 Unggah Dokumen Bukti, KKA, atau LHA")
+            st.info("File yang diunggah akan otomatis tersimpan di server lokal dan langsung terkirim ke Google Drive via Web App.")
 
-    doc_type = st.selectbox("Jenis Dokumen:", ["Tindak Lanjut (TL)", "Kertas Kerja Audit (KKA)", "Laporan Hasil Audit (LHA)"])
-    uploaded_file = st.file_uploader("Pilih file (PDF, Word, Excel, Gambar):", type=["pdf", "docx", "xlsx", "png", "jpg"])
+            doc_type = st.selectbox("Jenis Dokumen:", ["Tindak Lanjut (TL)", "Kertas Kerja Audit (KKA)", "Laporan Hasil Audit (LHA)"])
+            uploaded_file = st.file_uploader("Pilih file (PDF, Word, Excel, Gambar):", type=["pdf", "docx", "xlsx", "png", "jpg"])
 
-    if uploaded_file is not None:
-        file_path = os.path.join(VAULT_DIR, uploaded_file.name)
+            if uploaded_file is not None:
+               file_path = os.path.join(VAULT_DIR, uploaded_file.name)
         with open(file_path, "wb") as f:
             f.write(uploaded_file.getbuffer())
         
