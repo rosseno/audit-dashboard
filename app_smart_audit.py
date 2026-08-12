@@ -223,7 +223,7 @@ else:
     st.warning("Tidak ada data yang sesuai dengan filter yang dipilih.")
     
     # --- HALAMAN 2: UNGGAH DOKUMEN DENGAN GOOGLE DRIVE ---
-elif menu_pilihan == "Unggah Dokumen Audit (Auto-Drive)":
+    if menu_pilihan == "Unggah Dokumen Audit (Auto-Drive)":
     st.subheader("📤 Unggah Dokumen Bukti, KKA, atau LHA")
     st.info("File yang diunggah akan otomatis tersimpan di server lokal dan langsung terkirim ke Google Drive via Web App.")
 
