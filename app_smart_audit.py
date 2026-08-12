@@ -51,7 +51,7 @@ st.markdown("""
     }
     
     .alert-blink div {
-        font-size: 18px !important;
+        font-size: 24px !important;
         font-weight: bold !important;
     }
         /* Tambahan untuk tab navigasi */
