@@ -116,7 +116,7 @@ st.markdown("""
     .stDataFrame [role="grid"], 
     .stDataFrame [role="row"], 
     .stDataFrame [role="gridcell"] {
-        font-size: 20px !important;
+        font-size: 40px !important;
     }
 </style>
 """, unsafe_allow_html=True)
