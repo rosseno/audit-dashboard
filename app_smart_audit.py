@@ -49,7 +49,7 @@ st.markdown("""
         animation: marquee 18s linear infinite;
     }
     .stTabs button {
-        font-size: 18px !important;
+        font-size: 25px !important;
         font-weight: bold !important;
     }
     
