@@ -123,11 +123,11 @@ if menu_pilihan == "Dashboard Visualisasi & Tabel":
                 st.session_state.filter_status = "BD"
                 st.rerun()
     with col3:
-            if st.button(f"TOTAL TEMUAN\n\n{total_temuan}", use_container_width=True):
+            if st.button(f"STATUS EVAL\n\n{jml_eval}", use_container_width=True, key="btn_eval"):
                 st.session_state.filter_status = "EVAL"
                 st.rerun()
     with col4:
-            if st.button(f"TOTAL TEMUAN\n\n{total_temuan}", use_container_width=True):
+            if st.button(f"STATUS SLS\n\n{jml_sls}", use_container_width=True, key="btn_sls"):
                 st.session_state.filter_status = "SLS"
                 st.rerun()
 
