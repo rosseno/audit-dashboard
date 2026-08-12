@@ -41,11 +41,13 @@ st.markdown("""
         font-weight: bold !important;
     }
     
-    .alert-blink {
-        padding: 20px 25px !important;
-    }
     .alert-blink div {
-        font-size: 25px !important;
+        font-size: 18px !important;
+        font-weight: bold !important;
+    }
+        /* Tambahan untuk tab navigasi */
+    .stTabs [data-baseweb="tab"] p {
+        font-size: 16px !important;
         font-weight: bold !important;
     }
     .merdeka-text {
