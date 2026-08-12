@@ -59,36 +59,34 @@ st.markdown("""
     DIRGAHAYU REPUBLIK INDONESIA KE-81 — NUSANTARA BARU, INDONESIA MAJU!
 </div>
 """, unsafe_allow_html=True)
-# --- BANNER PERINGATAN BLINKING STATUS BD (MENYERAMKAN & FONT KUNING) ---
+# --- BANNER PERINGATAN MERAH PEKAT & FONT KUNING MENYALA ---
 if 'jml_bd' in locals() and jml_bd > 0:
     st.markdown(
         f"""
         <style>
-        @keyframes blink-animation {{
+        @keyframes alert-pulse {{
             0% {{ opacity: 1; transform: scale(1); }}
-            50% {{ opacity: 0.4; transform: scale(0.99); }}
+            50% {{ opacity: 0.5; transform: scale(0.99); }}
             100% {{ opacity: 1; transform: scale(1); }}
         }}
-        .blinking-banner {{
-            background: linear-gradient(135deg, #b71c1c, #d32f2f);
-            color: #ffeb3b;
-            padding: 16px 24px;
+        .scary-alert-banner {{
+            background: #990000 !important;
+            color: #ffff00 !important;
+            padding: 18px 24px;
             border-radius: 8px;
             text-align: center;
-            font-weight: 900;
-            font-size: 18px;
-            letter-spacing: 0.5px;
-            box-shadow: 0 0 15px rgba(255, 0, 0, 0.6);
-            animation: blink-animation 1s infinite ease-in-out;
+            font-weight: 900 !important;
+            font-size: 19px !important;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.9);
+            animation: alert-pulse 0.9s infinite ease-in-out;
             margin-bottom: 20px;
-            border: 2px solid #ff9800;
+            border: 3px solid #ffcc00;
         }}
         </style>
-        <div class="blinking-banner">
+        <div class="scary-alert-banner">
             🚨 PERINGATAN KERAS: Terdapat {jml_bd} Temuan dengan Status BD (Belum Ditindaklanjuti) yang Memerlukan Perhatian & Tindak Lanjut Segera! 🚨
         </div>
         
-        <!-- AUDIO PERINGATAN OTOMATIS -->
         <audio autoplay style="display:none;">
             <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
         </audio>
