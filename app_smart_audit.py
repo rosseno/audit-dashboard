@@ -211,9 +211,11 @@ if 'jml_bd' in locals() and jml_bd > 0:
     st.markdown("---")
     st.subheader("Detail Data Temuan & Rekomendasi")
     if not df_filtered.empty:
-        st.dataframe(df_filtered, use_container_width=True)
-    else:
-        st.warning("Tidak ada data yang sesuai dengan filter yang dipilih.")
+       kolom_tampil = ['ID Temuan', 'Judul Temuan Audit', 'Bidang', 'Tingkat Risiko', 'Rekomendasi Utama / Tindak Lanjut', 'Status']
+    kolom_tersedia = [col for col in kolom_tampil if col in df_filtered.columns]
+    st.dataframe(df_filtered[kolom_tersedia], use_container_width=True, hide_index=True)
+else:
+    st.warning("Tidak ada data yang sesuai dengan filter yang dipilih.")
 
 # --- HALAMAN 2: UNGGAH DOKUMEN DENGAN GOOGLE DRIVE ---
 elif menu_pilihan == "Unggah Dokumen Audit (Auto-Drive)":
