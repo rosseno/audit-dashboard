@@ -212,7 +212,7 @@ if 'jml_bd' in locals() and jml_bd > 0:
     st.subheader("Detail Data Temuan & Rekomendasi")
     if not df_filtered.empty:
        # --- TABEL DISEDERHANAKAN (MENGHAPUS KOLOM YANG TIDAK PERLU) ---
-    kolom_dibuang = ['No', 'Poin', 'Nama Entitas', 'Ringkasan Kondisi & Akar Masalah (Root Cause)']
+        kolom_dibuang = ['No', 'Poin', 'Nama Entitas', 'Ringkasan Kondisi & Akar Masalah (Root Cause)']
        
     # Buang kolom jika ada di dataframe
     df_tampil = df_filtered.drop(columns=[col for col in kolom_dibuang if col in df_filtered.columns])
