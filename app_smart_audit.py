@@ -98,13 +98,11 @@ if not df_filtered.empty:
     if selected_periode != "Semua Periode" and 'Tahun Audit' in df_filtered.columns:
         df_filtered = df_filtered[df_filtered['Tahun Audit'].astype(str) == selected_periode]
     if 'filter_status' not in st.session_state:
-    st.session_state.filter_status = "Semua"       
+       st.session_state.filter_status = "Semua"       
     if st.session_state.filter_status != "Semua" and 'Status' in df_filtered.columns:
         df_filtered = df_filtered[df_filtered['Status'].str.contains(st.session_state.filter_status, case=False, na=False)]
     
-    # Filter tambahan berdasarkan klik Card Status
-    if st.session_state.filter_status != "Semua" and 'Status' in df_filtered.columns:
-        df_filtered = df_filtered[df_filtered['Status'].str.contains(st.session_state.filter_status, case=False, na=False)]
+   
 
 # --- HALAMAN 1: DASHBOARD UTAMA ---
 if menu_pilihan == "Dashboard Visualisasi & Tabel":
