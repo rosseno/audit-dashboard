@@ -64,27 +64,30 @@ if 'jml_bd' in locals() and jml_bd > 0:
     st.markdown(
         f"""
         <style>
-        @keyframes alert-pulse {{
+        @keyframes scary-pulse {{
             0% {{ opacity: 1; transform: scale(1); }}
-            50% {{ opacity: 0.5; transform: scale(0.99); }}
+            50% {{ opacity: 0.4; transform: scale(0.98); }}
             100% {{ opacity: 1; transform: scale(1); }}
         }}
-        .scary-alert-banner {{
-            background: #990000 !important;
-            color: #ffff00 !important;
+        .custom-alert-box {{
+            background-color: #8b0000 !important;
             padding: 18px 24px;
             border-radius: 8px;
             text-align: center;
-            font-weight: 900 !important;
-            font-size: 19px !important;
-            box-shadow: 0 0 20px rgba(255, 0, 0, 0.9);
-            animation: alert-pulse 0.9s infinite ease-in-out;
+            box-shadow: 0 0 25px rgba(255, 0, 0, 0.9);
+            animation: scary-pulse 0.8s infinite ease-in-out;
             margin-bottom: 20px;
             border: 3px solid #ffcc00;
         }}
+        .custom-alert-box span {{
+            color: #ffff00 !important;
+            font-weight: 900 !important;
+            font-size: 19px !important;
+            letter-spacing: 0.5px;
+        }}
         </style>
-        <div class="scary-alert-banner">
-            🚨 PERINGATAN KERAS: Terdapat {jml_bd} Temuan dengan Status BD (Belum Ditindaklanjuti) yang Memerlukan Perhatian & Tindak Lanjut Segera! 🚨
+        <div class="custom-alert-box">
+            <span>🚨 PERINGATAN KERAS: Terdapat {jml_bd} Temuan dengan Status BD (Belum Ditindaklanjuti) yang Memerlukan Perhatian & Tindak Lanjut Segera! 🚨</span>
         </div>
         
         <audio autoplay style="display:none;">
