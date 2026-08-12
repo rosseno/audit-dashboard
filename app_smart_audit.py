@@ -45,7 +45,7 @@ st.markdown("""
         padding: 20px 25px !important;
     }
     .alert-blink div {
-        font-size: 40px !important;
+        font-size: 25px !important;
         font-weight: bold !important;
     }
     .merdeka-text {
