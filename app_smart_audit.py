@@ -52,33 +52,13 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
-# --- BANNER PERINGATAN MERAH PEKAT & FONT KUNING MENYALA (DIJAMIN TEMBUS) ---
+# --- BANNER PERINGATAN MENGGUNAKAN KOMPONEN BAWAAN STREAMLIT ---
 if 'jml_bd' in locals() and jml_bd > 0:
+    st.error(f"🚨 PERINGATAN KERAS: Terdapat {jml_bd} Temuan dengan Status BD (Belum Ditindaklanjuti) yang Memerlukan Perhatian & Tindak Lanjut Segera! 🚨")
+    
+    # Audio Peringatan
     st.markdown(
-        f"""
-        <style>
-        @keyframes scary-blink {{
-            0% {{ opacity: 1; }}
-            50% {{ opacity: 0.3; }}
-            100% {{ opacity: 1; }}
-        }}
-        .my-scary-banner {{
-            background-color: #8b0000;
-            padding: 16px 20px;
-            border-radius: 8px;
-            text-align: center;
-            animation: scary-blink 1s infinite ease-in-out;
-            margin-bottom: 20px;
-            border: 3px solid #ffcc00;
-            box-shadow: 0 0 20px rgba(255, 0, 0, 0.8);
-        }}
-        </style>
-        <div class="my-scary-banner">
-            <span style="color: #ffff00 !important; font-weight: 900 !important; font-size: 19px !important; letter-spacing: 0.5px;">
-                🚨 PERINGATAN KERAS: Terdapat {jml_bd} Temuan dengan Status BD (Belum Ditindaklanjuti) yang Memerlukan Perhatian & Tindak Lanjut Segera! 🚨
-            </span>
-        </div>
-        
+        """
         <audio autoplay style="display:none;">
             <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
         </audio>
