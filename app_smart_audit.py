@@ -112,11 +112,9 @@ st.markdown("""
         font-weight: 600;
     }
 }
-   .stDataFrame [data-testid="stDataFrame"], 
-    .stDataFrame [role="grid"], 
-    .stDataFrame [role="row"], 
-    .stDataFrame [role="gridcell"] {
-        font-size: 40px !important;
+   .stDataFrame td, .stDataFrame th, 
+    .stTable td, .stTable th {
+        font-size: 18px !important;
     }
 </style>
 """, unsafe_allow_html=True)
