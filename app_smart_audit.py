@@ -112,9 +112,11 @@ st.markdown("""
         font-weight: 600;
     }
 }
-   .stDataFrame div[data-testid="stVirtualGrid"] *,
-    .stDataFrame [role="gridcell"] span {
-        font-size: 16px !important;
+   .stDataFrame [data-testid="stDataFrame"], 
+    .stDataFrame [role="grid"], 
+    .stDataFrame [role="row"], 
+    .stDataFrame [role="gridcell"] {
+        font-size: 20px !important;
     }
 </style>
 """, unsafe_allow_html=True)
