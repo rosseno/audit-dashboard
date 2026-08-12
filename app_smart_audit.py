@@ -53,12 +53,12 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Banner Merdeka
-st.markdown("""
-<div style="background: linear-gradient(135deg, #991b1b 0%, #dc2626 50%); padding: 12px; border-radius: 8px; color: white; text-align: center; font-weight: 800; margin-bottom: 15px;">
-    DIRGAHAYU REPUBLIK INDONESIA KE-81 — NUSANTARA BARU, INDONESIA MAJU!
-</div>
-""", unsafe_allow_html=True)
+# --- BANNER MERDEKA DI-COMMENT SEMENTARA ---
+# st.markdown("""
+# <div style="...">
+#     DIRGAHAYU REPUBLIK INDONESIA...
+# </div>
+# """, unsafe_allow_html=True)
 # --- BANNER PERINGATAN MERAH PEKAT & FONT KUNING MENYALA (DIJAMIN TEMBUS) ---
 if 'jml_bd' in locals() and jml_bd > 0:
     st.markdown(
