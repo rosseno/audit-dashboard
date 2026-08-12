@@ -52,13 +52,6 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
-
-# --- BANNER MERDEKA DI-COMMENT SEMENTARA ---
-# st.markdown("""
-# <div style="...">
-#     DIRGAHAYU REPUBLIK INDONESIA...
-# </div>
-# """, unsafe_allow_html=True)
 # --- BANNER PERINGATAN MERAH PEKAT & FONT KUNING MENYALA (DIJAMIN TEMBUS) ---
 if 'jml_bd' in locals() and jml_bd > 0:
     st.markdown(
