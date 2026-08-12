@@ -25,7 +25,7 @@ st.markdown("""
     
     .merdeka-banner-container {
         background: linear-gradient(135deg, #991b1b 0%, #dc2626 50%, #b91c1c 100%);
-        padding: 14px 0;
+        padding: 8px 0; /* Ubah angka 14px menjadi 8px atau 6px di sini */
         border-radius: 8px;
         margin-bottom: 20px;
         overflow: hidden;
