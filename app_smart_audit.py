@@ -50,7 +50,7 @@ st.markdown("""
     }
     }
     div.stButton > button p {
-        font-size: 24px !important;
+        font-size: 50px !important;
         font-weight: bold !important;
     }
     
