@@ -33,13 +33,12 @@ st.markdown("""
         box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
         border: 2px solid #fca5a5;
     }
-        div.stButton > button {
-        min-height: 120px;
-    }
     div.stButton > button {
         min-height: 120px;
-        font-size: 60px;
-        font-weight: bold;
+    }
+    div.stButton > button p {
+        font-size: 24px !important;
+        font-weight: bold !important;
     }
     .merdeka-text {
         display: inline-block;
