@@ -113,7 +113,7 @@ st.markdown("""
     }
 }
    .stDataFrame div, .stTable div, .dataframe span {
-        font-size: 18px !important;
+        font-size: 25px !important;
     }
 </style>
 """, unsafe_allow_html=True)
