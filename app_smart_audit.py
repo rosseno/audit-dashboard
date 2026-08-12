@@ -40,11 +40,19 @@ st.markdown("""
         font-size: 24px !important;
         font-weight: bold !important;
     }
+    
+    .alert-blink {
+        padding: 20px 25px !important;
+    }
+    .alert-blink div {
+        font-size: 40px !important;
+        font-weight: bold !important;
+    }
     .merdeka-text {
         display: inline-block;
         color: #ffffff !important;
         font-weight: 800;
-        font-size: 18px;
+        font-size: 40px;
         letter-spacing: 1px;
         animation: marquee 18s linear infinite;
     }
