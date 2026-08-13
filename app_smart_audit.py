@@ -13,55 +13,61 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS Tema Light / Terang Profesional
+# Custom CSS Profesional, Bersih, & Minimalis (Light Theme Total)
 st.markdown("""
 <style>
-    /* Latar belakang utama aplikasi menjadi cerah/putih */
-    .stApp { background-color: #f8fafc; }
+    /* Latar belakang aplikasi putih bersih */
+    .stApp { background-color: #ffffff; }
     
-    /* Sidebar kiri dengan warna biru tua elegan */
+    /* Sidebar kiri bersih dengan warna abu-abu terang profesional */
     [data-testid="stSidebar"] {
-        background-color: #1e293b;
-        color: white;
+        background-color: #f1f5f9;
+        color: #1e293b;
         padding-top: 20px;
+        border-right: 1px solid #e2e8f0;
     }
     
-    /* Warna teks di dalam sidebar menjadi putih */
     [data-testid="stSidebar"] label, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3, [data-testid="stSidebar"] p {
-        color: #f8fafc !important;
+        color: #1e293b !important;
     }
 
     /* Kartu Header Utama */
     .header-banner {
-        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-        padding: 25px 30px;
-        border-radius: 12px;
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        padding: 20px 25px;
+        border-radius: 10px;
         color: white;
-        margin-bottom: 25px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
-    .header-title { color: #ffffff; font-size: 24px; font-weight: 700; }
-    .header-subtitle { color: #e2e8f0; font-size: 14px; margin-top: 5px; }
+    .header-title { color: #ffffff; font-size: 22px; font-weight: 700; }
+    .header-subtitle { color: #e2e8f0; font-size: 13px; margin-top: 5px; }
 
-    /* Kotak Peringatan Overdue yang lebih soft */
+    /* Kotak Peringatan Overdue Bersih */
     .alert-blink {
         background: #fef2f2;
-        border: 2px solid #f87171;
-        padding: 15px 20px;
-        border-radius: 10px;
-        margin-bottom: 20px;
+        border: 1px solid #f87171;
+        padding: 12px 18px;
+        border-radius: 8px;
+        margin-bottom: 15px;
         display: flex;
         align-items: center;
-        gap: 15px;
+        gap: 12px;
     }
 
+    /* Tombol KPI Minimalis */
     div.stButton > button {
-        min-height: 80px;
+        min-height: 70px;
         border-radius: 8px;
-        font-weight: bold;
-        background-color: #ffffff;
+        font-weight: 600;
+        background-color: #f8fafc;
         color: #1e293b;
         border: 1px solid #cbd5e1;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+    }
+    div.stButton > button:hover {
+        background-color: #e2e8f0;
+        border-color: #94a3b8;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -107,7 +113,7 @@ PIN_ADMIN = "1234"
 # --- SIDEBAR NAVIGASI ---
 with st.sidebar:
     st.markdown("### 🛡️ AUDIT DASHBOARD")
-    st.markdown("<p style='font-size: 12px; color: #94a3b8;'>Decision Support System</p>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size: 12px; color: #64748b;'>Decision Support System</p>", unsafe_allow_html=True)
     st.markdown("---")
     
     selected_menu = st.radio(
@@ -201,21 +207,21 @@ else:
 
 # --- KONTEN UTAMA ---
 
-# 1. PERINGATAN OVERDUE DI POSISI PALING ATAS
+# 1. PERINGATAN OVERDUE
 if not df_base.empty:
     overdue_df = df_base[df_base[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)]
     overdue_count = len(overdue_df)
     if overdue_count > 0:
         st.markdown(f"""
         <div class="alert-blink">
-            <div style="font-size: 24px;">🚨</div>
+            <div style="font-size: 20px;">🚨</div>
             <div>
-                <div style="color: #dc2626; font-weight: 700; font-size: 15px;">PERINGATAN: ADA {overdue_count} REKOMENDASI OVERDUE (BELUM DITINDAKLANJUTI)</div>
+                <div style="color: #dc2626; font-weight: 700; font-size: 14px;">PERINGATAN: ADA {overdue_count} REKOMENDASI OVERDUE (BELUM DITINDAKLANJUTI)</div>
             </div>
         </div>
         """, unsafe_allow_html=True)
 
-# 2. HEADER UTAMA DASHBOARD
+# 2. HEADER UTAMA
 st.markdown("""
 <div class="header-banner">
     <div class="header-title">EXECUTIVE OVERVIEW - PT PELINDO SOLUSI MARITIM</div>
@@ -254,7 +260,7 @@ if selected_menu == "📊 Executive Overview":
             set_filter("BD")
             st.rerun()
 
-    # --- VISUALISASI GRAFIK TEMA LIGHT ---
+    # --- VISUALISASI GRAFIK BERSIH TANPA BACKGROUND GELAP ---
     st.markdown("---")
     st.markdown("### 📊 Visualisasi Distribusi & Progres Tindak Lanjut")
     
@@ -281,8 +287,11 @@ if selected_menu == "📊 Executive Overview":
                 color_discrete_map=color_map,
                 template='plotly_white'
             )
+            # Mengatur background chart agar transparan / putih bersih
             fig_bar.update_layout(
                 height=320,
+                plot_bgcolor='rgba(0,0,0,0)',
+                paper_bgcolor='rgba(0,0,0,0)',
                 margin=dict(l=0, r=10, t=30, b=0),
                 legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, title="")
             )
@@ -300,8 +309,11 @@ if selected_menu == "📊 Executive Overview":
                 color_discrete_map=color_map,
                 template='plotly_white'
             )
+            # Mengatur background pie chart agar transparan / putih bersih
             fig_pie.update_layout(
                 height=320,
+                plot_bgcolor='rgba(0,0,0,0)',
+                paper_bgcolor='rgba(0,0,0,0)',
                 margin=dict(l=10, r=10, t=30, b=10),
                 showlegend=False
             )
@@ -320,6 +332,8 @@ if selected_menu == "📊 Executive Overview":
     target_columns = ["No", "ID Temuan", "Bidang", "Judul Temuan Audit", "Rekomendasi Utama / Tindak Lanjut", "Status", "PIC Temuan Audit"]
     df_table_display = df_table_final[[c for c in target_columns if c in df_table_final.columns]].copy()
     df_table_display["No"] = range(1, len(df_table_display) + 1)
+    
+    # Streamlit dataframe secara otomatis mengikuti tema terang (light mode) yang bersih
     st.dataframe(df_table_display, use_container_width=True, hide_index=True)
 
 elif selected_menu == "📋 KPI Performance":
