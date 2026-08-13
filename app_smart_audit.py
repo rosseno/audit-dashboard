@@ -13,36 +13,11 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS Ultimate + Banner HUT RI Besar & Bergerak
+# Custom CSS Ultimate
 st.markdown("""
 <style>
     .main { background-color: #0e1117; }
     
-    @keyframes marquee {
-        0% { transform: translateX(100%); }
-        100% { transform: translateX(-100%); }
-    }
-    
-    .merdeka-banner-container {
-        background: linear-gradient(135deg, #991b1b 0%, #dc2626 50%, #b91c1c 100%);
-        padding: 8px 0;
-        border-radius: 8px;
-        margin-bottom: 20px;
-        overflow: hidden;
-        white-space: nowrap;
-        box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
-        border: 2px solid #fca5a5;
-    }
-
-    .merdeka-text {
-        display: inline-block;
-        color: #ffffff !important;
-        font-weight: 800;
-        font-size: 30px;
-        letter-spacing: 1px;
-        animation: marquee 18s linear infinite;
-    }
-
     div.stButton > button {
         min-height: 120px;
     }
@@ -109,84 +84,6 @@ st.markdown("""
         font-weight: 600;
     }
 </style>
-""", unsafe_allow_html=True)
-
-# --- TABEL REKAPITULASI MANUAL HTML ---
-st.markdown("""
-    <table style="width:100%; font-size:20px; color:white; border-collapse:collapse;">
-        <tr style="border-bottom: 1px solid #444;">
-            <th style="text-align:left; padding:8px;">No</th>
-            <th style="text-align:left; padding:8px;">Objek Audit</th>
-            <th style="text-align:right; padding:8px;">Jumlah Temuan</th>
-            <th style="text-align:right; padding:8px;">Selesai (SLS)</th>
-            <th style="text-align:right; padding:8px;">EVALUASI AUDITOR</th>
-            <th style="text-align:right; padding:8px;">Belum Ditindaklanjuti (BD)</th>
-        </tr>
-        <tr style="border-bottom: 1px solid #333;">
-            <td style="text-align:left; padding:8px;">A</td>
-            <td style="text-align:left; padding:8px;">Bidang Bidang HSSE</td>
-            <td style="text-align:right; padding:8px;">11</td>
-            <td style="text-align:right; padding:8px;">4</td>
-            <td style="text-align:right; padding:8px;">7</td>
-            <td style="text-align:right; padding:8px;">0</td>
-        </tr>
-        <tr style="border-bottom: 1px solid #333;">
-            <td style="text-align:left; padding:8px;">B</td>
-            <td style="text-align:left; padding:8px;">Bidang Bidang Keuangan</td>
-            <td style="text-align:right; padding:8px;">17</td>
-            <td style="text-align:right; padding:8px;">16</td>
-            <td style="text-align:right; padding:8px;">0</td>
-            <td style="text-align:right; padding:8px;">1</td>
-        </tr>
-        <tr style="border-bottom: 1px solid #333;">
-            <td style="text-align:left; padding:8px;">C</td>
-            <td style="text-align:left; padding:8px;">Bidang Bidang Keuangan & Komersil</td>
-            <td style="text-align:right; padding:8px;">2</td>
-            <td style="text-align:right; padding:8px;">2</td>
-            <td style="text-align:right; padding:8px;">0</td>
-            <td style="text-align:right; padding:8px;">0</td>
-        </tr>  
-        <tr style="border-bottom: 1px solid #333;">
-            <td style="text-align:left; padding:8px;">C</td>
-            <td style="text-align:left; padding:8px;">Bidang Bidang Operasi & Teknik</td>
-            <td style="text-align:right; padding:8px;">2</td>
-            <td style="text-align:right; padding:8px;">2</td>
-            <td style="text-align:right; padding:8px;">0</td>
-            <td style="text-align:right; padding:8px;">0</td>
-        </tr>  
-        <tr style="border-bottom: 1px solid #333;">
-            <td style="text-align:left; padding:8px;">C</td>
-            <td style="text-align:left; padding:8px;">Bidang Bidang HSSE</td>
-            <td style="text-align:right; padding:8px;">2</td>
-            <td style="text-align:right; padding:8px;">2</td>
-            <td style="text-align:right; padding:8px;">0</td>
-            <td style="text-align:right; padding:8px;">0</td>
-        </tr>  
-        <tr style="border-bottom: 1px solid #333;">
-            <td style="text-align:left; padding:8px;">C</td>
-            <td style="text-align:left; padding:8px;">Bidang Bidang SDM</td>
-            <td style="text-align:right; padding:8px;">2</td>
-            <td style="text-align:right; padding:8px;">2</td>
-            <td style="text-align:right; padding:8px;">0</td>
-            <td style="text-align:right; padding:8px;">0</td>
-        </tr>  
-        <tr style="border-bottom: 1px solid #333;">
-            <td style="text-align:left; padding:8px;">C</td>
-            <td style="text-align:left; padding:8px;">Bidang Bidang Pemasaran</td>
-            <td style="text-align:right; padding:8px;">2</td>
-            <td style="text-align:right; padding:8px;">2</td>
-            <td style="text-align:right; padding:8px;">0</td>
-            <td style="text-align:right; padding:8px;">0</td>
-        </tr> 
-        <tr style="border-bottom: 1px solid #333;">
-            <td style="text-align:left; padding:8px;">C</td>
-            <td style="text-align:left; padding:8px;">Bidang Bidang Pengadaan</td>
-            <td style="text-align:right; padding:8px;">2</td>
-            <td style="text-align:right; padding:8px;">2</td>
-            <td style="text-align:right; padding:8px;">0</td>
-            <td style="text-align:right; padding:8px;">0</td>
-        </tr>    
-    </table>
 """, unsafe_allow_html=True)
 
 # --- CONFIG DATA ---
@@ -305,6 +202,20 @@ else:
     else:
         df_base = df_filtered_periode.head(0)
 
+# --- PERINGATAN OVERDUE DI POSISI PALING ATAS ---
+if not df_base.empty:
+    overdue_df = df_base[df_base[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)]
+    overdue_count = len(overdue_df)
+    if overdue_count > 0:
+        st.markdown(f"""
+        <div class="alert-blink">
+            <div style="font-size: 24px;">🚨</div>
+            <div>
+                <div style="color: #f87171; font-weight: 700; font-size: 15px;">PERINGATAN: ADA {overdue_count} REKOMENDASI OVERDUE (BELUM DITINDAKLANJUTI)</div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
 # --- HEADER UTAMA ---
 st.markdown("""
 <div class="header-banner">
@@ -341,19 +252,6 @@ tab_dash, tab_vault_kka, tab_vault_lha = st.tabs([
 ])
 
 with tab_dash:
-    if not df_base.empty:
-        overdue_df = df_base[df_base[col_status].str.contains("Overdue|BD|Belum", case=False, na=False)]
-        overdue_count = len(overdue_df)
-        if overdue_count > 0:
-            st.markdown(f"""
-            <div class="alert-blink">
-                <div style="font-size: 24px;">🚨</div>
-                <div>
-                    <div style="color: #f87171; font-weight: 700; font-size: 15px;">PERINGATAN: ADA {overdue_count} REKOMENDASI OVERDUE (BELUM DITINDAKLANJUTI)</div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-
     st.markdown("### Ringkasan Eksekutif KPI")
     total_temuan = len(df_base)
     selesai = len(df_base[df_base[col_status].str.contains("Selesai|SLS", case=False, na=False)]) if not df_base.empty else 0
