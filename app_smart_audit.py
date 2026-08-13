@@ -189,15 +189,6 @@ st.markdown("""
     </table>
 """, unsafe_allow_html=True)
 
-# --- BANNER KEMERDEKAAN BERGERAK (MARQUEE) ---
-st.markdown("""
-<div class="merdeka-banner-container">
-    <div class="merdeka-text">
-        ★ DIRGAHAYU REPUBLIK INDONESIA KE-81 — NUSANTARA BARU, INDONESIA MAJU (MERDEKA!) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ★ SEMANGAT INTEGRITAS, PATUH & PROFESIONAL UNTUK PELINDO SOLUSI MARITIM
-    </div>
-</div>
-""", unsafe_allow_html=True)
-
 # --- CONFIG DATA ---
 EXCEL_FILE = "Master_Database_Temuan_Audit_2024_2025_PSM_Ringkas.xlsx"
 EXCEL_KKA_FILE = "Database_Vault_KKA_AP.xlsx"
