@@ -57,6 +57,7 @@ st.markdown("""
         font-weight: bold !important;
     }
 
+    /* Tambahan untuk tab navigasi */
     .stTabs [data-baseweb="tab"] p {
         font-size: 16px !important;
         font-weight: bold !important;
@@ -65,61 +66,6 @@ st.markdown("""
     .alert-blink div {
         font-size: 24px !important;
         font-weight: bold !important;
-    }
-    
-    .header-banner {
-        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-        padding: 20px 25px;
-        border-radius: 10px;
-        border-left: 5px solid #3b82f6;
-        margin-bottom: 20px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-    }
-    .header-title { color: #ffffff; font-size: 22px; font-weight: 700; }
-    .header-subtitle { color: #94a3b8; font-size: 13px; margin-top: 5px; }
-
-    .stTextArea textarea { min-height: 100px !important; }
-
-    @keyframes blink-animation {
-        0% { opacity: 1; border-color: #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.6); }
-        50% { opacity: 0.4; border-color: #7f1d1d; box-shadow: 0 0 2px rgba(239, 68, 68, 0.1); }
-        100% { opacity: 1; border-color: #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.6); }
-    }
-
-    .alert-blink {
-        background: rgba(239, 68, 68, 0.15);
-        border: 2px solid #ef4444;
-        padding: 15px 20px;
-        border-radius: 8px;
-        margin-bottom: 20px;
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        animation: blink-animation 1.5s infinite ease-in-out;
-    }
-       .notification-box {
-        background: rgba(16, 185, 129, 0.15);
-        border: 2px solid #10b981;
-        padding: 15px 20px;
-        border-radius: 8px;
-        margin-bottom: 15px;
-        color: #34d399;
-        font-weight: 600;
-    }
-</style>
-""", unsafe_allow_html=True)
-        /* Tambahan untuk tab navigasi */
-    .stTabs [data-baseweb="tab"] p {
-        font-size: 16px !important;
-        font-weight: bold !important;
-    }
-    .merdeka-text {
-        display: inline-block;
-        color: #ffffff !important;
-        font-weight: 800;
-        font-size: 30px;
-        letter-spacing: 1px;
-        animation: marquee 18s linear infinite;
     }
     
     .header-banner {
@@ -162,8 +108,11 @@ st.markdown("""
         color: #34d399;
         font-weight: 600;
     }
-}
-   st.markdown("""
+</style>
+""", unsafe_allow_html=True)
+
+# --- TABEL REKAPITULASI MANUAL HTML ---
+st.markdown("""
     <table style="width:100%; font-size:20px; color:white; border-collapse:collapse;">
         <tr style="border-bottom: 1px solid #444;">
             <th style="text-align:left; padding:8px;">No</th>
@@ -173,74 +122,71 @@ st.markdown("""
             <th style="text-align:right; padding:8px;">EVALUASI AUDITOR</th>
             <th style="text-align:right; padding:8px;">Belum Ditindaklanjuti (BD)</th>
         </tr>
-        <!-- Masukkan data baris tabel Bapak di sini -->
-                     <tr style="border-bottom: 1px solid #333;">
-        <td style="text-align:left; padding:8px;">A</td>
-        <td style="text-align:left; padding:8px;">Bidang Bidang HSSE</td>
-        <td style="text-align:right; padding:8px;">11</td>
-        <td style="text-align:right; padding:8px;">4</td>
-        <td style="text-align:right; padding:8px;">7</td>
-        <td style="text-align:right; padding:8px;">0</td>
-                 <tr style="border-bottom: 1px solid #333;">
-        <td style="text-align:left; padding:8px;">B</td>
-        <td style="text-align:left; padding:8px;">Bidang Bidang Keuangan</td>
-        <td style="text-align:right; padding:8px;">17</td>
-        <td style="text-align:right; padding:8px;">16</td>
-        <td style="text-align:right; padding:8px;">0</td>
-        <td style="text-align:right; padding:8px;">1</td>
+        <tr style="border-bottom: 1px solid #333;">
+            <td style="text-align:left; padding:8px;">A</td>
+            <td style="text-align:left; padding:8px;">Bidang Bidang HSSE</td>
+            <td style="text-align:right; padding:8px;">11</td>
+            <td style="text-align:right; padding:8px;">4</td>
+            <td style="text-align:right; padding:8px;">7</td>
+            <td style="text-align:right; padding:8px;">0</td>
         </tr>
-                 <tr style="border-bottom: 1px solid #333;">
-        <td style="text-align:left; padding:8px;">C</td>
-        <td style="text-align:left; padding:8px;">Bidang Bidang Keuangan & Komersil</td>
-        <td style="text-align:right; padding:8px;">2</td>
-        <td style="text-align:right; padding:8px;">2</td>
-        <td style="text-align:right; padding:8px;">0</td>
-        <td style="text-align:right; padding:8px;">0</td>
-               </tr>  
- <tr style="border-bottom: 1px solid #333;">
-        <td style="text-align:left; padding:8px;">C</td>
-        <td style="text-align:left; padding:8px;">Bidang Bidang Operasi & Teknik</td>
-        <td style="text-align:right; padding:8px;">2</td>
-        <td style="text-align:right; padding:8px;">2</td>
-        <td style="text-align:right; padding:8px;">0</td>
-        <td style="text-align:right; padding:8px;">0</td>
-           </tr>  
-<tr style="border-bottom: 1px solid #333;">
-        <td style="text-align:left; padding:8px;">C</td>
-        <td style="text-align:left; padding:8px;">Bidang Bidang HSSE</td>
-        <td style="text-align:right; padding:8px;">2</td>
-        <td style="text-align:right; padding:8px;">2</td>
-        <td style="text-align:right; padding:8px;">0</td>
-        <td style="text-align:right; padding:8px;">0</td>
-           </tr>  
-<tr style="border-bottom: 1px solid #333;">
-        <td style="text-align:left; padding:8px;">C</td>
-        <td style="text-align:left; padding:8px;">Bidang Bidang SDM</td>
-        <td style="text-align:right; padding:8px;">2</td>
-        <td style="text-align:right; padding:8px;">2</td>
-        <td style="text-align:right; padding:8px;">0</td>
-        <td style="text-align:right; padding:8px;">0</td>
-           </tr>  
-  <tr style="border-bottom: 1px solid #333;">
-        <td style="text-align:left; padding:8px;">C</td>
-        <td style="text-align:left; padding:8px;">Bidang Bidang Pemasaran</td>
-        <td style="text-align:right; padding:8px;">2</td>
-        <td style="text-align:right; padding:8px;">2</td>
-        <td style="text-align:right; padding:8px;">0</td>
-        <td style="text-align:right; padding:8px;">0</td>
-           </tr> 
-   <tr style="border-bottom: 1px solid #333;">
-        <td style="text-align:left; padding:8px;">C</td>
-        <td style="text-align:left; padding:8px;">Bidang Bidang Pengadaan</td>
-        <td style="text-align:right; padding:8px;">2</td>
-        <td style="text-align:right; padding:8px;">2</td>
-        <td style="text-align:right; padding:8px;">0</td>
-        <td style="text-align:right; padding:8px;">0</td>              
-           </tr>   
+        <tr style="border-bottom: 1px solid #333;">
+            <td style="text-align:left; padding:8px;">B</td>
+            <td style="text-align:left; padding:8px;">Bidang Bidang Keuangan</td>
+            <td style="text-align:right; padding:8px;">17</td>
+            <td style="text-align:right; padding:8px;">16</td>
+            <td style="text-align:right; padding:8px;">0</td>
+            <td style="text-align:right; padding:8px;">1</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #333;">
+            <td style="text-align:left; padding:8px;">C</td>
+            <td style="text-align:left; padding:8px;">Bidang Bidang Keuangan & Komersil</td>
+            <td style="text-align:right; padding:8px;">2</td>
+            <td style="text-align:right; padding:8px;">2</td>
+            <td style="text-align:right; padding:8px;">0</td>
+            <td style="text-align:right; padding:8px;">0</td>
+        </tr>  
+        <tr style="border-bottom: 1px solid #333;">
+            <td style="text-align:left; padding:8px;">C</td>
+            <td style="text-align:left; padding:8px;">Bidang Bidang Operasi & Teknik</td>
+            <td style="text-align:right; padding:8px;">2</td>
+            <td style="text-align:right; padding:8px;">2</td>
+            <td style="text-align:right; padding:8px;">0</td>
+            <td style="text-align:right; padding:8px;">0</td>
+        </tr>  
+        <tr style="border-bottom: 1px solid #333;">
+            <td style="text-align:left; padding:8px;">C</td>
+            <td style="text-align:left; padding:8px;">Bidang Bidang HSSE</td>
+            <td style="text-align:right; padding:8px;">2</td>
+            <td style="text-align:right; padding:8px;">2</td>
+            <td style="text-align:right; padding:8px;">0</td>
+            <td style="text-align:right; padding:8px;">0</td>
+        </tr>  
+        <tr style="border-bottom: 1px solid #333;">
+            <td style="text-align:left; padding:8px;">C</td>
+            <td style="text-align:left; padding:8px;">Bidang Bidang SDM</td>
+            <td style="text-align:right; padding:8px;">2</td>
+            <td style="text-align:right; padding:8px;">2</td>
+            <td style="text-align:right; padding:8px;">0</td>
+            <td style="text-align:right; padding:8px;">0</td>
+        </tr>  
+        <tr style="border-bottom: 1px solid #333;">
+            <td style="text-align:left; padding:8px;">C</td>
+            <td style="text-align:left; padding:8px;">Bidang Bidang Pemasaran</td>
+            <td style="text-align:right; padding:8px;">2</td>
+            <td style="text-align:right; padding:8px;">2</td>
+            <td style="text-align:right; padding:8px;">0</td>
+            <td style="text-align:right; padding:8px;">0</td>
+        </tr> 
+        <tr style="border-bottom: 1px solid #333;">
+            <td style="text-align:left; padding:8px;">C</td>
+            <td style="text-align:left; padding:8px;">Bidang Bidang Pengadaan</td>
+            <td style="text-align:right; padding:8px;">2</td>
+            <td style="text-align:right; padding:8px;">2</td>
+            <td style="text-align:right; padding:8px;">0</td>
+            <td style="text-align:right; padding:8px;">0</td>
+        </tr>    
     </table>
-""", unsafe_allow_html=True)
-    }
-</style>
 """, unsafe_allow_html=True)
 
 # --- BANNER KEMERDEKAAN BERGERAK (MARQUEE) ---
