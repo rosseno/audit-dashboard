@@ -13,11 +13,13 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS Profesional & Bersih (Light Theme Kontras Tinggi)
+# Custom CSS dengan Latar Belakang Krem Lembut & Kartu Timbul (Soft Cream Theme)
 st.markdown("""
 <style>
-    .stApp { background-color: #ffffff; }
+    /* Latar belakang utama aplikasi menjadi krem lembut agar chart lebih hidup */
+    .stApp { background-color: #fcfbfa; }
     
+    /* Sidebar kiri dengan warna yang kontras dan elegan */
     [data-testid="stSidebar"] {
         background-color: #f1f5f9;
         color: #1e293b;
@@ -29,40 +31,45 @@ st.markdown("""
         color: #1e293b !important;
     }
 
+    /* Kartu Header Utama */
     .header-banner {
         background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
         padding: 20px 25px;
-        border-radius: 10px;
+        border-radius: 12px;
         color: white;
         margin-bottom: 20px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.06);
     }
     .header-title { color: #ffffff; font-size: 22px; font-weight: 700; }
     .header-subtitle { color: #e2e8f0; font-size: 13px; margin-top: 5px; }
 
+    /* Kotak Peringatan Overdue */
     .alert-blink {
         background: #fef2f2;
         border: 1px solid #f87171;
         padding: 12px 18px;
-        border-radius: 8px;
+        border-radius: 10px;
         margin-bottom: 15px;
         display: flex;
         align-items: center;
         gap: 12px;
+        box-shadow: 0 2px 4px rgba(239, 68, 68, 0.05);
     }
 
+    /* Tombol KPI / Kartu Metrik Timbul */
     div.stButton > button {
         min-height: 90px;
-        border-radius: 10px;
+        border-radius: 12px;
         font-weight: 600;
-        background-color: #f8fafc;
+        background-color: #ffffff;
         color: #1e293b;
-        border: 1px solid #cbd5e1;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
     }
     div.stButton > button:hover {
-        background-color: #f1f5f9;
-        border-color: #94a3b8;
+        background-color: #f8fafc;
+        border-color: #cbd5e1;
+        box-shadow: 0 6px 8px -1px rgba(0, 0, 0, 0.08);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -255,7 +262,7 @@ if selected_menu == "📊 Executive Overview":
             set_filter("BD")
             st.rerun()
 
-    # --- VISUALISASI GRAFIK DENGAN WARNA TEKS JELAS DAN KONTRAS ---
+    # --- VISUALISASI GRAFIK DENGAN LATAR KARTU PUTIH BERSIH AGAR TIMBUL ---
     st.markdown("---")
     st.markdown("### 📊 Visualisasi Distribusi & Progres Tindak Lanjut")
     
@@ -270,6 +277,7 @@ if selected_menu == "📊 Executive Overview":
         col_chart_bar, col_chart_pie = st.columns([2.5, 1.5])
 
         with col_chart_bar:
+            st.markdown('<div style="background: #ffffff; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">', unsafe_allow_html=True)
             df_chart = df_base.groupby([col_bidang, col_status]).size().reset_index(name='Jumlah')
             fig_bar = px.bar(
                 df_chart, 
@@ -282,19 +290,20 @@ if selected_menu == "📊 Executive Overview":
                 color_discrete_map=color_map,
                 template='plotly_white'
             )
-            # Mengatur warna teks grafik agar jelas terbaca dengan warna gelap
             fig_bar.update_layout(
-                height=280,
+                height=260,
                 plot_bgcolor='rgba(0,0,0,0)',
                 paper_bgcolor='rgba(0,0,0,0)',
-                margin=dict(l=0, r=10, t=40, b=0),
-                title_font=dict(size=15, color='#1e293b', family='sans-serif'),
-                font=dict(color='#334155', size=12),
+                margin=dict(l=0, r=10, t=35, b=0),
+                title_font=dict(size=14, color='#1e293b', family='sans-serif'),
+                font=dict(color='#334155', size=11),
                 legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, title="")
             )
             st.plotly_chart(fig_bar, use_container_width=True)
+            st.markdown('</div>', unsafe_allow_html=True)
 
         with col_chart_pie:
+            st.markdown('<div style="background: #ffffff; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">', unsafe_allow_html=True)
             df_pie = df_base.groupby(col_status).size().reset_index(name='Total')
             fig_pie = px.pie(
                 df_pie, 
@@ -307,16 +316,17 @@ if selected_menu == "📊 Executive Overview":
                 template='plotly_white'
             )
             fig_pie.update_layout(
-                height=280,
+                height=260,
                 plot_bgcolor='rgba(0,0,0,0)',
                 paper_bgcolor='rgba(0,0,0,0)',
-                margin=dict(l=10, r=10, t=40, b=10),
-                title_font=dict(size=15, color='#1e293b', family='sans-serif'),
-                font=dict(color='#334155', size=12),
+                margin=dict(l=10, r=10, t=35, b=10),
+                title_font=dict(size=14, color='#1e293b', family='sans-serif'),
+                font=dict(color='#334155', size=11),
                 showlegend=False
             )
             fig_pie.update_traces(textposition='inside', textinfo='percent+label')
             st.plotly_chart(fig_pie, use_container_width=True)
+            st.markdown('</div>', unsafe_allow_html=True)
     else:
         st.info("Data grafik belum tersedia untuk filter yang dipilih.")
 
