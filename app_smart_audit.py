@@ -264,8 +264,7 @@ if selected_menu == "📊 Executive Overview":
 
     # --- VISUALISASI GRAFIK DENGAN KARTU PUTIH DI ATAS LATAR KREM ---
     st.markdown("---")
-   st.markdown("<h3 style='color: #1e293b;'>📊 Visualisasi Distribusi & Progres Tindak Lanjut</h3>", unsafe_allow_html=True)
-    
+    st.markdown("<h3 style='color: #1e293b;'>📊 Visualisasi Distribusi & Progres Tindak Lanjut</h3>", unsafe_allow_html=True)
     color_map = {
         'Selesai (SLS)': '#10b981',
         'Evaluasi (EVAL)': '#f59e0b',
