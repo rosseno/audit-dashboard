@@ -15,8 +15,6 @@ st.set_page_config(
 
 # Custom CSS Ultimate + Banner HUT RI Besar & Bergerak
 st.markdown("""
-    ... (isi kode HTML tabel di sini) ...
-""", unsafe_allow_html=True)
 <style>
     .main { background-color: #0e1117; }
     
@@ -27,7 +25,7 @@ st.markdown("""
     
     .merdeka-banner-container {
         background: linear-gradient(135deg, #991b1b 0%, #dc2626 50%, #b91c1c 100%);
-        padding: 8px 0; /* Ubah angka 14px menjadi 8px atau 6px di sini */
+        padding: 8px 0;
         border-radius: 8px;
         margin-bottom: 20px;
         overflow: hidden;
@@ -35,30 +33,81 @@ st.markdown("""
         box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
         border: 2px solid #fca5a5;
     }
-   div.stButton > button {
-        min-height: 120px;
-    }
-    div.stButton > button p {
-     font-size: 24px !important;
-     font-weight: bold !important;
-    }
+
     .merdeka-text {
         display: inline-block;
         color: #ffffff !important;
         font-weight: 800;
-        font-size: 5px;
+        font-size: 30px;
         letter-spacing: 1px;
         animation: marquee 18s linear infinite;
     }
+
+    div.stButton > button {
+        min-height: 120px;
+    }
+
+    div.stButton > button p {
+        font-size: 24px !important;
+        font-weight: bold !important;
+    }
+
     .stTabs button {
         font-size: 25px !important;
         font-weight: bold !important;
     }
-    
+
+    .stTabs [data-baseweb="tab"] p {
+        font-size: 16px !important;
+        font-weight: bold !important;
+    }
+
     .alert-blink div {
         font-size: 24px !important;
         font-weight: bold !important;
     }
+    
+    .header-banner {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        padding: 20px 25px;
+        border-radius: 10px;
+        border-left: 5px solid #3b82f6;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    }
+    .header-title { color: #ffffff; font-size: 22px; font-weight: 700; }
+    .header-subtitle { color: #94a3b8; font-size: 13px; margin-top: 5px; }
+
+    .stTextArea textarea { min-height: 100px !important; }
+
+    @keyframes blink-animation {
+        0% { opacity: 1; border-color: #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.6); }
+        50% { opacity: 0.4; border-color: #7f1d1d; box-shadow: 0 0 2px rgba(239, 68, 68, 0.1); }
+        100% { opacity: 1; border-color: #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.6); }
+    }
+
+    .alert-blink {
+        background: rgba(239, 68, 68, 0.15);
+        border: 2px solid #ef4444;
+        padding: 15px 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        animation: blink-animation 1.5s infinite ease-in-out;
+    }
+       .notification-box {
+        background: rgba(16, 185, 129, 0.15);
+        border: 2px solid #10b981;
+        padding: 15px 20px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        color: #34d399;
+        font-weight: 600;
+    }
+</style>
+""", unsafe_allow_html=True)
         /* Tambahan untuk tab navigasi */
     .stTabs [data-baseweb="tab"] p {
         font-size: 16px !important;
