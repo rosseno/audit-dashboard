@@ -13,18 +13,18 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS dengan Latar Belakang Krem Lembut & Kartu Timbul (Soft Cream Theme)
+# Custom CSS Latar Belakang Krem Hangat & Kartu Kontras Timbul
 st.markdown("""
 <style>
-    /* Latar belakang utama aplikasi menjadi krem lembut agar chart lebih hidup */
-    .stApp { background-color: #fcfbfa; }
+    /* Latar belakang utama aplikasi menjadi krem hangat */
+    .stApp { background-color: #f4f1ea; }
     
-    /* Sidebar kiri dengan warna yang kontras dan elegan */
+    /* Sidebar kiri */
     [data-testid="stSidebar"] {
-        background-color: #f1f5f9;
+        background-color: #e9e5dc;
         color: #1e293b;
         padding-top: 20px;
-        border-right: 1px solid #e2e8f0;
+        border-right: 1px solid #d4cebe;
     }
     
     [data-testid="stSidebar"] label, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3, [data-testid="stSidebar"] p {
@@ -33,12 +33,12 @@ st.markdown("""
 
     /* Kartu Header Utama */
     .header-banner {
-        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);
         padding: 20px 25px;
         border-radius: 12px;
         color: white;
         margin-bottom: 20px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.06);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.08);
     }
     .header-title { color: #ffffff; font-size: 22px; font-weight: 700; }
     .header-subtitle { color: #e2e8f0; font-size: 13px; margin-top: 5px; }
@@ -63,13 +63,13 @@ st.markdown("""
         font-weight: 600;
         background-color: #ffffff;
         color: #1e293b;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        border: 1px solid #d4cebe;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
     }
     div.stButton > button:hover {
-        background-color: #f8fafc;
-        border-color: #cbd5e1;
-        box-shadow: 0 6px 8px -1px rgba(0, 0, 0, 0.08);
+        background-color: #faf8f5;
+        border-color: #94a3b8;
+        box-shadow: 0 6px 8px -1px rgba(0, 0, 0, 0.1);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -115,7 +115,7 @@ PIN_ADMIN = "1234"
 # --- SIDEBAR NAVIGASI ---
 with st.sidebar:
     st.markdown("### 🛡️ AUDIT DASHBOARD")
-    st.markdown("<p style='font-size: 12px; color: #64748b;'>Decision Support System</p>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size: 12px; color: #475569;'>Decision Support System</p>", unsafe_allow_html=True)
     st.markdown("---")
     
     selected_menu = st.radio(
@@ -262,7 +262,7 @@ if selected_menu == "📊 Executive Overview":
             set_filter("BD")
             st.rerun()
 
-    # --- VISUALISASI GRAFIK DENGAN LATAR KARTU PUTIH BERSIH AGAR TIMBUL ---
+    # --- VISUALISASI GRAFIK DENGAN KARTU PUTIH DI ATAS LATAR KREM ---
     st.markdown("---")
     st.markdown("### 📊 Visualisasi Distribusi & Progres Tindak Lanjut")
     
@@ -277,7 +277,7 @@ if selected_menu == "📊 Executive Overview":
         col_chart_bar, col_chart_pie = st.columns([2.5, 1.5])
 
         with col_chart_bar:
-            st.markdown('<div style="background: #ffffff; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">', unsafe_allow_html=True)
+            st.markdown('<div style="background: #ffffff; padding: 18px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.06); border: 1px solid #d4cebe;">', unsafe_allow_html=True)
             df_chart = df_base.groupby([col_bidang, col_status]).size().reset_index(name='Jumlah')
             fig_bar = px.bar(
                 df_chart, 
@@ -303,7 +303,7 @@ if selected_menu == "📊 Executive Overview":
             st.markdown('</div>', unsafe_allow_html=True)
 
         with col_chart_pie:
-            st.markdown('<div style="background: #ffffff; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">', unsafe_allow_html=True)
+            st.markdown('<div style="background: #ffffff; padding: 18px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.06); border: 1px solid #d4cebe;">', unsafe_allow_html=True)
             df_pie = df_base.groupby(col_status).size().reset_index(name='Total')
             fig_pie = px.pie(
                 df_pie, 
