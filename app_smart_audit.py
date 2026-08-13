@@ -13,7 +13,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS Profesional, Proporsional, & Bersih (Light Theme)
+# Custom CSS Profesional & Bersih (Light Theme Kontras Tinggi)
 st.markdown("""
 <style>
     .stApp { background-color: #ffffff; }
@@ -51,7 +51,6 @@ st.markdown("""
         gap: 12px;
     }
 
-    /* Tombol Kartu KPI Proporsional */
     div.stButton > button {
         min-height: 90px;
         border-radius: 10px;
@@ -238,7 +237,6 @@ if selected_menu == "📊 Executive Overview":
     def set_filter(val):
         st.session_state.kpi_filter = val
 
-    # Menggunakan 4 kolom proporsional untuk kartu KPI
     k_col1, k_col2, k_col3, k_col4 = st.columns(4)
     with k_col1:
         if st.button(f"📊 TOTAL\n\n{total_temuan}", key="btn_total", use_container_width=True):
@@ -257,7 +255,7 @@ if selected_menu == "📊 Executive Overview":
             set_filter("BD")
             st.rerun()
 
-    # --- VISUALISASI GRAFIK (BAR CHART DIBUAT LEBIH RINGKAS & TIDAK TERLALU PANJANG) ---
+    # --- VISUALISASI GRAFIK DENGAN WARNA TEKS JELAS DAN KONTRAS ---
     st.markdown("---")
     st.markdown("### 📊 Visualisasi Distribusi & Progres Tindak Lanjut")
     
@@ -284,12 +282,14 @@ if selected_menu == "📊 Executive Overview":
                 color_discrete_map=color_map,
                 template='plotly_white'
             )
-            # Tinggi chart diperkecil agar tidak terlalu panjang ke bawah
+            # Mengatur warna teks grafik agar jelas terbaca dengan warna gelap
             fig_bar.update_layout(
-                height=260,
+                height=280,
                 plot_bgcolor='rgba(0,0,0,0)',
                 paper_bgcolor='rgba(0,0,0,0)',
-                margin=dict(l=0, r=10, t=30, b=0),
+                margin=dict(l=0, r=10, t=40, b=0),
+                title_font=dict(size=15, color='#1e293b', family='sans-serif'),
+                font=dict(color='#334155', size=12),
                 legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, title="")
             )
             st.plotly_chart(fig_bar, use_container_width=True)
@@ -307,10 +307,12 @@ if selected_menu == "📊 Executive Overview":
                 template='plotly_white'
             )
             fig_pie.update_layout(
-                height=260,
+                height=280,
                 plot_bgcolor='rgba(0,0,0,0)',
                 paper_bgcolor='rgba(0,0,0,0)',
-                margin=dict(l=10, r=10, t=30, b=10),
+                margin=dict(l=10, r=10, t=40, b=10),
+                title_font=dict(size=15, color='#1e293b', family='sans-serif'),
+                font=dict(color='#334155', size=12),
                 showlegend=False
             )
             fig_pie.update_traces(textposition='inside', textinfo='percent+label')
