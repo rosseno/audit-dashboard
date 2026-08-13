@@ -13,13 +13,11 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS Profesional, Bersih, & Minimalis (Light Theme Total)
+# Custom CSS Profesional, Proporsional, & Bersih (Light Theme)
 st.markdown("""
 <style>
-    /* Latar belakang aplikasi putih bersih */
     .stApp { background-color: #ffffff; }
     
-    /* Sidebar kiri bersih dengan warna abu-abu terang profesional */
     [data-testid="stSidebar"] {
         background-color: #f1f5f9;
         color: #1e293b;
@@ -31,7 +29,6 @@ st.markdown("""
         color: #1e293b !important;
     }
 
-    /* Kartu Header Utama */
     .header-banner {
         background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
         padding: 20px 25px;
@@ -43,7 +40,6 @@ st.markdown("""
     .header-title { color: #ffffff; font-size: 22px; font-weight: 700; }
     .header-subtitle { color: #e2e8f0; font-size: 13px; margin-top: 5px; }
 
-    /* Kotak Peringatan Overdue Bersih */
     .alert-blink {
         background: #fef2f2;
         border: 1px solid #f87171;
@@ -55,18 +51,18 @@ st.markdown("""
         gap: 12px;
     }
 
-    /* Tombol KPI Minimalis */
+    /* Tombol Kartu KPI Proporsional */
     div.stButton > button {
-        min-height: 70px;
-        border-radius: 8px;
+        min-height: 90px;
+        border-radius: 10px;
         font-weight: 600;
         background-color: #f8fafc;
         color: #1e293b;
         border: 1px solid #cbd5e1;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     }
     div.stButton > button:hover {
-        background-color: #e2e8f0;
+        background-color: #f1f5f9;
         border-color: #94a3b8;
     }
 </style>
@@ -242,6 +238,7 @@ if selected_menu == "📊 Executive Overview":
     def set_filter(val):
         st.session_state.kpi_filter = val
 
+    # Menggunakan 4 kolom proporsional untuk kartu KPI
     k_col1, k_col2, k_col3, k_col4 = st.columns(4)
     with k_col1:
         if st.button(f"📊 TOTAL\n\n{total_temuan}", key="btn_total", use_container_width=True):
@@ -260,7 +257,7 @@ if selected_menu == "📊 Executive Overview":
             set_filter("BD")
             st.rerun()
 
-    # --- VISUALISASI GRAFIK BERSIH TANPA BACKGROUND GELAP ---
+    # --- VISUALISASI GRAFIK (BAR CHART DIBUAT LEBIH RINGKAS & TIDAK TERLALU PANJANG) ---
     st.markdown("---")
     st.markdown("### 📊 Visualisasi Distribusi & Progres Tindak Lanjut")
     
@@ -272,7 +269,7 @@ if selected_menu == "📊 Executive Overview":
     }
 
     if not df_base.empty and col_status in df_base.columns:
-        col_chart_bar, col_chart_pie = st.columns([3, 1.5])
+        col_chart_bar, col_chart_pie = st.columns([2.5, 1.5])
 
         with col_chart_bar:
             df_chart = df_base.groupby([col_bidang, col_status]).size().reset_index(name='Jumlah')
@@ -287,9 +284,9 @@ if selected_menu == "📊 Executive Overview":
                 color_discrete_map=color_map,
                 template='plotly_white'
             )
-            # Mengatur background chart agar transparan / putih bersih
+            # Tinggi chart diperkecil agar tidak terlalu panjang ke bawah
             fig_bar.update_layout(
-                height=320,
+                height=260,
                 plot_bgcolor='rgba(0,0,0,0)',
                 paper_bgcolor='rgba(0,0,0,0)',
                 margin=dict(l=0, r=10, t=30, b=0),
@@ -309,9 +306,8 @@ if selected_menu == "📊 Executive Overview":
                 color_discrete_map=color_map,
                 template='plotly_white'
             )
-            # Mengatur background pie chart agar transparan / putih bersih
             fig_pie.update_layout(
-                height=320,
+                height=260,
                 plot_bgcolor='rgba(0,0,0,0)',
                 paper_bgcolor='rgba(0,0,0,0)',
                 margin=dict(l=10, r=10, t=30, b=10),
@@ -332,8 +328,6 @@ if selected_menu == "📊 Executive Overview":
     target_columns = ["No", "ID Temuan", "Bidang", "Judul Temuan Audit", "Rekomendasi Utama / Tindak Lanjut", "Status", "PIC Temuan Audit"]
     df_table_display = df_table_final[[c for c in target_columns if c in df_table_final.columns]].copy()
     df_table_display["No"] = range(1, len(df_table_display) + 1)
-    
-    # Streamlit dataframe secara otomatis mengikuti tema terang (light mode) yang bersih
     st.dataframe(df_table_display, use_container_width=True, hide_index=True)
 
 elif selected_menu == "📋 KPI Performance":
