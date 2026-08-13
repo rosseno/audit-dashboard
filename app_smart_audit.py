@@ -13,61 +13,55 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS untuk Layout ala Dashboard Profesional (Sidebar Gelap di Kiri)
+# Custom CSS Tema Light / Terang Profesional
 st.markdown("""
 <style>
-    /* Background utama */
-    .stApp { background-color: #f4f6f9; }
+    /* Latar belakang utama aplikasi menjadi cerah/putih */
+    .stApp { background-color: #f8fafc; }
     
-    /* Sembunyikan sidebar bawaan Streamlit agar kita bisa pakai layout custom */
+    /* Sidebar kiri dengan warna biru tua elegan */
     [data-testid="stSidebar"] {
-        background-color: #0f172a;
+        background-color: #1e293b;
         color: white;
         padding-top: 20px;
     }
     
-    /* Styling Kartu Metrik/KPI */
-    .metric-card {
-        background-color: white;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        border: 1px solid #e2e8f0;
+    /* Warna teks di dalam sidebar menjadi putih */
+    [data-testid="stSidebar"] label, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3, [data-testid="stSidebar"] p {
+        color: #f8fafc !important;
     }
 
-    div.stButton > button {
-        min-height: 80px;
-        border-radius: 8px;
-        font-weight: bold;
-    }
-
+    /* Kartu Header Utama */
     .header-banner {
-        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
         padding: 25px 30px;
         border-radius: 12px;
         color: white;
         margin-bottom: 25px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
     }
     .header-title { color: #ffffff; font-size: 24px; font-weight: 700; }
-    .header-subtitle { color: #94a3b8; font-size: 14px; margin-top: 5px; }
+    .header-subtitle { color: #e2e8f0; font-size: 14px; margin-top: 5px; }
 
-    @keyframes blink-animation {
-        0% { opacity: 1; border-color: #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.6); }
-        50% { opacity: 0.4; border-color: #7f1d1d; box-shadow: 0 0 2px rgba(239, 68, 68, 0.1); }
-        100% { opacity: 1; border-color: #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.6); }
-    }
-
+    /* Kotak Peringatan Overdue yang lebih soft */
     .alert-blink {
-        background: rgba(239, 68, 68, 0.1);
-        border: 2px solid #ef4444;
+        background: #fef2f2;
+        border: 2px solid #f87171;
         padding: 15px 20px;
         border-radius: 10px;
         margin-bottom: 20px;
         display: flex;
         align-items: center;
         gap: 15px;
-        animation: blink-animation 1.5s infinite ease-in-out;
+    }
+
+    div.stButton > button {
+        min-height: 80px;
+        border-radius: 8px;
+        font-weight: bold;
+        background-color: #ffffff;
+        color: #1e293b;
+        border: 1px solid #cbd5e1;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -110,13 +104,12 @@ col_status = "Status" if "Status" in df_master.columns else "Status_TL"
 
 PIN_ADMIN = "1234"
 
-# --- SIDEBAR NAVIGASI ALA APLIKASI PROFESIONAL ---
+# --- SIDEBAR NAVIGASI ---
 with st.sidebar:
     st.markdown("### 🛡️ AUDIT DASHBOARD")
     st.markdown("<p style='font-size: 12px; color: #94a3b8;'>Decision Support System</p>", unsafe_allow_html=True)
     st.markdown("---")
     
-    # Menu Navigasi Utama
     selected_menu = st.radio(
         "Navigasi Utama",
         [
@@ -206,7 +199,7 @@ else:
     else:
         df_base = df_filtered_periode.head(0)
 
-# --- KONTEN UTAMA HALAMAN ---
+# --- KONTEN UTAMA ---
 
 # 1. PERINGATAN OVERDUE DI POSISI PALING ATAS
 if not df_base.empty:
@@ -217,7 +210,7 @@ if not df_base.empty:
         <div class="alert-blink">
             <div style="font-size: 24px;">🚨</div>
             <div>
-                <div style="color: #ef4444; font-weight: 700; font-size: 15px;">PERINGATAN: ADA {overdue_count} REKOMENDASI OVERDUE (BELUM DITINDAKLANJUTI)</div>
+                <div style="color: #dc2626; font-weight: 700; font-size: 15px;">PERINGATAN: ADA {overdue_count} REKOMENDASI OVERDUE (BELUM DITINDAKLANJUTI)</div>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -230,7 +223,6 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Navigasi berdasarkan pilihan sidebar
 if selected_menu == "📊 Executive Overview":
     st.markdown("### Ringkasan Eksekutif KPI")
     total_temuan = len(df_base)
@@ -262,15 +254,15 @@ if selected_menu == "📊 Executive Overview":
             set_filter("BD")
             st.rerun()
 
-    # --- VISUALISASI GRAFIK ---
+    # --- VISUALISASI GRAFIK TEMA LIGHT ---
     st.markdown("---")
     st.markdown("### 📊 Visualisasi Distribusi & Progres Tindak Lanjut")
     
     color_map = {
-        'Selesai (SLS)': '#00CC96',
-        'Evaluasi (EVAL)': '#FFA15A',
-        'Overdue (BD)': '#EF553B',
-        'Belum TL': '#EF553B'
+        'Selesai (SLS)': '#10b981',
+        'Evaluasi (EVAL)': '#f59e0b',
+        'Overdue (BD)': '#ef4444',
+        'Belum TL': '#ef4444'
     }
 
     if not df_base.empty and col_status in df_base.columns:
@@ -319,8 +311,6 @@ if selected_menu == "📊 Executive Overview":
         st.info("Data grafik belum tersedia untuk filter yang dipilih.")
 
     st.markdown("---")
-
-    # --- TABEL DETAIL ---
     st.markdown("### Detail Data Temuan & Rekomendasi")
     if st.session_state.kpi_filter == "SEMUA":
         df_table_final = df_base
