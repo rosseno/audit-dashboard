@@ -13,13 +13,11 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS Latar Belakang Krem Hangat & Kartu Kontras Timbul
+# Custom CSS Latar Belakang Krem Hangat & Warna Teks Jelas
 st.markdown("""
 <style>
-    /* Latar belakang utama aplikasi menjadi krem hangat */
     .stApp { background-color: #f4f1ea; }
     
-    /* Sidebar kiri */
     [data-testid="stSidebar"] {
         background-color: #e9e5dc;
         color: #1e293b;
@@ -31,7 +29,6 @@ st.markdown("""
         color: #1e293b !important;
     }
 
-    /* Kartu Header Utama */
     .header-banner {
         background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);
         padding: 20px 25px;
@@ -43,7 +40,6 @@ st.markdown("""
     .header-title { color: #ffffff; font-size: 22px; font-weight: 700; }
     .header-subtitle { color: #e2e8f0; font-size: 13px; margin-top: 5px; }
 
-    /* Kotak Peringatan Overdue */
     .alert-blink {
         background: #fef2f2;
         border: 1px solid #f87171;
@@ -56,7 +52,6 @@ st.markdown("""
         box-shadow: 0 2px 4px rgba(239, 68, 68, 0.05);
     }
 
-    /* Tombol KPI / Kartu Metrik Timbul */
     div.stButton > button {
         min-height: 90px;
         border-radius: 12px;
@@ -232,7 +227,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 if selected_menu == "📊 Executive Overview":
-    st.markdown("### Ringkasan Eksekutif KPI")
+    st.markdown("<h3 style='color: #1e293b;'>Ringkasan Eksekutif KPI</h3>", unsafe_allow_html=True)
     total_temuan = len(df_base)
     selesai = len(df_base[df_base[col_status].str.contains("Selesai|SLS", case=False, na=False)]) if not df_base.empty else 0
     evaluasi = len(df_base[df_base[col_status].str.contains("Evaluasi|EVAL", case=False, na=False)]) if not df_base.empty else 0
@@ -262,9 +257,10 @@ if selected_menu == "📊 Executive Overview":
             set_filter("BD")
             st.rerun()
 
-    # --- VISUALISASI GRAFIK DENGAN KARTU PUTIH DI ATAS LATAR KREM ---
+    # --- VISUALISASI GRAFIK ---
     st.markdown("---")
     st.markdown("<h3 style='color: #1e293b;'>📊 Visualisasi Distribusi & Progres Tindak Lanjut</h3>", unsafe_allow_html=True)
+    
     color_map = {
         'Selesai (SLS)': '#10b981',
         'Evaluasi (EVAL)': '#f59e0b',
@@ -330,7 +326,7 @@ if selected_menu == "📊 Executive Overview":
         st.info("Data grafik belum tersedia untuk filter yang dipilih.")
 
     st.markdown("---")
-    st.markdown("### Detail Data Temuan & Rekomendasi")
+    st.markdown("<h3 style='color: #1e293b;'>Detail Data Temuan & Rekomendasi</h3>", unsafe_allow_html=True)
     if st.session_state.kpi_filter == "SEMUA":
         df_table_final = df_base
     else:
@@ -342,7 +338,7 @@ if selected_menu == "📊 Executive Overview":
     st.dataframe(df_table_display, use_container_width=True, hide_index=True)
 
 elif selected_menu == "📋 KPI Performance":
-    st.markdown("### 📋 Halaman Kinerja KPI & Detail Rekapitulasi")
+    st.markdown("<h3 style='color: #1e293b;'>📋 Halaman Kinerja KPI & Detail Rekapitulasi</h3>", unsafe_allow_html=True)
     if not df_base.empty:
         rekap_data = []
         unique_bidangs = sorted(df_base[col_bidang].dropna().astype(str).unique())
@@ -366,7 +362,9 @@ elif selected_menu == "📋 KPI Performance":
         st.dataframe(df_rekap, use_container_width=True, hide_index=True)
 
 elif selected_menu == "📁 Vault KKA & AP":
-    st.markdown("### 📋 Vault Penyimpanan File KKA & Program Audit (AP)")
+    st.markdown("<h3 style='color: #1e293b;'>📋 Vault Penyimpanan File KKA & Program Audit (AP)</h3>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #475569;'>Unggah dan kelola file pendukung audit di sini.</p>", unsafe_allow_html=True)
+    
     uploaded_kka = st.file_uploader("Unggah File KKA / AP (.xlsx, .docx, .pdf)", type=["xlsx", "docx", "pdf"], key="uploader_kka")
     if uploaded_kka is not None:
         file_path = os.path.join(VAULT_DIR, uploaded_kka.name)
@@ -381,12 +379,12 @@ elif selected_menu == "📁 Vault KKA & AP":
         st.success(f"File KKA '{uploaded_kka.name}' berhasil disimpan ke Vault!")
 
     if st.session_state.vault_kka:
-        st.markdown("#### Daftar File KKA & AP Tersimpan:")
+        st.markdown("<h4 style='color: #1e293b;'>Daftar File KKA & AP Tersimpan:</h4>", unsafe_allow_html=True)
         for i, item in enumerate(st.session_state.vault_kka):
             f_path = os.path.join(VAULT_DIR, item["Nama File"])
             col1, col2, col3 = st.columns([3, 1, 1])
             with col1:
-                st.write(f"📄 **{item['Nama File']}** ({item['Tipe']}) - {item['Tanggal Upload']}")
+                st.markdown(f"<span style='color: #1e293b;'>📄 <b>{item['Nama File']}</b> ({item['Tipe']}) - {item['Tanggal Upload']}</span>", unsafe_allow_html=True)
             with col2:
                 if os.path.exists(f_path):
                     with open(f_path, "rb") as f:
@@ -400,7 +398,9 @@ elif selected_menu == "📁 Vault KKA & AP":
                     st.rerun()
 
 elif selected_menu == "📂 Vault LHA Word":
-    st.markdown("### 📁 Vault Penyimpanan File LHA (.docx / .pdf)")
+    st.markdown("<h3 style='color: #1e293b;'>📁 Vault Penyimpanan File LHA (.docx / .pdf)</h3>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #475569;'>Pusat arsip Laporan Hasil Audit (LHA) resmi.</p>", unsafe_allow_html=True)
+    
     uploaded_lha = st.file_uploader("Unggah File LHA (.docx, .pdf)", type=["docx", "pdf"], key="uploader_lha")
     if uploaded_lha is not None:
         file_path = os.path.join(VAULT_DIR, uploaded_lha.name)
@@ -415,12 +415,12 @@ elif selected_menu == "📂 Vault LHA Word":
         st.success(f"File LHA '{uploaded_lha.name}' berhasil disimpan ke Vault!")
 
     if st.session_state.vault_lha:
-        st.markdown("#### Daftar File LHA Tersimpan:")
+        st.markdown("<h4 style='color: #1e293b;'>Daftar File LHA Tersimpan:</h4>", unsafe_allow_html=True)
         for i, item in enumerate(st.session_state.vault_lha):
             f_path = os.path.join(VAULT_DIR, item["Nama File"])
             col1, col2, col3 = st.columns([3, 1, 1])
             with col1:
-                st.write(f"📄 **{item['Nama File']}** ({item['Tipe']}) - {item['Tanggal Upload']}")
+                st.markdown(f"<span style='color: #1e293b;'>📄 <b>{item['Nama File']}</b> ({item['Tipe']}) - {item['Tanggal Upload']}</span>", unsafe_allow_html=True)
             with col2:
                 if os.path.exists(f_path):
                     with open(f_path, "rb") as f:
