@@ -509,4 +509,3 @@ def authenticate(n_clicks, password, current_auth):
     return False
 
 if __name__ == "__main__":
-    app.run(debug=True, port=8080)
