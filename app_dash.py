@@ -508,4 +508,4 @@ def authenticate(n_clicks, password, current_auth):
             return False
     return False
 
-if __name__ == "__main__":
+
