@@ -157,12 +157,18 @@ if menu == "Dashboard Temuan":
 
     st.subheader(f"📋 Rincian Database Temuan Audit (Ditampilkan: {len(df_table_filtered)} Baris)")
     
+    # Penyederhanaan Kolom Tabel Utama
+    table_cols = [col_periode, "Nama Entitas", col_bidang, "Rekomendasi Utama / Tindak Lanjut", col_status]
+    existing_cols = [c for c in table_cols if c in df_table_filtered.columns]
+    df_display = df_table_filtered[existing_cols].copy()
+    df_display.insert(0, "No", range(1, len(df_display) + 1))
+
     search_q = st.text_input("🔍 Cari Temuan / Kondisi / Unit:")
     if search_q:
-        mask = df_table_filtered.astype(str).apply(lambda x: x.str.contains(search_q, case=False, na=False)).any(axis=1)
-        df_table_filtered = df_table_filtered[mask]
+        mask = df_display.astype(str).apply(lambda x: x.str.contains(search_q, case=False, na=False)).any(axis=1)
+        df_display = df_display[mask]
 
-    st.dataframe(df_table_filtered, use_container_width=True, height=600)
+    st.dataframe(df_display, use_container_width=True, height=600, hide_index=True)
 
 elif menu == "Upload Dokumen":
     st.subheader("📎 Integrasi Bukti Tindak Lanjut ke Google Drive")
