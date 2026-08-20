@@ -10,6 +10,7 @@ st.set_page_config(page_title="Executive Audit Dashboard SPI", layout="wide")
 
 ADMIN_PASSWORD = "SPI2026"
 EXCEL_FILE = "Master_Database_Temuan_Audit_2024_2025_PSM_Ringkas.xlsx"
+GDRIVE_FOLDER_DEFAULT = "https://drive.google.com/drive/folders/contoh-folder-spi-anda"
 
 # Load Data
 @st.cache_data
@@ -129,7 +130,6 @@ if menu == "Dashboard Temuan":
     if bd_count > 0:
         st.warning(f"🚨 **PERINGATAN:** ADA {bd_count} REKOMENDASI OVERDUE (BELUM DITINDAKLANJUTI)")
 
-    # Grafik Analisis
     col_g1, col_g2 = st.columns(2)
     with col_g1:
         if selected_bidang != "Semua" and not dff.empty:
@@ -147,18 +147,16 @@ if menu == "Dashboard Temuan":
         else:
             st.info("Data proporsi tidak tersedia.")
 
-    # Tabel Data Filtered
     df_table_filtered = dff.copy()
     if st.session_state.active_filter == "SLS":
         df_table_filtered = dff[dff[col_status].astype(str).str.contains("Selesai|SLS", case=False, na=False)]
-    elif st.session_state.active_filter == "EVALUASI" or st.session_state.active_filter == "EVAL":
+    elif st.session_state.active_filter == "EVAL":
         df_table_filtered = dff[dff[col_status].astype(str).str.contains("Evaluasi|EVAL", case=False, na=False)]
     elif st.session_state.active_filter == "BD":
         df_table_filtered = dff[dff[col_status].astype(str).str.contains("BD|Belum|Overdue", case=False, na=False)]
 
     st.subheader(f"📋 Rincian Database Temuan Audit (Ditampilkan: {len(df_table_filtered)} Baris)")
     
-    # Pencarian Cepat
     search_q = st.text_input("🔍 Cari Temuan / Kondisi / Unit:")
     if search_q:
         mask = df_table_filtered.astype(str).apply(lambda x: x.str.contains(search_q, case=False, na=False)).any(axis=1)
@@ -167,25 +165,30 @@ if menu == "Dashboard Temuan":
     st.dataframe(df_table_filtered, use_container_width=True, height=600)
 
 elif menu == "Upload Dokumen":
-    st.subheader("📎 Upload Dokumen Bukti Tindak Lanjut")
+    st.subheader("📎 Integrasi Bukti Tindak Lanjut ke Google Drive")
+    st.markdown("Auditee dapat melampirkan tautan Google Drive berisi dokumen bukti tindak lanjut temuan audit.")
+    
     rekomendasi_list = df_master["Rekomendasi Utama / Tindak Lanjut"].dropna().unique().tolist() if "Rekomendasi Utama / Tindak Lanjut" in df_master.columns else []
     selected_rec = st.selectbox("Pilih Rekomendasi Temuan:", rekomendasi_list)
     
-    uploaded_file = st.file_uploader("Pilih file laporan atau bukti penindaklanjutan:")
-    if uploaded_file and selected_rec:
-        upload_dir = os.path.join("app_uploads", str(selected_rec))
-        os.makedirs(upload_dir, exist_ok=True)
-        file_path = os.path.join(upload_dir, uploaded_file.name)
-        with open(file_path, "wb") as f:
-            f.write(uploaded_file.getbuffer())
-        st.success(f"✅ Berhasil! File {uploaded_file.name} tersimpan untuk rekomendasi tersebut.")
+    gdrive_link = st.text_input("🔗 Masukkan Link Google Drive (Folder/File Bukti Tindak Lanjut):", placeholder="https://drive.google.com/...")
+    
+    if st.button("Simpan Tautan Google Drive"):
+        if selected_rec and gdrive_link:
+            st.success(f"✅ Tautan Google Drive berhasil disimpan untuk rekomendasi tersebut!")
+            st.markdown(f"👉 [Buka Dokumen di Google Drive]({gdrive_link})", unsafe_allow_html=True)
+        else:
+            st.error("⚠️ Harap pilih rekomendasi dan masukkan tautan Google Drive dengan benar.")
 
 elif menu == "Vault KKA":
-    st.subheader("📋 Vault Penyimpanan File KKA & Program Audit (AP)")
-    st.markdown("Pusat arsip dokumen kertas kerja audit dan program audit.")
+    st.subheader("📋 Vault Penyimpanan KKA & Program Audit (Terhubung Google Drive)")
+    st.markdown("Pusat arsip dokumen Kertas Kerja Audit (KKA) dan Program Audit (AP).")
+    
+    kka_link = st.text_input("🔗 Masukkan Tautan Folder Google Drive KKA / AP:", value=GDRIVE_FOLDER_DEFAULT)
+    st.markdown(f"📂 **Akses Cepat Arsip KKA/AP:** [Buka Folder Google Drive SPI]({kka_link})", unsafe_allow_html=True)
 
 elif menu == "LHA Generator":
-    st.subheader("📁 LHA Generator Professional (Multi-Tabel & Narasi)")
+    st.subheader("📁 LHA Generator Professional & Arsip Google Drive")
     
     p1 = st.text_area("1. Paragraf Pengantar:", placeholder="Ketik kalimat pengantar...")
     up_t1 = st.file_uploader("Upload Excel Tabel 1 untuk LHA", type=["xlsx", "xls"], key="t1")
@@ -202,6 +205,9 @@ elif menu == "LHA Generator":
         st.dataframe(df_t2.head(3))
 
     p3 = st.text_area("3. Paragraf Kesimpulan / Penutup:", placeholder="Ketik kesimpulan...")
+
+    lha_gdrive = st.text_input("🔗 Tautan Folder Google Drive Penyimpanan Arsip LHA:", value=GDRIVE_FOLDER_DEFAULT)
+    st.markdown(f"📂 **Arsip LHA:** [Buka Folder LHA di Google Drive]({lha_gdrive})", unsafe_allow_html=True)
 
     if st.button("💾 Simpan & Download LHA Lengkap (.docx)", use_container_width=True):
         doc = Document()
